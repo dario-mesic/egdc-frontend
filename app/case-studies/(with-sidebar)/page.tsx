@@ -1,0 +1,81 @@
+import { Suspense } from "react";
+import Search from "../_components/Search";
+import Filters from "../_components/Filters";
+import CaseStudiesResults from "../_components/CaseStudiesResults";
+import LoadingIndicator from "../_components/LoadingIndicator";
+import type { ReferenceData } from "../_types/referenceData";
+import type { CaseStudySearchParams } from "../_types/search";
+import type { SearchFacets } from "../_types/facets";
+import { fetchJson } from "../_lib/api";
+
+const API_BASE = process.env.API_BASE_URL!;
+
+async function getFacets(): Promise<SearchFacets> {
+  return fetchJson(`${API_BASE}/api/v1/search/facets/`, {
+    next: { revalidate: 60 * 60 * 24 },
+  });
+}
+
+async function getReferenceData(): Promise<ReferenceData> {
+  return fetchJson(`${API_BASE}/api/v1/reference-data/`, {
+    next: { revalidate: 60 * 60 * 24 },
+  });
+}
+
+function suspenseKeyFrom(sp: CaseStudySearchParams) {
+  const norm = (v?: string | string[]) =>
+    Array.isArray(v) ? v.join(",") : v ?? "";
+
+  return [
+    sp.q ?? "",
+    sp.page ?? "1",
+    sp.limit ?? "10",
+    norm(sp.sector),
+    norm(sp.tech_code),
+    norm(sp.funding_type_code),
+    norm(sp.calc_type_code),
+    norm(sp.country),
+    norm(sp.organization_types),
+    norm(sp.benefit_units),
+    norm(sp.benefit_types),
+  ].join("|");
+}
+
+function ResultsFallback() {
+  return (
+    <div className="flex flex-col h-[calc(100vh-200px)] min-h-100">
+      <div className="flex-1 min-h-0 relative">
+        <LoadingIndicator />
+      </div>
+    </div>
+  );
+}
+
+export default async function CaseStudies({
+  searchParams,
+}: {
+  searchParams: Promise<CaseStudySearchParams>;
+}) {
+  const resolved = await searchParams;
+  const [referenceData, facets] = await Promise.all([
+    getReferenceData(),
+    getFacets(),
+  ]);
+
+  return (
+    <>
+      <div className="ecl-row ecl-u-align-items-end ecl-u-mb-s">
+        <div className="ecl-col-12 ecl-col-l-8 ecl-col-xl-9">
+          <Search />
+        </div>
+        <div className="ecl-col-12 ecl-col-l-4 ecl-col-xl-3">
+          <Filters referenceData={referenceData} facets={facets} />
+        </div>
+      </div>
+
+      <Suspense key={suspenseKeyFrom(resolved)} fallback={<ResultsFallback />}>
+        <CaseStudiesResults searchParams={resolved} />
+      </Suspense>
+    </>
+  );
+}

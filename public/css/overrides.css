@@ -1,0 +1,72 @@
+:root {
+  --ecl-color-primary: var(--ecl-color-primary-700);
+  --ecl-color-primary-950: #162a1c;
+  --ecl-color-primary-900: #1f3a27;
+  --ecl-color-primary-800: #2f5738;
+  --ecl-color-primary-700: var(--global-color-primary);
+  --ecl-color-primary-600: #5fa17a;
+  --ecl-color-primary-500: var(--global-color-accent);
+  --ecl-color-primary-400: #a9d4b5;
+  --ecl-color-primary-300: #c3e2cc;
+  --ecl-color-primary-200: #dff0e4;
+  --ecl-color-primary-100: #eef7f1;
+  --ecl-color-primary-75: #f3faf6;
+  --ecl-color-primary-50: #f7fcf9;
+  --ecl-color-primary-25: #fbfefd;
+
+  --ecl-color-secondary: var(--ecl-color-secondary-700);
+  --ecl-color-secondary-950: #0d1f3a;
+  --ecl-color-secondary-900: #122a4f;
+  --ecl-color-secondary-800: #163663;
+  --ecl-color-secondary-700: var(--global-color-secondary);
+  --ecl-color-secondary-600: #3a5f9a;
+  --ecl-color-secondary-500: #5f7fb3;
+  --ecl-color-secondary-400: #8fa6cc;
+  --ecl-color-secondary-300: #b3c3de;
+  --ecl-color-secondary-200: #d4def0;
+  --ecl-color-secondary-100: #e8eef8;
+  --ecl-color-secondary-75: #f1f5fb;
+  --ecl-color-secondary-50: #f7f9fd;
+  --ecl-color-secondary-25: #fbfdff;
+}
+
+.ecl-link[aria-current="page"] {
+  background-color: var(--ecl-color-primary);
+}
+
+.ecl-select__multiple-toggle {
+  height: 46px !important;
+}
+
+.ecl-select__container {
+  width: 100%;
+}
+
+.ecl-select-multiple-toolbar .ecl-button--primary {
+  display: none !important;
+}
+
+fieldset.ecl-select__multiple-group.is-collapsed > :not(legend) {
+  display: none !important;
+}
+
+legend.ecl-select__multiple-group__toggle {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  font-weight: 600;
+  user-select: none;
+}
+
+legend.ecl-select__multiple-group__toggle::after {
+  content: "▾";
+  transform: rotate(-180deg);
+  margin-left: auto;
+  transition: transform 0.15s ease;
+}
+
+fieldset.ecl-select__multiple-group.is-collapsed
+  > legend.ecl-select__multiple-group__toggle::after {
+  transform: rotate(0deg);
+}

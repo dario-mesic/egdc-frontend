@@ -6,9 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "postinstall": "node scripts/copy-ecl.mjs"
   },
   "dependencies": {
+    "@ecl/icon": "^5.0.0-alpha.22.2",
+    "@ecl/preset-ec": "^5.0.0-alpha.22.2",
     "next": "16.1.1",
     "react": "19.2.3",
     "react-dom": "19.2.3"
