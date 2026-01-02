@@ -104,19 +104,19 @@ export default function Filters({
   const sp = useSearchParams();
   const selectRef = useRef<HTMLSelectElement | null>(null);
 
-  const facetSets = useMemo(() => {
-    const toSet = (arr: { code: string }[]) =>
-      new Set(arr.map((x) => x.code.toLowerCase()));
+  const facetMaps = useMemo(() => {
+    const toMap = (arr: { code: string; count: number }[]) =>
+      new Map(arr.map((x) => [x.code.toLowerCase(), x.count]));
 
     return {
-      sector: toSet(facets.sectors),
-      tech_code: toSet(facets.technologies),
-      funding_type_code: toSet(facets.funding_types),
-      calc_type_code: toSet(facets.calculation_types),
-      country: toSet(facets.countries),
-      organization_types: toSet(facets.organization_types),
-      benefit_units: toSet(facets.benefit_units),
-      benefit_types: toSet(facets.benefit_types),
+      sector: toMap(facets.sectors),
+      tech_code: toMap(facets.technologies),
+      funding_type_code: toMap(facets.funding_types),
+      calc_type_code: toMap(facets.calculation_types),
+      country: toMap(facets.countries),
+      organization_types: toMap(facets.organization_types),
+      benefit_units: toMap(facets.benefit_units),
+      benefit_types: toMap(facets.benefit_types),
     };
   }, [facets]);
 
@@ -199,14 +199,16 @@ export default function Filters({
         >
           <optgroup label="Sectors">
             {referenceData.sectors.map((o) => {
-              const enabled = facetSets.sector.has(o.code.toLowerCase());
+              const count = facetMaps.sector.get(o.code.toLowerCase()) ?? 0;
+              const enabled = count > 0;
+
               return (
                 <option
                   key={o.code}
                   value={`sector:${o.code}`}
                   disabled={!enabled}
                 >
-                  {o.label}
+                  {o.label} ({count})
                 </option>
               );
             })}
@@ -214,14 +216,15 @@ export default function Filters({
 
           <optgroup label="Technologies">
             {referenceData.technologies.map((o) => {
-              const enabled = facetSets.tech_code.has(o.code.toLowerCase());
+              const count = facetMaps.tech_code.get(o.code.toLowerCase()) ?? 0;
+              const enabled = count > 0;
               return (
                 <option
                   key={o.code}
                   value={`tech_code:${o.code}`}
                   disabled={!enabled}
                 >
-                  {o.label}
+                  {o.label} ({count})
                 </option>
               );
             })}
@@ -229,16 +232,16 @@ export default function Filters({
 
           <optgroup label="Funding types">
             {referenceData.funding_types.map((o) => {
-              const enabled = facetSets.funding_type_code.has(
-                o.code.toLowerCase()
-              );
+              const count =
+                facetMaps.funding_type_code.get(o.code.toLowerCase()) ?? 0;
+              const enabled = count > 0;
               return (
                 <option
                   key={o.code}
                   value={`funding_type_code:${o.code}`}
                   disabled={!enabled}
                 >
-                  {o.label}
+                  {o.label} ({count})
                 </option>
               );
             })}
@@ -246,16 +249,16 @@ export default function Filters({
 
           <optgroup label="Calculation types">
             {referenceData.calculation_types.map((o) => {
-              const enabled = facetSets.calc_type_code.has(
-                o.code.toLowerCase()
-              );
+              const count =
+                facetMaps.calc_type_code.get(o.code.toLowerCase()) ?? 0;
+              const enabled = count > 0;
               return (
                 <option
                   key={o.code}
                   value={`calc_type_code:${o.code}`}
                   disabled={!enabled}
                 >
-                  {o.label}
+                  {o.label} ({count})
                 </option>
               );
             })}
@@ -263,16 +266,16 @@ export default function Filters({
 
           <optgroup label="Organisation types">
             {referenceData.organization_types.map((o) => {
-              const enabled = facetSets.organization_types.has(
-                o.code.toLowerCase()
-              );
+              const count =
+                facetMaps.organization_types.get(o.code.toLowerCase()) ?? 0;
+              const enabled = count > 0;
               return (
                 <option
                   key={o.code}
                   value={`organization_types:${o.code}`}
                   disabled={!enabled}
                 >
-                  {o.label}
+                  {o.label} ({count})
                 </option>
               );
             })}
@@ -280,14 +283,16 @@ export default function Filters({
 
           <optgroup label="Benefit types">
             {referenceData.benefit_types.map((o) => {
-              const enabled = facetSets.benefit_types.has(o.code.toLowerCase());
+              const count =
+                facetMaps.benefit_types.get(o.code.toLowerCase()) ?? 0;
+              const enabled = count > 0;
               return (
                 <option
                   key={o.code}
                   value={`benefit_types:${o.code}`}
                   disabled={!enabled}
                 >
-                  {o.label}
+                  {o.label} ({count})
                 </option>
               );
             })}
@@ -295,14 +300,16 @@ export default function Filters({
 
           <optgroup label="Benefit units">
             {referenceData.benefit_units.map((o) => {
-              const enabled = facetSets.benefit_units.has(o.code.toLowerCase());
+              const count =
+                facetMaps.benefit_units.get(o.code.toLowerCase()) ?? 0;
+              const enabled = count > 0;
               return (
                 <option
                   key={o.code}
                   value={`benefit_units:${o.code}`}
                   disabled={!enabled}
                 >
-                  {o.label}
+                  {o.label} ({count})
                 </option>
               );
             })}
@@ -310,14 +317,15 @@ export default function Filters({
 
           <optgroup label="Countries">
             {referenceData.countries.map((o) => {
-              const enabled = facetSets.country.has(o.code.toLowerCase());
+              const count = facetMaps.country.get(o.code.toLowerCase()) ?? 0;
+              const enabled = count > 0;
               return (
                 <option
                   key={o.code}
                   value={`country:${o.code}`}
                   disabled={!enabled}
                 >
-                  {o.label}
+                  {o.label} ({count})
                 </option>
               );
             })}
