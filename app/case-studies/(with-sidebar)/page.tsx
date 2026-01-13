@@ -3,23 +3,18 @@ import Search from "../_components/Search";
 import Filters from "../_components/Filters";
 import CaseStudiesResults from "../_components/CaseStudiesResults";
 import LoadingIndicator from "../_components/LoadingIndicator";
+import CreatedNotification from "../_components/CreatedNotification";
 import type { ReferenceData } from "../_types/referenceData";
 import type { CaseStudySearchParams } from "../_types/search";
 import type { SearchFacets } from "../_types/facets";
-import { fetchJson } from "../_lib/api";
-
-const API_BASE = process.env.API_BASE_URL!;
+import { API_BASE, fetchJson } from "../_lib/api";
 
 async function getFacets(): Promise<SearchFacets> {
-  return fetchJson(`${API_BASE}/api/v1/search/facets/`, {
-    next: { revalidate: 60 * 60 * 24 },
-  });
+  return fetchJson(`${API_BASE}/api/v1/search/facets/`);
 }
 
 async function getReferenceData(): Promise<ReferenceData> {
-  return fetchJson(`${API_BASE}/api/v1/reference-data/`, {
-    next: { revalidate: 60 * 60 * 24 },
-  });
+  return fetchJson(`${API_BASE}/api/v1/reference-data/`);
 }
 
 function suspenseKeyFrom(sp: CaseStudySearchParams) {
@@ -43,7 +38,7 @@ function suspenseKeyFrom(sp: CaseStudySearchParams) {
 
 function ResultsFallback() {
   return (
-    <div className="flex flex-col h-[calc(100vh-200px)] min-h-100">
+    <div className="ecl-u-d-flex ecl-u-flex-column h-[calc(100vh-200px)] min-h-100">
       <div className="flex-1 min-h-0 relative">
         <LoadingIndicator />
       </div>
@@ -64,6 +59,7 @@ export default async function CaseStudies({
 
   return (
     <>
+      <CreatedNotification />
       <div className="ecl-row ecl-u-align-items-end ecl-u-mb-s">
         <div className="ecl-col-12 ecl-col-l-8 ecl-col-xl-9">
           <Search />

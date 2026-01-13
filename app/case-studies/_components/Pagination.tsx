@@ -64,7 +64,7 @@ export default function Pagination({
             className="ecl-link ecl-link--standalone ecl-link--icon ecl-pagination__link ecl-link--icon-only"
             aria-label="Go to previous page"
           >
-            <ClientIcon className="ecl-icon ecl-icon--xs ecl-icon--rotate-270 ecl-link__icon" />
+            <ClientIcon className="wt-icon-ecl--corner-arrow-left ecl-icon  wt-icon--xs" />
             <span className="ecl-link__label">Previous</span>
           </Link>
         </li>
@@ -125,7 +125,7 @@ export default function Pagination({
             aria-label="Go to next page"
           >
             <span className="ecl-link__label">Next</span>
-            <ClientIcon className="ecl-icon ecl-icon--xs ecl-icon--rotate-90 ecl-link__icon" />
+            <ClientIcon className="wt-icon-ecl--corner-arrow-right ecl-icon wt-icon--xs" />
           </Link>
         </li>
       </ul>

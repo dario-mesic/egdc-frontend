@@ -42,10 +42,6 @@
   width: 100%;
 }
 
-.ecl-select-multiple-toolbar .ecl-button--primary {
-  display: none !important;
-}
-
 fieldset.ecl-select__multiple-group.is-collapsed > :not(legend) {
   display: none !important;
 }

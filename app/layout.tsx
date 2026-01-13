@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Montserrat, Lora } from "next/font/google";
 import Script from "next/script";
 import EclAutoInit from "./_components/EclAutoInit";
+import NextTopLoader from "nextjs-toploader";
 
 const moontserrat = Montserrat({
   subsets: ["latin"],
@@ -46,12 +47,25 @@ export default function RootLayout({
         <link rel="stylesheet" href="/css/overrides.css" />
       </head>
       <body className="min-h-screen ecl-color-mode--accent">
-        {children}
+        <div id="app-root">
+          <NextTopLoader color="#366340" />
+          {children}
+        </div>
+        <Script
+          type="module"
+          src="https://cdn.jsdelivr.net/npm/@duetds/date-picker@1.4.0/dist/duet/duet.esm.js"
+          strategy="afterInteractive"
+        />
+        <Script
+          noModule
+          src="https://cdn.jsdelivr.net/npm/@duetds/date-picker@1.4.0/dist/duet/duet.js"
+          strategy="afterInteractive"
+        />
         <Script
           src="https://webtools.europa.eu/load.js"
           strategy="afterInteractive"
         />
-        <EclAutoInit />
+        <EclAutoInit rootId="app-root" />
       </body>
     </html>
   );

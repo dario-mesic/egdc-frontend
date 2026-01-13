@@ -13,8 +13,10 @@
     "@ecl/icon": "^5.0.0-alpha.22.2",
     "@ecl/preset-ec": "^5.0.0-alpha.22.2",
     "next": "16.1.1",
+    "nextjs-toploader": "^3.9.17",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "zod": "^4.3.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

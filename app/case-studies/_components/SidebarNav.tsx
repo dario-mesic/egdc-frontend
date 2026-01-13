@@ -6,7 +6,7 @@ export default function SidebarNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="ecl-u-d-flex ecl-u-flex-column ecl-u-flex-gap-s">
+    <nav className="ecl-u-d-flex ecl-u-flex-column">
       <Link
         className="ecl-link ecl-link--primary  ecl-u-d-block  ecl-u-type-align-center ecl-u-mb-l"
         aria-current={pathname === "/case-studies" ? "page" : undefined}

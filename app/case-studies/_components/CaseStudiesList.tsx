@@ -43,27 +43,24 @@ export default function CaseStudiesList({
             className="ecl-u-display-block ecl-u-text-decoration-none"
           >
             <article className="ecl-content-item ecl-u-mb-l ecl-u-pa-m ecl-u-bg-primary-300 ecl-u-border-all ecl-u-border-width-2 ecl-u-border-color-primary">
-              <div className=" w-full grid gap-6 grid-cols-1 min-[1140px]:grid-cols-[152px_minmax(0,1fr)_minmax(320px,1fr)] min-[1140px]:items-stretch">
-                <div className="flex items-center justify-center">
+              <div className="ecl-u-width-100 grid gap-6 grid-cols-1 min-[1140px]:grid-cols-[152px_minmax(0,1fr)_minmax(320px,1fr)] min-[1140px]:items-stretch">
+                <div className="ecl-u-d-flex ecl-u-align-items-center ecl-u-justify-content-center">
                   <div className="relative w-24 h-24 min-[1140px]:w-38 min-[1140px]:h-38 rounded-full overflow-hidden ecl-u-bg-grey-25">
                     <Image
-                      src={
-                        logoUrl ??
-                        "https://inno-ecl.s3.amazonaws.com/media/examples/example-image.jpg"
-                      }
+                      src={logoUrl ?? ""}
                       alt={cs.logo?.alt_text ?? cs.title}
                       fill
                       sizes="152px"
-                      className="object-contain p-2"
+                      className="object-contain scale-[0.8] origin-center ecl-u-pa-s"
                       style={{ color: "unset" }}
                     />
                   </div>
                 </div>
 
-                <div className="min-[1140px]:pr-6 min-[1140px]:border-r border-right-none flex flex-col">
+                <div className="min-[1140px]:pr-6 min-[1140px]:border-r border-right-none ecl-u-d-flex ecl-u-flex-column">
                   <ul className="ecl-content-block__primary-meta-container font-semibold">
                     <li className="ecl-content-block__primary-meta-item ecl-u-type-color-secondary-700">
-                      Organisation name: {provider?.name ?? "—"}
+                      Organization name: {provider?.name ?? "—"}
                     </li>
                     <li className="ecl-content-block__primary-meta-item ecl-u-type-color-secondary-700">
                       Sector: {provider?.sector?.label ?? "—"}
@@ -83,13 +80,13 @@ export default function CaseStudiesList({
                         </div>
 
                         {locations.length > 0 && (
-                          <div className="ecl-u-mt-2xs ecl-u-type-paragraph flex items-center gap-2">
+                          <div className="ecl-u-mt-2xs ecl-u-type-paragraph ecl-u-d-flex ecl-u-align-items-center gap-2">
                             <ClientIcon className="wt-icon-location wt-icon--s shrink-0" />
-                            <span className="flex flex-wrap gap-x-2">
+                            <span className="ecl-u-d-flex ecl-u-flex-wrap gap-x-2">
                               {locations.map((l, i) => (
                                 <span
                                   key={l.key}
-                                  className="inline-flex items-center gap-1"
+                                  className="ecl-u-d-inline-flex ecl-u-align-items-center gap-1"
                                 >
                                   {l.iso2 && (
                                     <ClientIcon
@@ -115,8 +112,8 @@ export default function CaseStudiesList({
                   </div>
                 </div>
 
-                <div className="min-[1140px]:pl-6 flex flex-col">
-                  <span className="ecl-u-type-heading-4 ecl-u-type-color-primary-950 underline ecl-u-mb-xs block">
+                <div className="min-[1140px]:pl-6 ecl-u-d-flex ecl-u-flex-column">
+                  <span className="ecl-u-type-heading-4 ecl-u-type-color-primary-950 underline ecl-u-mb-xs ecl-u-d-block">
                     Benefits
                   </span>
 

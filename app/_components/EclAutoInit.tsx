@@ -4,16 +4,6 @@ import Script from "next/script";
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 
-declare global {
-  interface Window {
-    ECL?: { autoInit?: () => void };
-  }
-}
-
-function hasEclAutoInitNodes() {
-  return document.querySelector("[data-ecl-auto-init]") !== null;
-}
-
 function markReady() {
   document.documentElement.classList.add("ecl-ready");
 }
@@ -22,20 +12,39 @@ function clearReady() {
   document.documentElement.classList.remove("ecl-ready");
 }
 
-function autoInitWithRetry(maxTries = 20) {
+function hasAutoInitNodes(root: ParentNode) {
+  return root.querySelector("[data-ecl-auto-init]") !== null;
+}
+
+function hasDatepickerNodes(root: ParentNode) {
+  return root.querySelector('[data-ecl-auto-init="Datepicker"]') !== null;
+}
+
+function duetReady() {
+  return (
+    typeof window !== "undefined" && !!customElements.get("duet-date-picker")
+  );
+}
+
+function autoInitWithRetry(root: Element, maxTries = 40) {
   let tries = 0;
 
   const attempt = () => {
-    tries += 1;
+    tries++;
 
-    if (!hasEclAutoInitNodes()) {
+    if (!hasAutoInitNodes(root)) {
       markReady();
+      return;
+    }
+
+    if (hasDatepickerNodes(root) && !duetReady()) {
+      if (tries < maxTries) setTimeout(attempt, 50);
       return;
     }
 
     if (window.ECL?.autoInit) {
       requestAnimationFrame(() => {
-        window.ECL?.autoInit?.();
+        window.ECL!.autoInit!(root);
         markReady();
       });
       return;
@@ -47,38 +56,53 @@ function autoInitWithRetry(maxTries = 20) {
   attempt();
 }
 
-export default function EclAutoInit() {
+export default function EclAutoInit({
+  rootId = "app-root",
+}: {
+  rootId?: string;
+}) {
   const pathname = usePathname();
   const loadedRef = useRef(false);
+
+  const getRoot = () => document.getElementById(rootId);
 
   useEffect(() => {
     const cl = document.documentElement.classList;
     cl.remove("no-js");
     cl.add("has-js");
+    clearReady();
   }, []);
 
   useEffect(() => {
     if (!loadedRef.current) return;
-    clearReady();
-    autoInitWithRetry();
-  }, [pathname]);
-  useEffect(() => {
-    const handler = () => {
-      clearReady();
-      autoInitWithRetry();
-    };
 
-    window.addEventListener("ecl:autoinit", handler);
-    return () => window.removeEventListener("ecl:autoinit", handler);
-  }, []);
+    const root = getRoot();
+    clearReady();
+
+    if (!root) {
+      markReady();
+      return;
+    }
+
+    autoInitWithRetry(root);
+  }, [pathname]);
+
   return (
     <Script
       src="/ecl/scripts/ecl-ec.js"
       strategy="afterInteractive"
       onLoad={() => {
         loadedRef.current = true;
+
+        const root = getRoot();
         clearReady();
-        autoInitWithRetry();
+
+        if (!root) {
+          markReady();
+          return;
+        }
+
+        autoInitWithRetry(root);
       }}
     />
   );

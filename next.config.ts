@@ -11,17 +11,29 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async rewrites() {
+    return [
+      {
+        source: "/static/uploads/:path*",
+        destination: "http://127.0.0.1:8000/static/uploads/:path*",
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "inno-ecl.s3.amazonaws.com",
-        pathname: "/media/**",
+        hostname: "**",
       },
       {
-        protocol: "https",
-        hostname: "upload.wikimedia.org",
-        pathname: "/wikipedia/**",
+        protocol: "http",
+        hostname: "**",
+      },
+      {
+        protocol: "http",
+        hostname: "127.0.0.1",
+        port: "8000",
+        pathname: "/static/uploads/**",
       },
     ],
   },

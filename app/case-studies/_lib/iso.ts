@@ -28,7 +28,6 @@ export const ISO3_TO_ISO2: Record<string, string> = {
   SVN: "si",
   ESP: "es",
   SWE: "se",
-
   CHE: "ch",
   ISL: "is",
   LIE: "li",
@@ -39,10 +38,29 @@ export const ISO3_TO_ISO2: Record<string, string> = {
   GBR: "uk",
 };
 
-export function iso3ToIso2(iso3?: string | null): string | null {
-  if (!iso3) return null;
-  const iso2 = ISO3_TO_ISO2[iso3.toUpperCase()];
+const ALIAS_TO_ISO3: Record<string, keyof typeof ISO3_TO_ISO2> = {
+  CRO: "HRV",
+  UK: "GBR",
+  ENG: "GBR",
+  GER: "DEU",
+  GRE: "GRC",
+};
+
+export function iso3ToIso2(code?: string | null): string | null {
+  if (!code) return null;
+
+  const upper = code.trim().toUpperCase();
+
+  if (upper.length === 2) {
+    const iso2 = upper.toLowerCase();
+    return iso2 in countries ? iso2 : null;
+  }
+
+  const iso3 = ALIAS_TO_ISO3[upper] ?? upper;
+
+  const iso2 = ISO3_TO_ISO2[iso3];
   if (!iso2) return null;
+
   return iso2 in countries ? iso2 : null;
 }
 

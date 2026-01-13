@@ -9,7 +9,7 @@ export default function Error(props: {
   return (
     <ErrorState
       {...props}
-      message="We couldn’t load case studies right now. Please try again."
+      message="We couldn’t load data right now. Please try again."
     />
   );
 }

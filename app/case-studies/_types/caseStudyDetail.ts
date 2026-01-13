@@ -28,7 +28,7 @@ export type ContactPoint = {
   has_email?: string;
 };
 
-export type OrganisationDetail = {
+export type OrganizationDetail = {
   id: number;
   name: string;
   description?: string;
@@ -59,5 +59,5 @@ export type CaseStudyDetail = CaseStudy & {
   methodology: Methodology | null;
   dataset: Dataset | null;
 
-  is_provided_by: OrganisationDetail[];
+  is_provided_by: OrganizationDetail[];
 };

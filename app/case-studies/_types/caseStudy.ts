@@ -26,7 +26,7 @@ export type OrgType = {
   code: string;
 };
 
-export type Organisation = {
+export type Organization = {
   id: number;
   name: string;
   sector: Sector;
@@ -56,8 +56,8 @@ export type CaseStudy = {
   title: string;
   short_description: string;
   benefits: Benefit[];
-  is_provided_by: Organisation[];
-  is_funded_by: Organisation[];
+  is_provided_by: Organization[];
+  is_funded_by: Organization[];
   funding_type: FundingType | null;
   logo: Logo | null;
   addresses?: Address[];

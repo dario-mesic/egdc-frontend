@@ -4,9 +4,7 @@ import type {
   CaseStudySearchParams,
   PaginatedCaseStudies,
 } from "../_types/search";
-import { fetchJson } from "../_lib/api";
-
-const API_BASE = process.env.API_BASE_URL!;
+import { API_BASE, fetchJson } from "../_lib/api";
 
 const appendAll = (
   params: URLSearchParams,
@@ -38,9 +36,7 @@ async function searchCaseStudies(
   params.set("page", sp.page ?? "1");
   params.set("limit", sp.limit ?? "10");
 
-  return fetchJson(`${API_BASE}/api/v1/search/?${params.toString()}`, {
-    next: { revalidate: 10 },
-  });
+  return fetchJson(`${API_BASE}/api/v1/search/?${params.toString()}`);
 }
 
 export default async function CaseStudiesResults({
@@ -90,14 +86,14 @@ export default async function CaseStudiesResults({
 
       <div className="ecl-row">
         <div className="ecl-col-12">
-          <div className="flex flex-col max-h-[calc(100vh-200px)] min-h-90">
+          <div className="ecl-u-d-flex ecl-u-flex-column max-h-[calc(100vh-200px)] min-h-90">
             <div className="flex-1 min-h-0 overflow-y-auto">
               <CaseStudiesList caseStudies={result.items} />
             </div>
 
             {totalPages > 1 && (
-              <div className="mt-auto bg-white pt-8">
-                <div className="flex justify-center">
+              <div className="mt-auto ecl-u-bg-white ecl-u-pt-2xl">
+                <div className="ecl-u-d-flex ecl-u-justify-content-center">
                   <Pagination
                     total={result.total}
                     page={result.page}

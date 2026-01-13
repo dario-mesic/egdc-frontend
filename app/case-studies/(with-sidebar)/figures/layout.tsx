@@ -1,0 +1,11 @@
+export default function FiguresLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="ecl-u-pv-l">
+      <div className="ecl-container">{children}</div>
+    </section>
+  );
+}

@@ -4,10 +4,8 @@ import type { CaseStudyDetail } from "../_types/caseStudyDetail";
 import { notFound } from "next/navigation";
 import { compactLocations } from "../_lib/locations";
 import { iso2CountryName } from "../_lib/iso";
-import { fetchJson, ApiError } from "../_lib/api";
+import { API_BASE, fetchJson, ApiError } from "../_lib/api";
 import ClientIcon from "../_components/icons/ClientIcon";
-
-const API_BASE = process.env.API_BASE_URL!;
 
 function formatValue(value: number) {
   return new Intl.NumberFormat("en-GB").format(value);
@@ -27,7 +25,7 @@ async function getCaseStudy(id: string): Promise<CaseStudyDetail> {
   const url = `${API_BASE}/api/v1/case-studies/${id}/`;
 
   try {
-    return await fetchJson<CaseStudyDetail>(url, { next: { revalidate: 60 } });
+    return await fetchJson<CaseStudyDetail>(url);
   } catch (e) {
     if (e instanceof ApiError) {
       if (e.status === 404 || e.status === 422) notFound();
@@ -70,7 +68,7 @@ export default async function CaseStudyPage({
                   alt={cs.logo?.alt_text ?? cs.title}
                   fill
                   sizes="(min-width: 1200px) 50vw, 100vw"
-                  className="object-contain p-6"
+                  className="object-contain ecl-u-pa-l"
                   priority
                 />
               </picture>
@@ -89,13 +87,13 @@ export default async function CaseStudyPage({
                   </div>
 
                   {locations.length > 0 && (
-                    <div className="ecl-u-mt-2xs ecl-u-type-paragraph flex items-center gap-2">
+                    <div className="ecl-u-mt-2xs ecl-u-type-paragraph ecl-u-d-flex ecl-u-align-items-center gap-2">
                       <ClientIcon className="wt-icon-location wt-icon--s shrink-0" />
-                      <span className="flex flex-wrap gap-x-2">
+                      <span className="ecl-u-d-flex ecl-u-flex-wrap gap-x-2">
                         {locations.map((l, i) => (
                           <span
                             key={l.key}
-                            className="inline-flex items-center gap-1"
+                            className="ecl-u-d-inline-flex ecl-u-align-items-center gap-1"
                           >
                             {l.iso2 && (
                               <ClientIcon
@@ -116,70 +114,81 @@ export default async function CaseStudyPage({
                     {cs.long_description ?? cs.short_description}
                   </div>
 
-                  <div className="ecl-u-bg-grey-50 ecl-u-pa-m ecl-u-mt-m">
-                    <ul className="ecl-unordered-list ecl-unordered-list--no-marker">
-                      <li className="ecl-u-d-flex ecl-u-align-items-center ecl-u-justify-content-between ecl-u-pv-s">
-                        <div className="ecl-u-d-flex ecl-u-align-items-center gap-2">
-                          <ClientIcon className="wt-icon-ecl--file ecl-icon ecl-icon--l" />
-                          {cs.methodology?.url ? (
+                  <div className="ecl-u-bg-grey-50 ecl-u-pa-m ecl-u-mt-m ecl-u-d-flex ecl-u-flex-column gap-3">
+                    <div className="ecl-file" data-ecl-file>
+                      <div className="ecl-file__container">
+                        <ClientIcon className="wt-icon-ecl--file ecl-icon ecl-icon--2xl ecl-file__icon" />
+                        <div className="ecl-file__info">
+                          <div className="ecl-file__title">
+                            {cs.methodology?.url
+                              ? cs.methodology.name ?? "Methodology report"
+                              : "Methodology report (not available)"}
+                          </div>
+                        </div>
+                      </div>
+
+                      {cs.methodology?.url && (
+                        <div className="ecl-file__footer">
+                          <div
+                            className="ecl-file__language"
+                            id="ecl-file-1200506283-lang"
+                          >
+                            English
+                          </div>
+                          <div className="ecl-file__meta">(16.2 MB - PDF)</div>
+                          <div className="ecl-file__action">
                             <Link
-                              className="ecl-link"
                               href={cs.methodology.url}
                               target="_blank"
                               rel="noopener noreferrer"
                               download
+                              className="ecl-link ecl-link--standalone ecl-link--icon ecl-file__download ecl-u-d-inline-flex ecl-u-align-items-center"
                             >
-                              {cs.methodology.name ?? "Methodology report"}{" "}
-                              (.pdf)
+                              <span className="ecl-link__label">Download</span>
+                              <ClientIcon className="wt-icon-ecl--download ecl-icon ecl-icon--fluid ecl-link__icon" />
                             </Link>
-                          ) : (
-                            <span className="ecl-u-type-color-grey-75">
-                              Methodology report (not available)
-                            </span>
-                          )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {cs.dataset?.url && (
+                      <div className="ecl-file" data-ecl-file>
+                        <div className="ecl-file__container">
+                          <ClientIcon className="wt-icon-ecl--spreadsheet ecl-icon ecl-icon--2xl ecl-file__icon ecl-icon--secondary" />
+
+                          <div className="ecl-file__info">
+                            <div className="ecl-file__title">
+                              {cs.dataset.url
+                                ? cs.dataset.name ?? "Dataset"
+                                : "Dataset (not available)"}
+                            </div>
+                          </div>
                         </div>
 
-                        {cs.methodology?.url ? (
-                          <Link
-                            href={cs.methodology.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="ecl-link"
+                        <div className="ecl-file__footer">
+                          <div
+                            className="ecl-file__language"
+                            id="ecl-file-1200506233-lang"
                           >
-                            <ClientIcon className="wt-icon-ecl--download ecl-icon ecl-icon--l" />
-                          </Link>
-                        ) : null}
-                      </li>
-
-                      {cs.dataset?.url ? (
-                        <li className="ecl-u-d-flex ecl-u-align-items-center ecl-u-justify-content-between ecl-u-pv-s">
-                          <div className="ecl-u-d-flex ecl-u-align-items-center gap-2">
-                            <ClientIcon className="wt-icon-ecl--spreadsheet ecl-icon ecl-icon--l ecl-icon--secondary" />
+                            English
+                          </div>
+                          <div className="ecl-file__meta">(16.2 MB - PDF)</div>
+                          <div className="ecl-file__action">
                             <Link
-                              className="ecl-link"
                               href={cs.dataset.url}
                               target="_blank"
                               rel="noopener noreferrer"
                               download
+                              className="ecl-link ecl-link--standalone ecl-link--icon ecl-file__download ecl-u-d-inline-flex ecl-u-align-items-center"
                             >
-                              {cs.dataset.name ?? "Dataset"} (.xlsx)
+                              <span className="ecl-link__label">Download</span>
+                              <ClientIcon className="wt-icon-ecl--download ecl-icon ecl-icon--fluid ecl-link__icon" />
                             </Link>
                           </div>
-
-                          <Link
-                            href={cs.dataset.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="ecl-link"
-                          >
-                            <span
-                              className="wt-icon-ecl--download ecl-icon ecl-icon--l"
-                              aria-hidden="true"
-                            />
-                          </Link>
-                        </li>
-                      ) : null}
-                    </ul>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -262,14 +271,14 @@ export default async function CaseStudyPage({
                 <div className="ecl-col-12 ecl-col-m-6 md:border-l">
                   <div className="ecl-u-bg-primary ecl-u-pa-s">
                     <div className="ecl-u-type-heading-6 ecl-u-type-color-white ecl-u-type-align-center">
-                      ORGANISATIONS DETAILS
+                      ORGANIZATIONS DETAILS
                     </div>
                   </div>
 
                   <div className="ecl-u-pa-m">
                     <dl>
                       <div className="ecl-u-mb-s">
-                        <dt className="font-bold">Organisation name:</dt>
+                        <dt className="font-bold">Organization name:</dt>
                         <dd className="ecl-u-mt-2xs">
                           {provider?.name ?? "—"}
                         </dd>

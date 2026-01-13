@@ -264,7 +264,7 @@ export default function Filters({
             })}
           </optgroup>
 
-          <optgroup label="Organisation types">
+          <optgroup label="Organization types">
             {referenceData.organization_types.map((o) => {
               const count =
                 facetMaps.organization_types.get(o.code.toLowerCase()) ?? 0;
