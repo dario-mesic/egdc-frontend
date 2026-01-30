@@ -6,6 +6,8 @@ import EclAutoInit from "./_components/EclAutoInit";
 import NextTopLoader from "nextjs-toploader";
 import EgdcLayout from "./case-studies/_components/EgdcLayout";
 
+export const dynamic = "force-dynamic";
+
 const moontserrat = Montserrat({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600"],
