@@ -10,16 +10,23 @@ export type CalcType = {
   label: string;
 };
 
+export type LanguageType = {
+  code: string;
+  label: string;
+};
+
 export type Methodology = {
   id: number;
   name: string;
   url: string;
+  language: LanguageType;
 };
 
 export type Dataset = {
   id: number;
   name?: string;
   url: string;
+  language: LanguageType;
 };
 
 export type ContactPoint = {

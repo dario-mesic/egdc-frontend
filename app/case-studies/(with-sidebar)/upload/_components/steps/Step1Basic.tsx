@@ -11,8 +11,6 @@ function todayISODate() {
   return `${y}-${m}-${day}`;
 }
 
-type Errors = Partial<Record<keyof FormState, string>>;
-
 type FormState = {
   title: string;
   shortDescription: string;
@@ -20,6 +18,9 @@ type FormState = {
   problemSolved: string;
   creationDate: string;
 };
+
+type Errors = Partial<Record<keyof FormState, string>>;
+type Touched = Partial<Record<keyof FormState, boolean>>;
 
 export default function Step1Basic() {
   const { data, setMetadata } = useWizardData();
@@ -32,9 +33,7 @@ export default function Step1Basic() {
     creationDate: todayISODate(),
   });
 
-  const [touched, setTouched] = useState<
-    Partial<Record<keyof FormState, boolean>>
-  >({});
+  const [touched, setTouched] = useState<Touched>({});
 
   const duetRef = useRef<HTMLElement | null>(null);
 
@@ -76,14 +75,23 @@ export default function Step1Basic() {
     const e: Errors = {};
 
     if (!form.title.trim()) e.title = "Title is required.";
-    else if (form.title.length > 255) e.title = "Maximum 255 characters.";
+    else if (form.title.length > 80) e.title = "Maximum 80 characters.";
 
     if (!form.shortDescription.trim())
       e.shortDescription = "Short description is required.";
+    else if (form.shortDescription.length > 160)
+      e.shortDescription = "Maximum 160 characters.";
+
     if (!form.longDescription.trim())
       e.longDescription = "Long description is required.";
+    else if (form.longDescription.length > 1000)
+      e.longDescription = "Maximum 1000 characters.";
+
     if (!form.problemSolved.trim())
       e.problemSolved = "Problem solved is required.";
+    else if (form.problemSolved.length > 1000)
+      e.problemSolved = "Maximum 1000 characters.";
+
     if (!form.creationDate) e.creationDate = "Creation date is required.";
 
     return e;
@@ -106,17 +114,22 @@ export default function Step1Basic() {
         <label className="ecl-form-label" htmlFor="cs-title">
           Title <span className="ecl-u-type-color-error">*</span>
         </label>
+        <div className="ecl-help-block" id="cs-title-helper">
+          Max. 80 characters ({form.title.length}/80)
+        </div>
         <input
           id="cs-title"
           className="ecl-text-input ecl-u-width-100"
           value={form.title}
-          maxLength={255}
+          required
+          maxLength={80}
           onChange={(e) => {
             const v = e.target.value;
             set("title", v);
             setMetadata({ title: v });
           }}
           onBlur={() => touch("title")}
+          aria-describedby="cs-title-helper"
         />
         {showError("title") ? (
           <div className="ecl-feedback-message ecl-feedback-message--error ecl-u-mt-2xs">
@@ -129,17 +142,23 @@ export default function Step1Basic() {
         <label className="ecl-form-label" htmlFor="cs-short">
           Short description <span className="ecl-u-type-color-error">*</span>
         </label>
+        <div className="ecl-help-block" id="cs-short-helper">
+          Max. 160 characters ({form.shortDescription.length}/160)
+        </div>
         <textarea
           id="cs-short"
           className="ecl-text-area ecl-u-width-100"
+          maxLength={160}
           rows={3}
           value={form.shortDescription}
+          required
           onChange={(e) => {
             const v = e.target.value;
             set("shortDescription", v);
             setMetadata({ short_description: v });
           }}
           onBlur={() => touch("shortDescription")}
+          aria-describedby="cs-short-helper"
         />
         {showError("shortDescription") ? (
           <div className="ecl-feedback-message ecl-feedback-message--error ecl-u-mt-2xs">
@@ -152,17 +171,23 @@ export default function Step1Basic() {
         <label className="ecl-form-label" htmlFor="cs-long">
           Long description <span className="ecl-u-type-color-error">*</span>
         </label>
+        <div className="ecl-help-block" id="cs-long-helper">
+          Max. 1000 characters ({form.longDescription.length}/1000)
+        </div>
         <textarea
           id="cs-long"
           className="ecl-text-area ecl-u-width-100"
+          maxLength={1000}
           rows={6}
           value={form.longDescription}
+          required
           onChange={(e) => {
             const v = e.target.value;
             set("longDescription", v);
             setMetadata({ long_description: v });
           }}
           onBlur={() => touch("longDescription")}
+          aria-describedby="cs-long-helper"
         />
         {showError("longDescription") ? (
           <div className="ecl-feedback-message ecl-feedback-message--error ecl-u-mt-2xs">
@@ -175,17 +200,23 @@ export default function Step1Basic() {
         <label className="ecl-form-label" htmlFor="cs-problem">
           Problem solved <span className="ecl-u-type-color-error">*</span>
         </label>
+        <div className="ecl-help-block" id="cs-problem-helper">
+          Max. 1000 characters ({form.problemSolved.length}/1000)
+        </div>
         <textarea
           id="cs-problem"
           className="ecl-text-area ecl-u-width-100"
+          maxLength={1000}
           rows={4}
           value={form.problemSolved}
+          required
           onChange={(e) => {
             const v = e.target.value;
             set("problemSolved", v);
             setMetadata({ problem_solved: v });
           }}
           onBlur={() => touch("problemSolved")}
+          aria-describedby="cs-problem-helper"
         />
         {showError("problemSolved") ? (
           <div className="ecl-feedback-message ecl-feedback-message--error ecl-u-mt-2xs">
@@ -208,6 +239,7 @@ export default function Step1Basic() {
             ref={duetRef}
             identifier="cs-creation-date"
             value={form.creationDate}
+            required
           />
         </div>
 

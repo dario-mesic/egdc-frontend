@@ -1,10 +1,18 @@
 import { z } from "zod";
 
 export const createOrganizationSchema = z.object({
-  name: z.string().trim().min(1, "Name is required").max(255, "Max 255 chars"),
+  name: z
+    .string()
+    .trim()
+    .min(1, "Name is required")
+    .max(80, "Max 80 characters"),
 
-  description: z.string().trim().optional().nullable(),
-
+  description: z
+    .string()
+    .trim()
+    .max(160, "Max 160 characters")
+    .optional()
+    .nullable(),
   website_url: z
     .string()
     .trim()

@@ -20,13 +20,13 @@ type FilterKey = (typeof FILTER_KEYS)[number];
 function initCollapsibleGroups(dropdownEl: HTMLElement) {
   const groups = Array.from(
     dropdownEl.querySelectorAll<HTMLFieldSetElement>(
-      "fieldset.ecl-select__multiple-group"
-    )
+      "fieldset.ecl-select__multiple-group",
+    ),
   );
 
   groups.forEach((fs) => {
     const legend = fs.querySelector<HTMLLegendElement>(
-      "legend.ecl-select__multiple-group__title"
+      "legend.ecl-select__multiple-group__title",
     );
     if (!legend) return;
 
@@ -46,7 +46,7 @@ function initCollapsibleGroups(dropdownEl: HTMLElement) {
 
     const toggle = (legend: HTMLLegendElement) => {
       const fs = legend.closest(
-        "fieldset.ecl-select__multiple-group"
+        "fieldset.ecl-select__multiple-group",
       ) as HTMLFieldSetElement | null;
       if (!fs) return;
 
@@ -56,7 +56,7 @@ function initCollapsibleGroups(dropdownEl: HTMLElement) {
 
     dropdownEl.addEventListener("click", (e) => {
       const legend = (e.target as HTMLElement).closest(
-        "legend.ecl-select__multiple-group__title"
+        "legend.ecl-select__multiple-group__title",
       ) as HTMLLegendElement | null;
 
       if (!legend) return;
@@ -71,7 +71,7 @@ function initCollapsibleGroups(dropdownEl: HTMLElement) {
       if (ke.key !== "Enter" && ke.key !== " ") return;
 
       const legend = (e.target as HTMLElement).closest(
-        "legend.ecl-select__multiple-group__title"
+        "legend.ecl-select__multiple-group__title",
       ) as HTMLLegendElement | null;
 
       if (!legend) return;
@@ -120,6 +120,56 @@ export default function Filters({
     };
   }, [facets]);
 
+  const optGroups = [
+    {
+      key: "benefit_types",
+      label: "Benefit types",
+      items: referenceData.benefit_types,
+      facetMap: facetMaps.benefit_types,
+    },
+    {
+      key: "benefit_units",
+      label: "Benefit units",
+      items: referenceData.benefit_units,
+      facetMap: facetMaps.benefit_units,
+    },
+    {
+      key: "calc_type_code",
+      label: "Calculation types",
+      items: referenceData.calculation_types,
+      facetMap: facetMaps.calc_type_code,
+    },
+    {
+      key: "country",
+      label: "Countries",
+      items: referenceData.countries,
+      facetMap: facetMaps.country,
+    },
+    {
+      key: "funding_type_code",
+      label: "Funding types",
+      items: referenceData.funding_types,
+      facetMap: facetMaps.funding_type_code,
+    },
+    {
+      key: "organization_types",
+      label: "Organization types",
+      items: referenceData.organization_types,
+      facetMap: facetMaps.organization_types,
+    },
+    {
+      key: "sector",
+      label: "Sectors",
+      items: referenceData.sectors,
+      facetMap: facetMaps.sector,
+    },
+    {
+      key: "tech_code",
+      label: "Technologies",
+      items: referenceData.technologies,
+      facetMap: facetMaps.tech_code,
+    },
+  ].sort((a, b) => a.label.localeCompare(b.label));
   const defaultValue = useMemo(() => {
     const values: string[] = [];
     FILTER_KEYS.forEach((key) => {
@@ -141,7 +191,7 @@ export default function Filters({
     Array.from(el.selectedOptions).forEach((opt) => {
       const [key, value] = opt.value.split(":") as [
         FilterKey | undefined,
-        string | undefined
+        string | undefined,
       ];
       if (!key || !value) return;
       params.append(key, value);
@@ -197,139 +247,24 @@ export default function Filters({
           data-ecl-select-search="Enter filter keyword"
           data-ecl-select-no-results="No results found"
         >
-          <optgroup label="Sectors">
-            {referenceData.sectors.map((o) => {
-              const count = facetMaps.sector.get(o.code.toLowerCase()) ?? 0;
-              const enabled = count > 0;
+          {optGroups.map((group) => (
+            <optgroup key={group.key} label={group.label}>
+              {group.items.map((o) => {
+                const count = group.facetMap.get(o.code.toLowerCase()) ?? 0;
+                const enabled = count > 0;
 
-              return (
-                <option
-                  key={o.code}
-                  value={`sector:${o.code}`}
-                  disabled={!enabled}
-                >
-                  {o.label} ({count})
-                </option>
-              );
-            })}
-          </optgroup>
-
-          <optgroup label="Technologies">
-            {referenceData.technologies.map((o) => {
-              const count = facetMaps.tech_code.get(o.code.toLowerCase()) ?? 0;
-              const enabled = count > 0;
-              return (
-                <option
-                  key={o.code}
-                  value={`tech_code:${o.code}`}
-                  disabled={!enabled}
-                >
-                  {o.label} ({count})
-                </option>
-              );
-            })}
-          </optgroup>
-
-          <optgroup label="Funding types">
-            {referenceData.funding_types.map((o) => {
-              const count =
-                facetMaps.funding_type_code.get(o.code.toLowerCase()) ?? 0;
-              const enabled = count > 0;
-              return (
-                <option
-                  key={o.code}
-                  value={`funding_type_code:${o.code}`}
-                  disabled={!enabled}
-                >
-                  {o.label} ({count})
-                </option>
-              );
-            })}
-          </optgroup>
-
-          <optgroup label="Calculation types">
-            {referenceData.calculation_types.map((o) => {
-              const count =
-                facetMaps.calc_type_code.get(o.code.toLowerCase()) ?? 0;
-              const enabled = count > 0;
-              return (
-                <option
-                  key={o.code}
-                  value={`calc_type_code:${o.code}`}
-                  disabled={!enabled}
-                >
-                  {o.label} ({count})
-                </option>
-              );
-            })}
-          </optgroup>
-
-          <optgroup label="Organization types">
-            {referenceData.organization_types.map((o) => {
-              const count =
-                facetMaps.organization_types.get(o.code.toLowerCase()) ?? 0;
-              const enabled = count > 0;
-              return (
-                <option
-                  key={o.code}
-                  value={`organization_types:${o.code}`}
-                  disabled={!enabled}
-                >
-                  {o.label} ({count})
-                </option>
-              );
-            })}
-          </optgroup>
-
-          <optgroup label="Benefit types">
-            {referenceData.benefit_types.map((o) => {
-              const count =
-                facetMaps.benefit_types.get(o.code.toLowerCase()) ?? 0;
-              const enabled = count > 0;
-              return (
-                <option
-                  key={o.code}
-                  value={`benefit_types:${o.code}`}
-                  disabled={!enabled}
-                >
-                  {o.label} ({count})
-                </option>
-              );
-            })}
-          </optgroup>
-
-          <optgroup label="Benefit units">
-            {referenceData.benefit_units.map((o) => {
-              const count =
-                facetMaps.benefit_units.get(o.code.toLowerCase()) ?? 0;
-              const enabled = count > 0;
-              return (
-                <option
-                  key={o.code}
-                  value={`benefit_units:${o.code}`}
-                  disabled={!enabled}
-                >
-                  {o.label} ({count})
-                </option>
-              );
-            })}
-          </optgroup>
-
-          <optgroup label="Countries">
-            {referenceData.countries.map((o) => {
-              const count = facetMaps.country.get(o.code.toLowerCase()) ?? 0;
-              const enabled = count > 0;
-              return (
-                <option
-                  key={o.code}
-                  value={`country:${o.code}`}
-                  disabled={!enabled}
-                >
-                  {o.label} ({count})
-                </option>
-              );
-            })}
-          </optgroup>
+                return (
+                  <option
+                    key={o.code}
+                    value={`${group.key}:${o.code}`}
+                    disabled={!enabled}
+                  >
+                    {o.label} ({count})
+                  </option>
+                );
+              })}
+            </optgroup>
+          ))}
         </select>
       </div>
     </div>

@@ -6,7 +6,10 @@ export type StatsResponse = {
   map_data: {
     country_code: string;
     country_label: string;
-    case_study_count: number;
+    cities: {
+      name: string;
+      count: number;
+    }[];
   }[];
   kpi_data: {
     type_code: string;

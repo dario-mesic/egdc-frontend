@@ -14,11 +14,12 @@ export const API_BASE = process.env.API_BASE_URL!;
 
 export async function fetchJson<T>(
   url: string,
-  init?: RequestInit & { next?: { revalidate?: number } }
+  init?: RequestInit & { next?: { revalidate?: number } },
 ): Promise<T> {
   let res: Response;
   try {
     res = await fetch(url, {
+      cache: "no-store",
       ...init,
       headers: { Accept: "application/json", ...(init?.headers ?? {}) },
     });

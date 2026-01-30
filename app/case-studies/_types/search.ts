@@ -12,6 +12,9 @@ export type CaseStudySearchParams = {
   benefit_types?: string | string[];
   page?: string;
   limit?: string;
+  sort_by?: "created_date" | "title";
+  sort_order?: "asc" | "desc";
+  match_type?: "partial" | "exact";
 };
 
 export type PaginatedCaseStudies = {

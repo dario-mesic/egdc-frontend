@@ -28,6 +28,17 @@ const EMPTY_FORM = {
   org_type_code: "",
 };
 
+type OrgFormState = {
+  name: string;
+  description: string;
+  website_url: string;
+  sector_code: string;
+  org_type_code: string;
+};
+
+type Errors = Partial<Record<keyof OrgFormState, string>>;
+type Touched = Partial<Record<keyof OrgFormState, boolean>>;
+
 function AddOrganizationModal({
   onCreated,
 }: {
@@ -52,6 +63,16 @@ function AddOrganizationModal({
   async function submit() {
     setError("");
 
+    setTouched({
+      name: true,
+      description: true,
+      website_url: true,
+      sector_code: true,
+      org_type_code: true,
+    });
+
+    if (Object.keys(errors).length > 0) return;
+
     const parsed = createOrganizationSchema.safeParse({
       name: form.name,
       description: form.description || null,
@@ -62,7 +83,7 @@ function AddOrganizationModal({
 
     if (!parsed.success) {
       setError(
-        parsed.error.issues[0]?.message ?? "Please check the form fields."
+        parsed.error.issues[0]?.message ?? "Please check the form fields.",
       );
       return;
     }
@@ -85,7 +106,7 @@ function AddOrganizationModal({
 
       const dialog = document.getElementById(`${ADD_ORG_MODAL_ID}-modal`);
       const closeBtn = dialog?.querySelector(
-        "[data-ecl-modal-close]"
+        "[data-ecl-modal-close]",
       ) as HTMLButtonElement | null;
       closeBtn?.click();
     } catch {
@@ -98,8 +119,40 @@ function AddOrganizationModal({
   const reset = () => {
     setError("");
     setSaving(false);
-    setForm({ ...EMPTY_FORM }); // ✅ new object
+    setForm({ ...EMPTY_FORM });
   };
+
+  const [touched, setTouched] = useState<Touched>({});
+
+  const touch = (k: keyof OrgFormState) =>
+    setTouched((p) => ({ ...p, [k]: true }));
+
+  const errors = useMemo<Errors>(() => {
+    const e: Errors = {};
+
+    if (!form.name.trim()) e.name = "Name is required.";
+    else if (form.name.length > 80) e.name = "Maximum 80 characters.";
+
+    if (form.description.trim() && form.description.length > 160)
+      e.description = "Maximum 160 characters.";
+
+    if (form.website_url.trim()) {
+      try {
+        new URL(form.website_url.trim());
+      } catch {
+        e.website_url = "Website URL must be a valid URL.";
+      }
+    }
+
+    if (!form.sector_code.trim()) e.sector_code = "Sector is required.";
+    if (!form.org_type_code.trim())
+      e.org_type_code = "Organization type is required.";
+
+    return e;
+  }, [form]);
+
+  const showError = (k: keyof OrgFormState) =>
+    touched[k] ? errors[k] : undefined;
 
   return (
     <Modal
@@ -147,25 +200,48 @@ function AddOrganizationModal({
             *
           </span>
         </label>
+        <div className="ecl-help-block" id="org-name-helper">
+          Max. 80 characters ({form.name.length}/80)
+        </div>
         <input
           className="ecl-text-input ecl-u-width-100"
+          maxLength={80}
           value={form.name}
+          required
           disabled={saving}
           onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+          onBlur={() => touch("name")}
+          aria-describedby="org-name-helper"
         />
+        {showError("name") ? (
+          <div className="ecl-feedback-message ecl-feedback-message--error ecl-u-mt-2xs">
+            {showError("name")}
+          </div>
+        ) : null}
       </div>
 
       <div className="ecl-form-group ecl-u-mb-m">
         <label className="ecl-form-label">Description</label>
+        <div className="ecl-help-block" id="org-description-helper">
+          Max. 160 characters ({form.description.length}/160)
+        </div>
         <textarea
           className="ecl-text-area ecl-u-width-100"
+          maxLength={160}
           rows={4}
           value={form.description}
           disabled={saving}
           onChange={(e) =>
             setForm((p) => ({ ...p, description: e.target.value }))
           }
+          onBlur={() => touch("description")}
+          aria-describedby="org-description-helper"
         />
+        {showError("description") ? (
+          <div className="ecl-feedback-message ecl-feedback-message--error ecl-u-mt-2xs">
+            {showError("description")}
+          </div>
+        ) : null}
       </div>
 
       <div className="ecl-form-group ecl-u-mb-m">
@@ -178,7 +254,13 @@ function AddOrganizationModal({
           onChange={(e) =>
             setForm((p) => ({ ...p, website_url: e.target.value }))
           }
+          onBlur={() => touch("website_url")}
         />
+        {showError("website_url") ? (
+          <div className="ecl-feedback-message ecl-feedback-message--error ecl-u-mt-2xs">
+            {showError("website_url")}
+          </div>
+        ) : null}
       </div>
 
       <div className="ecl-form-group ecl-u-mb-m">
@@ -197,10 +279,12 @@ function AddOrganizationModal({
           <select
             className="ecl-select"
             value={form.sector_code}
+            required
             disabled={saving}
             onChange={(e) =>
               setForm((p) => ({ ...p, sector_code: e.target.value }))
             }
+            onBlur={() => touch("sector_code")}
             data-ecl-auto-init="Select"
           >
             <option value="" disabled>
@@ -216,9 +300,13 @@ function AddOrganizationModal({
             <ClientIcon className="wt-icon-ecl--corner-arrow-down ecl-icon ecl-icon--xs" />
           </div>
         </div>
+        {showError("sector_code") ? (
+          <div className="ecl-feedback-message ecl-feedback-message--error ecl-u-mt-2xs">
+            {showError("sector_code")}
+          </div>
+        ) : null}
       </div>
 
-      {/* Org type (required) */}
       <div className="ecl-form-group">
         <label className="ecl-form-label">
           Organization type
@@ -230,15 +318,16 @@ function AddOrganizationModal({
             *
           </span>
         </label>
-
         <div className="ecl-select__container ecl-select__container--m">
           <select
             className="ecl-select"
             value={form.org_type_code}
+            required
             disabled={saving}
             onChange={(e) =>
               setForm((p) => ({ ...p, org_type_code: e.target.value }))
             }
+            onBlur={() => touch("org_type_code")}
             data-ecl-auto-init="Select"
           >
             <option value="" disabled>
@@ -254,6 +343,11 @@ function AddOrganizationModal({
             <ClientIcon className="wt-icon-ecl--corner-arrow-down ecl-icon ecl-icon--xs" />
           </div>
         </div>
+        {showError("org_type_code") ? (
+          <div className="ecl-feedback-message ecl-feedback-message--error ecl-u-mt-2xs">
+            {showError("org_type_code")}
+          </div>
+        ) : null}
       </div>
     </Modal>
   );
@@ -300,7 +394,7 @@ export default function Step4Organizations() {
 
   const orgOptions = useMemo(
     () => [...orgs].sort((a, b) => a.name.localeCompare(b.name)),
-    [orgs]
+    [orgs],
   );
 
   const providedError =
@@ -311,7 +405,10 @@ export default function Step4Organizations() {
   return (
     <>
       <h2 className="ecl-u-type-heading-3 ecl-u-mb-m">Organizations (Links)</h2>
-
+      <p className="ecl-u-type-paragraph ecl-u-mb-l">
+        If you do not find the organization you are looking for in the list, you
+        can add it using the <strong>“Add organization”</strong> option below.
+      </p>
       <div className="ecl-form-group ecl-u-mb-m">
         <label htmlFor="cs-provided-by" className="ecl-form-label">
           Provided By
@@ -425,7 +522,7 @@ export default function Step4Organizations() {
       <AddOrganizationModal
         onCreated={(org) => {
           setOrgs((prev) =>
-            prev.some((p) => p.id === org.id) ? prev : [...prev, org]
+            prev.some((p) => p.id === org.id) ? prev : [...prev, org],
           );
           setForm((p) => ({ ...p, providedBy: String(org.id) }));
           setMetadata({ provider_org_id: org.id });

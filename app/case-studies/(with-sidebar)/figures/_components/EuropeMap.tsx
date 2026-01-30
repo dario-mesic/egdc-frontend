@@ -2,9 +2,10 @@ import fs from "fs";
 import path from "path";
 import type { StatsResponse } from "../page";
 import { iso3ToIso2 } from "@/app/case-studies/_lib/iso";
+import ClientEuropeMap from "./ClientEuropeMap";
 
 function colorForCount(count: number): string {
-  if (count <= 0) return "var(--ecl-color-grey-200)";
+  if (count <= 0) return "var(--ecl-color-grey-75)";
   if (count <= 2) return "var(--ecl-color-primary-200)";
   if (count <= 5) return "var(--ecl-color-primary-400)";
   if (count <= 10) return "var(--ecl-color-primary-600)";
@@ -22,85 +23,60 @@ function injectCountryFills(svg: string, counts: Map<string, number>) {
       const cleanedPre = pre.replace(/\sfill="[^"]*"/g, "");
       const cleanedPost = post.replace(/\sfill="[^"]*"/g, "");
 
-      return `<path${cleanedPre} id="${iso2}" fill="${fill}"${cleanedPost}>`;
-    }
+      return `<path${cleanedPre} class="europe-country" id="${iso2}" fill="${fill}"${cleanedPost} role="button" aria-label="${iso2}">`;
+    },
   );
 }
 
 function normalizeSvg(svg: string) {
   return svg.replace(
     /<svg\b([^>]*)>/,
-    `<svg$1 preserveAspectRatio="xMidYMid meet">`
-  );
-}
-
-function LegendItem({ color, label }: { color: string; label: string }) {
-  return (
-    <div className="ecl-u-d-flex ecl-u-align-items-center gap-2">
-      <span
-        className="h-4 w-4 rounded-sm ring-1 ring-black/10"
-        style={{ backgroundColor: color }}
-        aria-hidden="true"
-      />
-      <span className="tabular-nums">{label}</span>
-    </div>
+    `<svg$1 preserveAspectRatio="xMidYMid meet">`,
   );
 }
 
 export default function EuropeMap({ stats }: { stats: StatsResponse }) {
   const svg = fs.readFileSync(
     path.join(process.cwd(), "data/europe.svg"),
-    "utf8"
+    "utf8",
   );
+
+  const byIso2 = new Map<
+    string,
+    {
+      iso2: string;
+      iso3: string;
+      country_label: string;
+      cities: { name: string; count: number }[];
+      total: number;
+    }
+  >();
 
   const counts = new Map<string, number>();
 
   for (const c of stats.map_data) {
     const iso2 = iso3ToIso2(c.country_code);
     if (!iso2) continue;
-    counts.set(iso2, c.case_study_count);
+
+    const total =
+      (c as any).case_study_count ??
+      (c.cities ?? []).reduce((sum, x) => sum + (x.count ?? 0), 0);
+
+    counts.set(iso2, total);
+
+    byIso2.set(iso2, {
+      iso2,
+      iso3: c.country_code,
+      country_label: c.country_label,
+      cities: c.cities ?? [],
+      total,
+    });
   }
+
   const normalizedSvg = normalizeSvg(svg);
   const coloredSvg = injectCountryFills(normalizedSvg, counts);
 
   return (
-    <div className="min-w-0">
-      <div className="rounded-2xl border border-gray-200 ecl-u-bg-white ecl-u-shadow-1">
-        <div className="ecl-u-d-flex ecl-u-align-items-center ecl-u-justify-content-between gap-3 border-b border-gray-100 px-4 py-3 sm:px-6">
-          <h2 className="text-base font-semibold text-gray-900">
-            Aggregated KPIs of EGDC
-          </h2>
-        </div>
-
-        <div className="ecl-u-pa-s sm:p-4! md:p-6!">
-          <div
-            className="ecl-u-width-100
-            min-w-0
-            ecl-u-d-flex
-            ecl-u-justify-content-center 
-            max-h-[70vh]
-            [&_svg]:ecl-u-width-100
-            [&_svg]:max-w-4xl
-            [&_svg]:h-auto
-            [&_svg_path]:stroke-(--ecl-color-grey-600)
-            [&_svg_path]:stroke-[0.8]
-            [&_svg_path]:stroke-linejoin:round
-            [&_svg_path]:transition-colors
-            [&_svg_path:hover]:brightness-95"
-            dangerouslySetInnerHTML={{ __html: coloredSvg }}
-          />
-
-          <div className="ecl-u-mt-m ecl-u-d-flex ecl-u-flex-column gap-2 sm:flex-row! sm:items-center sm:justify-end">
-            <div className="ecl-u-d-flex ecl-u-flex-wrap ecl-u-align-items-center gap-x-4 gap-y-2 text-xs text-gray-700">
-              <LegendItem color="var(--ecl-color-grey-200)" label="0" />
-              <LegendItem color="var(--ecl-color-primary-200)" label="1–2" />
-              <LegendItem color="var(--ecl-color-primary-400)" label="3–5" />
-              <LegendItem color="var(--ecl-color-primary-600)" label="6–10" />
-              <LegendItem color="var(--ecl-color-primary-800)" label="11+" />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <ClientEuropeMap svg={coloredSvg} byIso2={Object.fromEntries(byIso2)} />
   );
 }

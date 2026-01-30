@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import ClientIcon from "../_components/icons/ClientIcon";
 
 export default function Search() {
@@ -22,7 +22,9 @@ export default function Search() {
       router.push(`?${params.toString()}`);
     });
   };
-
+  useEffect(() => {
+    setValue(sp.get("q") ?? "");
+  }, [sp]);
   return (
     <form
       className="ecl-search-form ecl-u-mt-m ecl-u-mt-xl-none"

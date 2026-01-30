@@ -2,7 +2,10 @@ import { z } from "zod";
 
 export const benefitSchema = z.object({
   type_code: z.string().min(1, "Benefit type is required"),
-  name: z.string().min(1, "Benefit name is required").max(255, "Max 255 chars"),
+  name: z
+    .string()
+    .min(1, "Benefit name is required")
+    .max(80, "Max 80 characters"),
   value: z.coerce
     .number()
     .int("Value must be an integer")
@@ -16,10 +19,19 @@ export const addressSchema = z.object({
 });
 
 export const baseMetadataSchema = z.object({
-  title: z.string().min(1, "Title is required").max(255, "Max 255 chars"),
-  short_description: z.string().min(1, "Short description is required"),
-  long_description: z.string().min(1, "Long description is required"),
-  problem_solved: z.string().min(1, "Problem solved is required"),
+  title: z.string().min(1, "Title is required").max(80, "Max 80 characters"),
+  short_description: z
+    .string()
+    .min(1, "Short description is required")
+    .max(160, "Max 160 characters"),
+  long_description: z
+    .string()
+    .min(1, "Long description is required")
+    .max(1000, "Max 1000 characters"),
+  problem_solved: z
+    .string()
+    .min(1, "Problem solved is required")
+    .max(1000, "Max 1000 characters"),
   created_date: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format (YYYY-MM-DD)"),
@@ -35,11 +47,15 @@ export const baseMetadataSchema = z.object({
   used_by_org_id: z.coerce.number().int().positive().optional().nullable(),
 
   benefits: z.array(benefitSchema).min(1, "At least one benefit is required"),
+  methodology_language_code: z
+    .string()
+    .min(1, "Methodology language is required"),
+  dataset_language_code: z.string().min(1, "Dataset language is required"),
 });
 
 export const metadataSchema = baseMetadataSchema.superRefine((val, ctx) => {
   const hasEnvironmental = val.benefits.some(
-    (b) => (b.type_code || "").toLowerCase() === "environmental"
+    (b) => (b.type_code || "").toLowerCase() === "environmental",
   );
 
   if (!hasEnvironmental) {

@@ -43,15 +43,15 @@ export default function Step2Categorization() {
 
   const techOptions = useMemo(
     () => [...technologies].sort((a, b) => a.label.localeCompare(b.label)),
-    [technologies]
+    [technologies],
   );
   const calcOptions = useMemo(
     () => [...calculation_types].sort((a, b) => a.label.localeCompare(b.label)),
-    [calculation_types]
+    [calculation_types],
   );
   const fundingOptions = useMemo(
     () => [...funding_types].sort((a, b) => a.label.localeCompare(b.label)),
-    [funding_types]
+    [funding_types],
   );
 
   const techError =
@@ -93,7 +93,6 @@ export default function Step2Categorization() {
               setMetadata({ tech_code: v });
             }}
             onBlur={() => setTouched((p) => ({ ...p, technology: true }))}
-            aria-describedby="cs-technology-helper"
             required
             data-ecl-auto-init="Select"
           >
@@ -145,7 +144,6 @@ export default function Step2Categorization() {
               setMetadata({ calc_type_code: v });
             }}
             onBlur={() => setTouched((p) => ({ ...p, calculationType: true }))}
-            aria-describedby="cs-calculation-helper"
             required
             data-ecl-auto-init="Select"
           >

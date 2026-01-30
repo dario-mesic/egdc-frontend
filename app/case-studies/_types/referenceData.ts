@@ -21,5 +21,6 @@ export type ReferenceData = {
   benefit_units: Option[];
   organization_types: Option[];
   countries: Option[];
-  organizations?: Organization[];
+  organizations: Organization[];
+  languages: Option[];
 };

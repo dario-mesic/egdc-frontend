@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import Search from "../_components/Search";
 import Filters from "../_components/Filters";
+import MatchTypeToggle from "../_components/MatchTypeToggle";
 import CaseStudiesResults from "../_components/CaseStudiesResults";
 import LoadingIndicator from "../_components/LoadingIndicator";
 import CreatedNotification from "../_components/CreatedNotification";
@@ -8,6 +9,8 @@ import type { ReferenceData } from "../_types/referenceData";
 import type { CaseStudySearchParams } from "../_types/search";
 import type { SearchFacets } from "../_types/facets";
 import { API_BASE, fetchJson } from "../_lib/api";
+
+export const dynamic = "force-dynamic";
 
 async function getFacets(): Promise<SearchFacets> {
   return fetchJson(`${API_BASE}/api/v1/search/facets/`);
@@ -19,12 +22,15 @@ async function getReferenceData(): Promise<ReferenceData> {
 
 function suspenseKeyFrom(sp: CaseStudySearchParams) {
   const norm = (v?: string | string[]) =>
-    Array.isArray(v) ? v.join(",") : v ?? "";
+    Array.isArray(v) ? v.join(",") : (v ?? "");
 
   return [
     sp.q ?? "",
     sp.page ?? "1",
     sp.limit ?? "10",
+    sp.sort_by ?? "created_date",
+    sp.sort_order ?? "desc",
+    sp.match_type ?? "exact",
     norm(sp.sector),
     norm(sp.tech_code),
     norm(sp.funding_type_code),
@@ -68,7 +74,11 @@ export default async function CaseStudies({
           <Filters referenceData={referenceData} facets={facets} />
         </div>
       </div>
-
+      <div className="ecl-row ecl-u-mb-s">
+        <div className="ecl-col-12">
+          <MatchTypeToggle />
+        </div>
+      </div>
       <Suspense key={suspenseKeyFrom(resolved)} fallback={<ResultsFallback />}>
         <CaseStudiesResults searchParams={resolved} />
       </Suspense>

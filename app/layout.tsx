@@ -4,6 +4,7 @@ import { Montserrat, Lora } from "next/font/google";
 import Script from "next/script";
 import EclAutoInit from "./_components/EclAutoInit";
 import NextTopLoader from "nextjs-toploader";
+import EgdcLayout from "./case-studies/_components/EgdcLayout";
 
 const moontserrat = Montserrat({
   subsets: ["latin"],
@@ -47,6 +48,7 @@ export default function RootLayout({
         <link rel="stylesheet" href="/css/overrides.css" />
       </head>
       <body className="min-h-screen ecl-color-mode--accent">
+        <EgdcLayout />
         <div id="app-root">
           <NextTopLoader color="#366340" />
           {children}

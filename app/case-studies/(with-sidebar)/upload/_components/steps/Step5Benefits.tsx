@@ -13,6 +13,15 @@ type BenefitRow = {
   unit: string;
 };
 
+type FieldKey =
+  | `${string}:benefitType`
+  | `${string}:name`
+  | `${string}:value`
+  | `${string}:unit`;
+
+type Errors = Partial<Record<FieldKey, string>>;
+type Touched = Partial<Record<FieldKey, boolean>>;
+
 export default function Step5Benefits() {
   const { benefit_types, benefit_units } = useReferenceData();
   const { data, setMetadata, setStepValidity } = useWizardData();
@@ -24,7 +33,7 @@ export default function Step5Benefits() {
 
   const environmentalCode = useMemo(() => {
     const env = benefit_types.find(
-      (b) => (b.code || "").toLowerCase() === "environmental"
+      (b) => (b.code || "").toLowerCase() === "environmental",
     );
     return env?.code ?? "";
   }, [benefit_types]);
@@ -69,11 +78,11 @@ export default function Step5Benefits() {
 
   const typeOptions = useMemo(
     () => [...benefit_types].sort((a, b) => a.label.localeCompare(b.label)),
-    [benefit_types]
+    [benefit_types],
   );
   const unitOptions = useMemo(
     () => [...benefit_units].sort((a, b) => a.label.localeCompare(b.label)),
-    [benefit_units]
+    [benefit_units],
   );
 
   const isCompleteRow = (r: BenefitRow) =>
@@ -94,7 +103,7 @@ export default function Step5Benefits() {
 
     const allComplete = rows.length >= 1 && rows.every(isCompleteRow);
     const hasEnvironmental = rows.some(
-      (r) => (r.benefitType || "").toLowerCase() === "environmental"
+      (r) => (r.benefitType || "").toLowerCase() === "environmental",
     );
 
     setStepValidity(5, allComplete && hasEnvironmental);
@@ -115,6 +124,41 @@ export default function Step5Benefits() {
   const updateRow = (id: string, patch: Partial<BenefitRow>) => {
     setRows((p) => p.map((r) => (r.id === id ? { ...r, ...patch } : r)));
   };
+
+  const [touched, setTouched] = useState<Touched>({});
+
+  const touch = (k: FieldKey) => setTouched((p) => ({ ...p, [k]: true }));
+
+  const showError = (k: FieldKey, errors: Errors) =>
+    touched[k] ? errors[k] : undefined;
+
+  const errors = useMemo<Errors>(() => {
+    const e: Errors = {};
+
+    for (const r of rows) {
+      const base = r.id;
+
+      if (!r.benefitType.trim())
+        e[`${base}:benefitType`] = "Benefit type is required.";
+
+      if (!r.name.trim()) e[`${base}:name`] = "Name is required.";
+      else if (r.name.length > 80) e[`${base}:name`] = "Maximum 80 characters.";
+
+      if (!r.value.trim()) e[`${base}:value`] = "Value is required.";
+      else {
+        const n = Number(r.value);
+        if (!Number.isFinite(n)) e[`${base}:value`] = "Value must be a number.";
+        else if (!Number.isInteger(n))
+          e[`${base}:value`] = "Value must be an integer.";
+        else if (n < 0)
+          e[`${base}:value`] = "Value must be greater than or equal 0.";
+      }
+
+      if (!r.unit.trim()) e[`${base}:unit`] = "Unit is required.";
+    }
+
+    return e;
+  }, [rows]);
 
   return (
     <>
@@ -176,6 +220,7 @@ export default function Step5Benefits() {
                   onChange={(e) =>
                     updateRow(row.id, { benefitType: e.target.value })
                   }
+                  onBlur={() => touch(`${row.id}:benefitType`)}
                   required
                   data-ecl-auto-init="Select"
                 >
@@ -192,6 +237,11 @@ export default function Step5Benefits() {
                   <ClientIcon className="wt-icon-ecl--corner-arrow-down ecl-icon ecl-icon--xs " />
                 </div>
               </div>
+              {showError(`${row.id}:benefitType`, errors) ? (
+                <div className="ecl-feedback-message ecl-feedback-message--error ecl-u-mt-2xs">
+                  {showError(`${row.id}:benefitType`, errors)}
+                </div>
+              ) : null}
             </div>
 
             <div className="ecl-form-group ecl-u-mb-m">
@@ -208,15 +258,27 @@ export default function Step5Benefits() {
                   *
                 </span>
               </label>
-
+              <div
+                className="ecl-help-block"
+                id={`benefit-name-${row.id}-helper`}
+              >
+                Max. 80 characters ({row.name.length}/80)
+              </div>
               <input
                 id={`benefit-name-${row.id}`}
                 className="ecl-text-input ecl-u-width-100"
                 value={row.name}
-                maxLength={255}
+                maxLength={80}
                 onChange={(e) => updateRow(row.id, { name: e.target.value })}
+                onBlur={() => touch(`${row.id}:name`)}
                 required
+                aria-describedby={`benefit-name-${row.id}-helper`}
               />
+              {showError(`${row.id}:name`, errors) ? (
+                <div className="ecl-feedback-message ecl-feedback-message--error ecl-u-mt-2xs">
+                  {showError(`${row.id}:name`, errors)}
+                </div>
+              ) : null}
             </div>
 
             <div className="ecl-form-group ecl-u-mb-m">
@@ -242,8 +304,14 @@ export default function Step5Benefits() {
                 step={1}
                 value={row.value}
                 onChange={(e) => updateRow(row.id, { value: e.target.value })}
+                onBlur={() => touch(`${row.id}:value`)}
                 required
               />
+              {showError(`${row.id}:value`, errors) ? (
+                <div className="ecl-feedback-message ecl-feedback-message--error ecl-u-mt-2xs">
+                  {showError(`${row.id}:value`, errors)}
+                </div>
+              ) : null}
             </div>
 
             <div className="ecl-form-group">
@@ -267,6 +335,7 @@ export default function Step5Benefits() {
                   className="ecl-select"
                   value={row.unit}
                   onChange={(e) => updateRow(row.id, { unit: e.target.value })}
+                  onBlur={() => touch(`${row.id}:unit`)}
                   required
                   data-ecl-auto-init="Select"
                 >
@@ -283,6 +352,11 @@ export default function Step5Benefits() {
                   <ClientIcon className="wt-icon-ecl--corner-arrow-down ecl-icon ecl-icon--xs " />
                 </div>
               </div>
+              {showError(`${row.id}:unit`, errors) ? (
+                <div className="ecl-feedback-message ecl-feedback-message--error ecl-u-mt-2xs">
+                  {showError(`${row.id}:unit`, errors)}
+                </div>
+              ) : null}
             </div>
           </div>
         ))}

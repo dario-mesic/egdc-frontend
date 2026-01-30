@@ -13,7 +13,7 @@ function formatValue(value: number) {
 
 function benefit(cs: CaseStudyDetail, code: string) {
   const b = (cs.benefits ?? []).find(
-    (x) => x.type?.code?.toLowerCase() === code.toLowerCase()
+    (x) => x.type?.code?.toLowerCase() === code.toLowerCase(),
   );
   if (!b) return "—";
   return `${formatValue(b.value)} ${b.unit?.code ?? ""} — ${
@@ -59,18 +59,20 @@ export default async function CaseStudyPage({
         <div className="ecl-row">
           <div className="ecl-col-12 ecl-col-xl-6">
             <article className="ecl-card">
-              <picture className="ecl-picture ecl-card__picture relative h-64 ecl-u-bg-grey-25 ecl-u-d-flex ecl-u-align-items-center ecl-u-justify-content-center">
-                <Image
-                  src={
-                    cs.logo?.url ??
-                    "https://inno-ecl.s3.amazonaws.com/media/examples/example-image.jpg"
-                  }
-                  alt={cs.logo?.alt_text ?? cs.title}
-                  fill
-                  sizes="(min-width: 1200px) 50vw, 100vw"
-                  className="object-contain ecl-u-pa-l"
-                  priority
-                />
+              <picture className="ecl-picture ecl-card__picture relative h-64 ecl-u-bg-grey-25 ecl-u-d-flex ecl-u-align-items-center ecl-u-justify-content-center overflow-hidden">
+                <div className="relative h-full w-full p-6">
+                  <Image
+                    src={
+                      cs.logo?.url ??
+                      "https://inno-ecl.s3.amazonaws.com/media/examples/example-image.jpg"
+                    }
+                    alt={cs.logo?.alt_text ?? cs.title}
+                    fill
+                    sizes="(min-width: 1200px) 420px, 100vw"
+                    className="object-contain scale-[0.8]"
+                    priority
+                  />
+                </div>
               </picture>
 
               <div className="ecl-card__body">
@@ -114,14 +116,14 @@ export default async function CaseStudyPage({
                     {cs.long_description ?? cs.short_description}
                   </div>
 
-                  <div className="ecl-u-bg-grey-50 ecl-u-pa-m ecl-u-mt-m ecl-u-d-flex ecl-u-flex-column gap-3">
+                  <div className="ecl-u-bg-grey-75 ecl-u-pa-m ecl-u-mt-m ecl-u-d-flex ecl-u-flex-column gap-3">
                     <div className="ecl-file" data-ecl-file>
                       <div className="ecl-file__container">
                         <ClientIcon className="wt-icon-ecl--file ecl-icon ecl-icon--2xl ecl-file__icon" />
                         <div className="ecl-file__info">
                           <div className="ecl-file__title">
                             {cs.methodology?.url
-                              ? cs.methodology.name ?? "Methodology report"
+                              ? (cs.methodology.name ?? "Methodology report")
                               : "Methodology report (not available)"}
                           </div>
                         </div>
@@ -133,10 +135,10 @@ export default async function CaseStudyPage({
                             className="ecl-file__language"
                             id="ecl-file-1200506283-lang"
                           >
-                            English
+                            {cs.methodology?.language.label}
                           </div>
-                          <div className="ecl-file__meta">(16.2 MB - PDF)</div>
-                          <div className="ecl-file__action">
+                          <div className="ecl-file__meta"></div>
+                          <div className="ecl-file__action mt-0!">
                             <Link
                               href={cs.methodology.url}
                               target="_blank"
@@ -160,7 +162,7 @@ export default async function CaseStudyPage({
                           <div className="ecl-file__info">
                             <div className="ecl-file__title">
                               {cs.dataset.url
-                                ? cs.dataset.name ?? "Dataset"
+                                ? (cs.dataset.name ?? "Dataset")
                                 : "Dataset (not available)"}
                             </div>
                           </div>
@@ -171,10 +173,10 @@ export default async function CaseStudyPage({
                             className="ecl-file__language"
                             id="ecl-file-1200506233-lang"
                           >
-                            English
+                            {cs.dataset?.language.label}
                           </div>
-                          <div className="ecl-file__meta">(16.2 MB - PDF)</div>
-                          <div className="ecl-file__action">
+                          <div className="ecl-file__meta"></div>
+                          <div className="ecl-file__action mt-0!">
                             <Link
                               href={cs.dataset.url}
                               target="_blank"
@@ -195,7 +197,7 @@ export default async function CaseStudyPage({
             </article>
           </div>
 
-          <div className="ecl-col-12 ecl-col-xl-6 ecl-u-mt-l ecl-u-mt-xl-none">
+          <div className="ecl-col-12 ecl-col-xl-6 ecl-u-mt-l ecl-u-mt-xl-none ecl-u-d-xl-flex ecl-u-flex-column">
             <section className="ecl-u-mb-l">
               <div className="ecl-u-bg-black ecl-u-pa-s">
                 <div className="ecl-u-type-heading-5 ecl-u-type-color-white">
@@ -223,7 +225,7 @@ export default async function CaseStudyPage({
               </div>
             </section>
 
-            <section className="ecl-u-bg-grey-50 ecl-u-pa-m">
+            <section className="ecl-u-bg-primary-300 ecl-u-pa-m">
               <div className="ecl-row">
                 <div className="ecl-col-12 ecl-col-m-6">
                   <div className="ecl-u-bg-primary ecl-u-pa-s">

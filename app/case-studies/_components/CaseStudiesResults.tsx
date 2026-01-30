@@ -1,5 +1,8 @@
 import CaseStudiesList from "../_components/CaseStudiesList";
 import Pagination from "../_components/Pagination";
+import PageSizeSelect from "../_components/PageSizeSelect";
+import SortPopover from "./SortPopover";
+
 import type {
   CaseStudySearchParams,
   PaginatedCaseStudies,
@@ -9,16 +12,16 @@ import { API_BASE, fetchJson } from "../_lib/api";
 const appendAll = (
   params: URLSearchParams,
   key: string,
-  values?: string | string[]
+  values?: string | string[],
 ) => {
   if (!values) return;
   (Array.isArray(values) ? values : [values]).forEach((v) =>
-    params.append(key, v)
+    params.append(key, v),
   );
 };
 
 async function searchCaseStudies(
-  sp: CaseStudySearchParams
+  sp: CaseStudySearchParams,
 ): Promise<PaginatedCaseStudies> {
   const params = new URLSearchParams();
 
@@ -36,6 +39,11 @@ async function searchCaseStudies(
   params.set("page", sp.page ?? "1");
   params.set("limit", sp.limit ?? "10");
 
+  params.set("sort_by", sp.sort_by ?? "created_date");
+  params.set("sort_order", sp.sort_order ?? "desc");
+
+  params.set("match_type", sp.match_type ?? "exact");
+
   return fetchJson(`${API_BASE}/api/v1/search/?${params.toString()}`);
 }
 
@@ -52,9 +60,12 @@ export default async function CaseStudiesResults({
       <>
         <div className="ecl-row ecl-u-mb-s">
           <div className="ecl-col-12">
-            <span className="ecl-u-type-paragraph ecl-u-type-italic">
-              Case studies found (0)
-            </span>
+            <div className="ecl-u-d-flex ecl-u-align-items-center ecl-u-justify-content-between gap-4">
+              <span className="ecl-u-type-paragraph ecl-u-type-italic">
+                Case studies found (0)
+              </span>
+              <SortPopover />
+            </div>
           </div>
         </div>
 
@@ -78,12 +89,14 @@ export default async function CaseStudiesResults({
     <>
       <div className="ecl-row ecl-u-mb-s">
         <div className="ecl-col-12">
-          <span className="ecl-u-type-paragraph ecl-u-type-italic">
-            Case studies found ({result.total})
-          </span>
+          <div className="ecl-u-d-flex ecl-u-align-items-center ecl-u-justify-content-between gap-4">
+            <span className="ecl-u-type-paragraph ecl-u-type-italic">
+              Case studies found ({result.total})
+            </span>
+            <SortPopover />
+          </div>
         </div>
       </div>
-
       <div className="ecl-row">
         <div className="ecl-col-12">
           <div className="ecl-u-d-flex ecl-u-flex-column max-h-[calc(100vh-200px)] min-h-90">
@@ -91,18 +104,27 @@ export default async function CaseStudiesResults({
               <CaseStudiesList caseStudies={result.items} />
             </div>
 
-            {totalPages > 1 && (
-              <div className="mt-auto ecl-u-bg-white ecl-u-pt-2xl">
-                <div className="ecl-u-d-flex ecl-u-justify-content-center">
-                  <Pagination
-                    total={result.total}
-                    page={result.page}
-                    limit={result.limit}
-                    searchParams={searchParams}
-                  />
+            <div className="mt-auto ecl-u-bg-white ecl-u-pt-2xl">
+              <div className="ecl-u-d-flex gap-4 flex-col min-[1140px]:flex-row min-[1140px]:items-end min-[1140px]:justify-between">
+                <div
+                  className="order-2 min-[1140px]:order-1 ecl-u-d-flex ecl-u-justify-content-center min-[1140px]:ecl-u-justify-content-start! mt-4
+  min-[1140px]:mt-0"
+                >
+                  <PageSizeSelect />
                 </div>
+
+                {totalPages > 1 && (
+                  <div className="order-1 min-[1140px]:order-2 ecl-u-d-flex ecl-u-justify-content-center min-[1140px]:flex-1">
+                    <Pagination
+                      total={result.total}
+                      page={result.page}
+                      limit={result.limit}
+                      searchParams={searchParams}
+                    />
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>

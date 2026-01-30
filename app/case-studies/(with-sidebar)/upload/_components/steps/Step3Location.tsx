@@ -77,6 +77,7 @@ export default function Step3Location() {
           id="cs-country"
           className="ecl-text-input ecl-u-width-100"
           value={form.country}
+          required
           onChange={(e) => {
             const v = e.target.value;
             set("country", v);

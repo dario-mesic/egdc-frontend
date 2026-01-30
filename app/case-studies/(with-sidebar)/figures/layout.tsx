@@ -5,7 +5,7 @@ export default function FiguresLayout({
 }) {
   return (
     <section className="ecl-u-pv-l">
-      <div className="ecl-container">{children}</div>
+      <div>{children}</div>
     </section>
   );
 }
