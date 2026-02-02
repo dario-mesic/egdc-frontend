@@ -4,7 +4,8 @@ import { metadataSchema } from "@/app/case-studies/(with-sidebar)/upload/_lib/sc
 
 export const runtime = "nodejs";
 
-const API_BASE_URL = process.env.API_BASE_URL ?? "http://localhost:8000";
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 const TARGET = `${API_BASE_URL}/api/v1/case-studies/`;
 
 export async function POST(req: Request) {
@@ -14,7 +15,7 @@ export async function POST(req: Request) {
   if (typeof metadataRaw !== "string") {
     return NextResponse.json(
       { error: "metadata is required" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -24,7 +25,7 @@ export async function POST(req: Request) {
   } catch {
     return NextResponse.json(
       { error: "metadata must be valid JSON" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -32,7 +33,7 @@ export async function POST(req: Request) {
   if (!metaParsed.success) {
     return NextResponse.json(
       { error: "Invalid metadata", details: metaParsed.error.format() },
-      { status: 422 }
+      { status: 422 },
     );
   }
 
@@ -43,19 +44,19 @@ export async function POST(req: Request) {
   if (!(file_methodology instanceof File)) {
     return NextResponse.json(
       { error: "file_methodology is required" },
-      { status: 400 }
+      { status: 400 },
     );
   }
   if (!(file_dataset instanceof File)) {
     return NextResponse.json(
       { error: "file_dataset is required" },
-      { status: 400 }
+      { status: 400 },
     );
   }
   if (!(file_logo instanceof File)) {
     return NextResponse.json(
       { error: "file_logo is required" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 

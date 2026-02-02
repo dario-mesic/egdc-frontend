@@ -9,6 +9,10 @@ import React, {
 } from "react";
 import type { CaseStudyMetadata } from "../_lib/schemas/caseStudy";
 
+type WizardDataProviderProps = Readonly<{
+  children: React.ReactNode;
+}>;
+
 type WizardFiles = {
   file_methodology?: File;
   file_dataset?: File;
@@ -26,7 +30,6 @@ type Ctx = {
   data: WizardData;
   setMetadata: (patch: Partial<CaseStudyMetadata>) => void;
   setFiles: (patch: WizardFiles) => void;
-
   stepValidity: StepValidity;
   setStepValidity: (stepId: number, valid: boolean) => void;
 };
@@ -42,18 +45,14 @@ function shallowEqualObj(a: Record<string, any>, b: Record<string, any>) {
   return true;
 }
 
-export function WizardDataProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export function WizardDataProvider({ children }: WizardDataProviderProps) {
   const [data, setData] = useState<WizardData>({ metadata: {}, files: {} });
-  const [stepValidity, setStepValidityState] = useState<StepValidity>({});
+  const [stepValidity, setStepValidity] = useState<StepValidity>({});
 
   const setMetadata = useCallback((patch: Partial<CaseStudyMetadata>) => {
     setData((p) => {
       const nextMeta = { ...p.metadata, ...patch };
-      if (shallowEqualObj(p.metadata as any, nextMeta as any)) return p;
+      if (shallowEqualObj(p.metadata, nextMeta)) return p;
       return { ...p, metadata: nextMeta };
     });
   }, []);
@@ -61,13 +60,13 @@ export function WizardDataProvider({
   const setFiles = useCallback((patch: WizardFiles) => {
     setData((p) => {
       const nextFiles = { ...p.files, ...patch };
-      if (shallowEqualObj(p.files as any, nextFiles as any)) return p;
+      if (shallowEqualObj(p.files, nextFiles)) return p;
       return { ...p, files: nextFiles };
     });
   }, []);
 
-  const setStepValidity = useCallback((stepId: number, valid: boolean) => {
-    setStepValidityState((prev) => {
+  const updateStepValidity = useCallback((stepId: number, valid: boolean) => {
+    setStepValidity((prev) => {
       if (prev[stepId] === valid) return prev;
       return { ...prev, [stepId]: valid };
     });
@@ -79,7 +78,7 @@ export function WizardDataProvider({
       setMetadata,
       setFiles,
       stepValidity,
-      setStepValidity,
+      setStepValidity: updateStepValidity,
     }),
     [
       data,
@@ -87,8 +86,8 @@ export function WizardDataProvider({
       stepValidity,
       setMetadata,
       setFiles,
-      setStepValidity,
-    ]
+      updateStepValidity,
+    ],
   );
 
   return (

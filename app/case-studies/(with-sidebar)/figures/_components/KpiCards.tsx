@@ -1,9 +1,9 @@
 import type { StatsResponse } from "../page";
 
-type Props = {
+type KpiCardsProps = Readonly<{
   kpis: StatsResponse["kpi_data"];
   limit?: number;
-};
+}>;
 
 function formatValue(value: number, unitCode: string) {
   const formatted = Number(value).toLocaleString(undefined);
@@ -21,12 +21,12 @@ function formatValue(value: number, unitCode: string) {
 
 function labelFromType(typeCode: string) {
   return typeCode
-    .replace(/_/g, " ")
+    .replaceAll(/_/g, " ")
     .toLowerCase()
     .replace(/^\w/, (c) => c.toUpperCase());
 }
 
-export default function KpiCards({ kpis, limit = 3 }: Props) {
+export default function KpiCards({ kpis, limit = 3 }: KpiCardsProps) {
   const top = (kpis ?? [])
     .slice()
     .sort((a, b) => (b.total_value ?? 0) - (a.total_value ?? 0))

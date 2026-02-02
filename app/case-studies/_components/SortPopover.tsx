@@ -36,7 +36,7 @@ export default function SortPopover() {
   const sp = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const popoverId = useId();
-  const groupName = useId(); // unique radio group name
+  const groupName = useId();
 
   const sortBy = (sp.get("sort_by") ?? "created_date") as
     | "created_date"
@@ -46,9 +46,7 @@ export default function SortPopover() {
   const selectedKey = `${sortBy}-${sortOrder}`;
 
   useEffect(() => {
-    if (typeof window !== "undefined" && (window as any).ECL?.autoInit) {
-      (window as any).ECL.autoInit();
-    }
+    globalThis.ECL?.autoInit?.();
   }, []);
 
   const apply = (next: { sort_by: string; sort_order: string }) => {
@@ -96,12 +94,8 @@ export default function SortPopover() {
           </button>
 
           <div className="ecl-popover__content">
-            <fieldset
-              className="ecl-form-group"
-              role="radiogroup"
-              aria-label="Sort options"
-            >
-              <legend className="sr-only">Sort options</legend>
+            <fieldset className="ecl-form-group" aria-busy={isPending}>
+              <legend className="ecl-u-sr-only">Sort options</legend>
 
               {OPTIONS.map((o) => {
                 const value = `${o.sort_by}-${o.sort_order}`;

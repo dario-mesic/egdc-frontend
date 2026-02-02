@@ -1,18 +1,20 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import ClientIcon from "@/app/case-studies/_components/icons/ClientIcon";
 
-type ModalProps = {
+type ModalProps = Readonly<{
   id: string;
   title: string;
   triggerLabel: string;
   triggerClassName?: string;
   size?: "s" | "m" | "l";
+  modalClassName?: string;
   children: React.ReactNode;
   footer?: React.ReactNode;
+  isBlocking?: boolean;
   onOpen?: () => void;
-};
+}>;
 
 export default function Modal({
   id,
@@ -20,19 +22,45 @@ export default function Modal({
   triggerLabel,
   triggerClassName = "ecl-button ecl-button--primary",
   size = "l",
+  modalClassName,
   children,
   footer,
+  isBlocking = false,
   onOpen,
 }: ModalProps) {
   const toggleId = `${id}-toggle`;
   const dialogId = `${id}-modal`;
   const headerId = `${dialogId}-header`;
 
+  const dialogRef = useRef<HTMLDialogElement | null>(null);
+
   useEffect(() => {
-    if (typeof window !== "undefined" && (window as any).ECL?.autoInit) {
-      (window as any).ECL.autoInit();
-    }
+    globalThis.ECL?.autoInit?.();
   }, []);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+
+    const onCancel = (e: Event) => {
+      if (!isBlocking) return;
+      e.preventDefault(); // blocks ESC close
+    };
+
+    const onClose = () => {
+      if (!isBlocking) return;
+
+      if (!dialog.open) dialog.showModal();
+    };
+
+    dialog.addEventListener("cancel", onCancel);
+    dialog.addEventListener("close", onClose);
+
+    return () => {
+      dialog.removeEventListener("cancel", onCancel);
+      dialog.removeEventListener("close", onClose);
+    };
+  }, [isBlocking]);
 
   return (
     <>
@@ -54,9 +82,12 @@ export default function Modal({
         aria-modal="true"
         className={`ecl-modal ecl-modal--${size}`}
         aria-labelledby={headerId}
+        ref={dialogRef}
       >
         <div className="ecl-modal__container">
-          <div className="ecl-modal__content ecl-container">
+          <div
+            className={`ecl-modal__content ecl-container ${modalClassName ?? ""}`}
+          >
             <header className="ecl-modal__header">
               <div className="ecl-modal__header-content" id={headerId}>
                 {title}

@@ -4,6 +4,13 @@ import Link from "next/link";
 import type { CaseStudySearchParams } from "../_types/search";
 import ClientIcon from "../_components/icons/ClientIcon";
 
+type PaginationProps = Readonly<{
+  total: number;
+  page: number;
+  limit: number;
+  searchParams: CaseStudySearchParams;
+}>;
+
 function makeHref(searchParams: CaseStudySearchParams, page: number) {
   const params = new URLSearchParams();
 
@@ -37,17 +44,20 @@ function getPages(current: number, totalPages: number) {
   return out;
 }
 
+function pageKey(p: number | "…", idx: number, arr: Array<number | "…">) {
+  if (p !== "…") return String(p);
+
+  const prev = arr[idx - 1];
+  const next = arr[idx + 1];
+  return `gap-${prev}-${next}`;
+}
+
 export default function Pagination({
   total,
   page,
   limit,
   searchParams,
-}: {
-  total: number;
-  page: number;
-  limit: number;
-  searchParams: CaseStudySearchParams;
-}) {
+}: PaginationProps) {
   const totalPages = Math.max(1, Math.ceil(total / limit));
   const current = Math.min(Math.max(1, page), totalPages);
 
@@ -73,7 +83,7 @@ export default function Pagination({
           if (p === "…") {
             return (
               <li
-                key={`t-${idx}`}
+                key={pageKey(p, idx, pages)}
                 className="ecl-pagination__item ecl-pagination__item--truncation"
               >
                 <span className="ecl-pagination__text ecl-pagination__text--summary">

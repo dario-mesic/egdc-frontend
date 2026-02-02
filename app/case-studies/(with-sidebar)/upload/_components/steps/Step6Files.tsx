@@ -6,6 +6,16 @@ import { useReferenceData } from "../../_context/ReferenceDataContext";
 import ClientIcon from "@/app/case-studies/_components/icons/ClientIcon";
 import { useDropzone, type Accept } from "react-dropzone";
 
+type SingleFileDropzoneProps = Readonly<{
+  label: string;
+  accept: Accept;
+  disabled?: boolean;
+  file?: File;
+  onDropFile: (f: File) => void;
+  onClear: () => void;
+  className?: string;
+}>;
+
 type LocalTouched = {
   methodology?: boolean;
   dataset?: boolean;
@@ -64,6 +74,17 @@ function isDataset(f: File) {
   );
 }
 
+function isImage(file: File) {
+  const name = (file.name || "").toLowerCase();
+  return (
+    file.type === "image/png" ||
+    file.type === "image/jpeg" ||
+    name.endsWith(".png") ||
+    name.endsWith(".jpg") ||
+    name.endsWith(".jpeg")
+  );
+}
+
 function SingleFileDropzone({
   label,
   accept,
@@ -72,15 +93,7 @@ function SingleFileDropzone({
   onDropFile,
   onClear,
   className,
-}: {
-  label: string;
-  accept: Accept;
-  disabled?: boolean;
-  file?: File;
-  onDropFile: (f: File) => void;
-  onClear: () => void;
-  className?: string;
-}) {
+}: SingleFileDropzoneProps) {
   const { getRootProps, getInputProps, isDragAccept, isDragReject } =
     useDropzone({
       multiple: false,
@@ -92,11 +105,9 @@ function SingleFileDropzone({
       },
     });
 
-  const borderClass = isDragAccept
-    ? "ecl-u-border-color-success"
-    : isDragReject
-      ? "ecl-u-border-color-error"
-      : "ecl-u-border-color-grey-300";
+  let borderClass = "ecl-u-border-color-grey-300";
+  if (isDragAccept) borderClass = "ecl-u-border-color-success";
+  else if (isDragReject) borderClass = "ecl-u-border-color-error";
 
   return (
     <div className={className}>
@@ -168,43 +179,44 @@ export default function Step6Files() {
     if (ref.current) ref.current.value = "";
   };
 
+  const clearPickedFile = (
+    key: "methodology" | "dataset" | "logo",
+    ref: React.RefObject<HTMLInputElement | null>,
+  ) => {
+    if (key === "methodology") setFiles({ file_methodology: undefined });
+    if (key === "dataset") setFiles({ file_dataset: undefined });
+    if (key === "logo") setFiles({ file_logo: undefined });
+
+    clearNative(ref);
+    bumpResetKey(key);
+  };
+
+  const setFileError = (key: keyof LocalErrors, message: string) => {
+    setErrors((p) => ({ ...p, [key]: message }));
+  };
+
   useEffect(() => {
-    if (typeof window !== "undefined" && (window as any).ECL?.autoInit) {
-      (window as any).ECL.autoInit();
-    }
+    globalThis.ECL?.autoInit?.();
   }, [resetKeys.methodology, resetKeys.dataset, resetKeys.logo]);
 
   const stepValid = hasLogo && hasMethodology && hasDatasetFile;
-
-  function isImage(file: File) {
-    const name = (file.name || "").toLowerCase();
-    return (
-      file.type === "image/png" ||
-      file.type === "image/jpeg" ||
-      name.endsWith(".png") ||
-      name.endsWith(".jpg") ||
-      name.endsWith(".jpeg")
-    );
-  }
 
   useEffect(() => {
     setStepValidity(6, stepValid);
   }, [setStepValidity, stepValid]);
 
-  const onPickMethodology = (file?: File, source?: "input" | "drop") => {
-    setErrors((p) => ({ ...p, methodology: "" }));
+  const onPickMethodology = (file?: File) => {
+    setFileError("methodology", "");
 
     if (!file) {
-      setFiles({ file_methodology: undefined });
-      clearNative(methodologyRef);
-      bumpResetKey("methodology");
+      clearPickedFile("methodology", methodologyRef);
       return;
     }
 
     if (!isPdf(file)) {
       clearNative(methodologyRef);
       setFiles({ file_methodology: undefined });
-      setErrors((p) => ({ ...p, methodology: "Only PDF files are allowed." }));
+      setFileError("methodology", "Only PDF files are allowed.");
       return;
     }
 
@@ -214,23 +226,18 @@ export default function Step6Files() {
     }
   };
 
-  const onPickDataset = (file?: File, source?: "input" | "drop") => {
-    setErrors((p) => ({ ...p, dataset: "" }));
+  const onPickDataset = (file?: File) => {
+    setFileError("dataset", "");
 
     if (!file) {
-      setFiles({ file_dataset: undefined });
-      clearNative(datasetRef);
-      bumpResetKey("dataset");
+      clearPickedFile("dataset", datasetRef);
       return;
     }
 
     if (!isDataset(file)) {
       clearNative(datasetRef);
       setFiles({ file_dataset: undefined });
-      setErrors((p) => ({
-        ...p,
-        dataset: "Only CSV, XLS or XLSX files are allowed.",
-      }));
+      setFileError("dataset", "Only CSV, XLS or XLSX files are allowed.");
       return;
     }
 
@@ -240,20 +247,18 @@ export default function Step6Files() {
     }
   };
 
-  const onPickLogo = (file?: File, source?: "input" | "drop") => {
-    setErrors((p) => ({ ...p, logo: "" }));
+  const onPickLogo = (file?: File) => {
+    setFileError("logo", "");
 
     if (!file) {
-      setFiles({ file_logo: undefined });
-      clearNative(logoRef);
-      bumpResetKey("logo");
+      clearPickedFile("logo", logoRef);
       return;
     }
 
     if (!isImage(file)) {
       clearNative(logoRef);
       setFiles({ file_logo: undefined });
-      setErrors((p) => ({ ...p, logo: "Only PNG or JPG images are allowed." }));
+      setFileError("logo", "Only PNG or JPG images are allowed.");
       return;
     }
 
@@ -281,18 +286,20 @@ export default function Step6Files() {
   };
 
   const methodologyError = touched.methodology
-    ? errors.methodology ||
-      (!hasMethodology ? "Methodology report (PDF) is required." : "")
-    : "";
+    ? (errors.methodology ??
+      (hasMethodology ? undefined : "Methodology report (PDF) is required."))
+    : undefined;
 
   const datasetError = touched.dataset
-    ? errors.dataset ||
-      (!hasDatasetFile ? "Calculator/Dataset (CSV/XLS/XLSX) is required." : "")
-    : "";
+    ? (errors.dataset ??
+      (hasDatasetFile
+        ? undefined
+        : "Calculator/Dataset (CSV/XLS/XLSX) is required."))
+    : undefined;
 
   const logoError = touched.logo
-    ? errors.logo || (!hasLogo ? "Logo is required." : "")
-    : "";
+    ? (errors.logo ?? (hasLogo ? undefined : "Logo is required."))
+    : undefined;
 
   return (
     <>
@@ -307,12 +314,12 @@ export default function Step6Files() {
           onDropFile={(f) => {
             setTouched((p) => ({ ...p, methodology: true }));
             syncFileToNativeInput(methodologyRef, f);
-            onPickMethodology(f, "drop");
+            onPickMethodology(f);
           }}
           onClear={() => {
             setTouched((p) => ({ ...p, methodology: true }));
-            syncFileToNativeInput(methodologyRef, undefined);
-            onPickMethodology(undefined, "drop");
+            syncFileToNativeInput(methodologyRef);
+            onPickMethodology();
           }}
         />
 
@@ -328,7 +335,7 @@ export default function Step6Files() {
               id={IDS.methodology.label}
               className="ecl-form-label"
             >
-              Methodology Report (PDF)
+              Methodology Report (PDF){" "}
               <span
                 className="ecl-form-label__required"
                 role="note"
@@ -359,7 +366,7 @@ export default function Step6Files() {
               ].join(" ")}
               onChange={(e) => {
                 setTouched((p) => ({ ...p, methodology: true }));
-                onPickMethodology(e.currentTarget.files?.[0], "input");
+                onPickMethodology(e.currentTarget.files?.[0]);
               }}
             />
 
@@ -401,7 +408,7 @@ export default function Step6Files() {
             htmlFor={IDS.methodologyLanguage.input}
             className="ecl-form-label"
           >
-            Methodology language
+            Methodology language{" "}
             <span
               className="ecl-form-label__required"
               role="note"
@@ -454,12 +461,12 @@ export default function Step6Files() {
           onDropFile={(f) => {
             setTouched((p) => ({ ...p, dataset: true }));
             syncFileToNativeInput(datasetRef, f);
-            onPickDataset(f, "drop");
+            onPickDataset(f);
           }}
           onClear={() => {
             setTouched((p) => ({ ...p, dataset: true }));
-            syncFileToNativeInput(datasetRef, undefined);
-            onPickDataset(undefined, "drop");
+            syncFileToNativeInput(datasetRef);
+            onPickDataset();
           }}
         />
 
@@ -475,7 +482,7 @@ export default function Step6Files() {
               id={IDS.dataset.label}
               className="ecl-form-label"
             >
-              Calculator/Dataset (CSV/XLS/XLSX)
+              Calculator/Dataset (CSV/XLS/XLSX){" "}
               <span
                 className="ecl-form-label__required"
                 role="note"
@@ -511,7 +518,7 @@ export default function Step6Files() {
               ].join(" ")}
               onChange={(e) => {
                 setTouched((p) => ({ ...p, dataset: true }));
-                onPickDataset(e.currentTarget.files?.[0], "input");
+                onPickDataset(e.currentTarget.files?.[0]);
               }}
             />
 
@@ -550,7 +557,7 @@ export default function Step6Files() {
       {hasDatasetFile && (
         <div className="ecl-form-group ecl-u-mb-l">
           <label htmlFor={IDS.datasetLanguage.input} className="ecl-form-label">
-            Dataset language
+            Dataset language{" "}
             <span
               className="ecl-form-label__required"
               role="note"
@@ -595,12 +602,12 @@ export default function Step6Files() {
           onDropFile={(f) => {
             setTouched((p) => ({ ...p, logo: true }));
             syncFileToNativeInput(logoRef, f);
-            onPickLogo(f, "drop");
+            onPickLogo(f);
           }}
           onClear={() => {
             setTouched((p) => ({ ...p, logo: true }));
-            syncFileToNativeInput(logoRef, undefined);
-            onPickLogo(undefined, "drop");
+            syncFileToNativeInput(logoRef);
+            onPickLogo();
           }}
         />
 
@@ -616,7 +623,7 @@ export default function Step6Files() {
               id={IDS.logo.label}
               className="ecl-form-label"
             >
-              Case Study Logo
+              Case Study Logo{" "}
               <span
                 className="ecl-form-label__required"
                 role="note"
@@ -647,7 +654,7 @@ export default function Step6Files() {
               ].join(" ")}
               onChange={(e) => {
                 setTouched((p) => ({ ...p, logo: true }));
-                onPickLogo(e.currentTarget.files?.[0], "input");
+                onPickLogo(e.currentTarget.files?.[0]);
               }}
             />
 

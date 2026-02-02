@@ -16,7 +16,13 @@ const FILTER_KEYS = [
   "benefit_types",
 ] as const;
 
+type FiltersProps = Readonly<{
+  referenceData: ReferenceData;
+  facets: SearchFacets;
+}>;
+
 type FilterKey = (typeof FILTER_KEYS)[number];
+
 function initCollapsibleGroups(dropdownEl: HTMLElement) {
   const groups = Array.from(
     dropdownEl.querySelectorAll<HTMLFieldSetElement>(
@@ -45,9 +51,7 @@ function initCollapsibleGroups(dropdownEl: HTMLElement) {
     dropdownEl.dataset.collapsibleDelegation = "1";
 
     const toggle = (legend: HTMLLegendElement) => {
-      const fs = legend.closest(
-        "fieldset.ecl-select__multiple-group",
-      ) as HTMLFieldSetElement | null;
+      const fs = legend.closest("fieldset.ecl-select__multiple-group");
       if (!fs) return;
 
       const nowCollapsed = fs.classList.toggle("is-collapsed");
@@ -55,9 +59,10 @@ function initCollapsibleGroups(dropdownEl: HTMLElement) {
     };
 
     dropdownEl.addEventListener("click", (e) => {
-      const legend = (e.target as HTMLElement).closest(
+      const target = e.target instanceof Element ? e.target : null;
+      const legend = target?.closest<HTMLLegendElement>(
         "legend.ecl-select__multiple-group__title",
-      ) as HTMLLegendElement | null;
+      );
 
       if (!legend) return;
       if (legend.dataset.collapsibleLegend !== "1") return;
@@ -67,17 +72,18 @@ function initCollapsibleGroups(dropdownEl: HTMLElement) {
     });
 
     dropdownEl.addEventListener("keydown", (e) => {
-      const ke = e as KeyboardEvent;
-      if (ke.key !== "Enter" && ke.key !== " ") return;
+      if (!(e instanceof KeyboardEvent)) return;
+      if (e.key !== "Enter" && e.key !== " ") return;
 
-      const legend = (e.target as HTMLElement).closest(
+      const target = e.target instanceof Element ? e.target : null;
+      const legend = target?.closest<HTMLLegendElement>(
         "legend.ecl-select__multiple-group__title",
-      ) as HTMLLegendElement | null;
+      );
 
       if (!legend) return;
       if (legend.dataset.collapsibleLegend !== "1") return;
 
-      ke.preventDefault();
+      e.preventDefault();
       toggle(legend);
     });
   }
@@ -93,13 +99,7 @@ function initCollapsibleGroups(dropdownEl: HTMLElement) {
   }
 }
 
-export default function Filters({
-  referenceData,
-  facets,
-}: {
-  referenceData: ReferenceData;
-  facets: SearchFacets;
-}) {
+export default function Filters({ referenceData, facets }: FiltersProps) {
   const router = useRouter();
   const sp = useSearchParams();
   const selectRef = useRef<HTMLSelectElement | null>(null);
@@ -221,8 +221,8 @@ export default function Filters({
 
     run();
 
-    window.addEventListener("ecl:autoinit", run);
-    return () => window.removeEventListener("ecl:autoinit", run);
+    globalThis.addEventListener("ecl:autoinit", run);
+    return () => globalThis.removeEventListener("ecl:autoinit", run);
   }, []);
   return (
     <div className="ecl-form-group ecl-u-mt-m ecl-u-mt-xl-none">

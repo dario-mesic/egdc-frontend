@@ -1,9 +1,11 @@
 export {};
 
 declare global {
-  interface Window {
-    ECL?: { autoInit?: (root?: Element | Document) => void };
-  }
+  var ECL:
+    | {
+        autoInit?: (root?: Element | Document) => void;
+      }
+    | undefined;
 
   namespace JSX {
     interface IntrinsicElements {

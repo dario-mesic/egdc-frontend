@@ -12,6 +12,10 @@ import { API_BASE, fetchJson } from "../_lib/api";
 
 export const dynamic = "force-dynamic";
 
+type CaseStudiesProps = Readonly<{
+  searchParams: Promise<CaseStudySearchParams>;
+}>;
+
 async function getFacets(): Promise<SearchFacets> {
   return fetchJson(`${API_BASE}/api/v1/search/facets/`);
 }
@@ -52,11 +56,7 @@ function ResultsFallback() {
   );
 }
 
-export default async function CaseStudies({
-  searchParams,
-}: {
-  searchParams: Promise<CaseStudySearchParams>;
-}) {
+export default async function CaseStudies({ searchParams }: CaseStudiesProps) {
   const resolved = await searchParams;
   const [referenceData, facets] = await Promise.all([
     getReferenceData(),

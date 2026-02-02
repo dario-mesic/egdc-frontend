@@ -66,8 +66,9 @@ export default function RootLayout({
           strategy="afterInteractive"
         />
         <Script
+          type="text/javascript"
+          defer
           src="https://webtools.europa.eu/load.js"
-          strategy="afterInteractive"
         />
         <EclAutoInit rootId="app-root" />
       </body>

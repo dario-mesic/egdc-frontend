@@ -2,10 +2,12 @@
 
 import ErrorState from "../_components/ErrorState";
 
-export default function Error(props: {
+type CaseStudyErrorProps = Readonly<{
   error: Error & { digest?: string };
   reset: () => void;
-}) {
+}>;
+
+export default function CaseStudyError(props: CaseStudyErrorProps) {
   return (
     <ErrorState
       {...props}

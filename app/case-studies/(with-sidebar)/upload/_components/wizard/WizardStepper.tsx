@@ -6,13 +6,12 @@ export type WizardStep = {
   state: WizardStepState;
 };
 
-type Props = {
+type WizardStepperProps = Readonly<{
   steps: WizardStep[];
   onStepClick?: (stepId: number) => void;
-  maxReachableStep?: number;
   maxUnlockedStep?: number;
   className?: string;
-};
+}>;
 
 function circleClasses(state: WizardStepState) {
   if (state === "done") {
@@ -46,16 +45,29 @@ function getCurrentIndex(steps: WizardStep[]) {
   return 0;
 }
 
+function getVisualState(
+  step: WizardStep,
+  maxUnlockedStep?: number,
+): WizardStepState {
+  const unlocked = (maxUnlockedStep ?? 1) >= step.id;
+  if (step.state === "upcoming" && unlocked) return "done";
+  return step.state;
+}
+
+function statusText(state: WizardStepState) {
+  if (state === "done") return "Completed";
+  if (state === "current") return "In progress";
+  return "Upcoming";
+}
+
 export default function WizardStepper({
   steps,
   onStepClick,
   maxUnlockedStep,
   className,
-}: Props) {
+}: WizardStepperProps) {
   const clickable = typeof onStepClick === "function";
   const currentIndex = getCurrentIndex(steps);
-
-  const max = Math.max(steps.length - 1, 1);
 
   return (
     <nav
@@ -107,9 +119,7 @@ export default function WizardStepper({
               const Comp: any = clickable ? "button" : "div";
               const isCurrent = step.state === "current";
 
-              const isUnlocked = (maxUnlockedStep ?? 1) >= step.id;
-              const visualState: WizardStepState =
-                step.state === "upcoming" && isUnlocked ? "done" : step.state;
+              const visualState = getVisualState(step, maxUnlockedStep);
 
               return (
                 <li
@@ -156,10 +166,10 @@ export default function WizardStepper({
           const Comp: any = clickable ? "button" : "div";
           const isLast = i === steps.length - 1;
           const isCurrent = step.state === "current";
-          const isUnlocked = (maxUnlockedStep ?? 1) >= step.id;
-          const visualState: WizardStepState =
-            step.state === "upcoming" && isUnlocked ? "done" : step.state;
+
+          const visualState = getVisualState(step, maxUnlockedStep);
           const connectorFilled = visualState === "done";
+          const label = statusText(visualState);
 
           return (
             <li key={step.id} className="relative">
@@ -208,13 +218,7 @@ export default function WizardStepper({
                   aria-current={isCurrent ? "step" : undefined}
                 >
                   <div className="font-medium leading-snug">{step.title}</div>
-                  <div className="text-sm opacity-70">
-                    {step.state === "done"
-                      ? "Completed"
-                      : step.state === "current"
-                      ? "In progress"
-                      : "Upcoming"}
-                  </div>
+                  <div className="text-sm opacity-70">{label}</div>
                 </Comp>
               </div>
             </li>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 type MatchType = "partial" | "exact";
@@ -25,12 +25,8 @@ export default function MatchTypeToggle() {
   };
 
   return (
-    <fieldset
-      className="ecl-form-group ecl-u-mb-none"
-      role="radiogroup"
-      aria-label="Search match type"
-      aria-busy={isPending}
-    >
+    <fieldset className="ecl-form-group ecl-u-mb-none" aria-busy={isPending}>
+      <legend className="ecl-u-sr-only">Search match type</legend>
       <div className="ecl-u-d-flex ecl-u-flex-wrap ecl-u-align-items-center gap-4">
         <div className="ecl-radio">
           <input

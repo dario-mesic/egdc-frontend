@@ -19,7 +19,6 @@ function toIdOrUndefined(v: string): number | undefined {
   return Number.isFinite(n) && n > 0 ? n : undefined;
 }
 
-const ADD_ORG_MODAL_ID = "add-org-modal";
 const EMPTY_FORM = {
   name: "",
   description: "",
@@ -39,11 +38,11 @@ type OrgFormState = {
 type Errors = Partial<Record<keyof OrgFormState, string>>;
 type Touched = Partial<Record<keyof OrgFormState, boolean>>;
 
-function AddOrganizationModal({
-  onCreated,
-}: {
+type AddOrganizationModalProps = Readonly<{
   onCreated: (org: Organization) => void;
-}) {
+}>;
+
+function AddOrganizationModal({ onCreated }: AddOrganizationModalProps) {
   const { sectors, organization_types } = useReferenceData();
 
   const [saving, setSaving] = useState(false);
@@ -104,7 +103,7 @@ function AddOrganizationModal({
       const created: Organization = await res.json();
       onCreated(created);
 
-      const dialog = document.getElementById(`${ADD_ORG_MODAL_ID}-modal`);
+      const dialog = document.getElementById(`add-org-modal-modal`);
       const closeBtn = dialog?.querySelector(
         "[data-ecl-modal-close]",
       ) as HTMLButtonElement | null;
@@ -156,7 +155,7 @@ function AddOrganizationModal({
 
   return (
     <Modal
-      id={ADD_ORG_MODAL_ID}
+      id="add-org-modal"
       title="Add organization"
       triggerLabel="+ Add organization"
       footer={
@@ -190,8 +189,8 @@ function AddOrganizationModal({
       ) : null}
 
       <div className="ecl-form-group ecl-u-mb-m">
-        <label className="ecl-form-label">
-          Name
+        <label htmlFor="org-name" className="ecl-form-label">
+          Name{" "}
           <span
             className="ecl-form-label__required"
             role="note"
@@ -204,6 +203,7 @@ function AddOrganizationModal({
           Max. 80 characters ({form.name.length}/80)
         </div>
         <input
+          id="org-name"
           className="ecl-text-input ecl-u-width-100"
           maxLength={80}
           value={form.name}
@@ -221,11 +221,14 @@ function AddOrganizationModal({
       </div>
 
       <div className="ecl-form-group ecl-u-mb-m">
-        <label className="ecl-form-label">Description</label>
+        <label htmlFor="org-description" className="ecl-form-label">
+          Description
+        </label>
         <div className="ecl-help-block" id="org-description-helper">
           Max. 160 characters ({form.description.length}/160)
         </div>
         <textarea
+          id="org-description"
           className="ecl-text-area ecl-u-width-100"
           maxLength={160}
           rows={4}
@@ -245,8 +248,11 @@ function AddOrganizationModal({
       </div>
 
       <div className="ecl-form-group ecl-u-mb-m">
-        <label className="ecl-form-label">Website URL</label>
+        <label htmlFor="org-website-url" className="ecl-form-label">
+          Website URL
+        </label>
         <input
+          id="org-website-url"
           type="url"
           className="ecl-text-input ecl-u-width-100"
           value={form.website_url}
@@ -264,8 +270,8 @@ function AddOrganizationModal({
       </div>
 
       <div className="ecl-form-group ecl-u-mb-m">
-        <label className="ecl-form-label">
-          Sector
+        <label htmlFor="org-sector" className="ecl-form-label">
+          Sector{" "}
           <span
             className="ecl-form-label__required"
             role="note"
@@ -277,6 +283,7 @@ function AddOrganizationModal({
 
         <div className="ecl-select__container ecl-select__container--m">
           <select
+            id="org-sector"
             className="ecl-select"
             value={form.sector_code}
             required
@@ -308,8 +315,8 @@ function AddOrganizationModal({
       </div>
 
       <div className="ecl-form-group">
-        <label className="ecl-form-label">
-          Organization type
+        <label htmlFor="org-org-type" className="ecl-form-label">
+          Organization type{" "}
           <span
             className="ecl-form-label__required"
             role="note"
@@ -320,6 +327,7 @@ function AddOrganizationModal({
         </label>
         <div className="ecl-select__container ecl-select__container--m">
           <select
+            id="org-org-type"
             className="ecl-select"
             value={form.org_type_code}
             required
@@ -387,9 +395,7 @@ export default function Step4Organizations() {
   }, [organizations]);
 
   useEffect(() => {
-    if (typeof window !== "undefined" && (window as any).ECL?.autoInit) {
-      (window as any).ECL.autoInit();
-    }
+    globalThis.ECL?.autoInit?.();
   }, []);
 
   const orgOptions = useMemo(
@@ -411,7 +417,7 @@ export default function Step4Organizations() {
       </p>
       <div className="ecl-form-group ecl-u-mb-m">
         <label htmlFor="cs-provided-by" className="ecl-form-label">
-          Provided By
+          Provided By{" "}
           <span
             className="ecl-form-label__required"
             role="note"

@@ -9,6 +9,10 @@ import type {
 } from "../_types/search";
 import { API_BASE, fetchJson } from "../_lib/api";
 
+type CaseStudiesResultsProps = Readonly<{
+  searchParams: CaseStudySearchParams;
+}>;
+
 const appendAll = (
   params: URLSearchParams,
   key: string,
@@ -49,9 +53,7 @@ async function searchCaseStudies(
 
 export default async function CaseStudiesResults({
   searchParams,
-}: {
-  searchParams: CaseStudySearchParams;
-}) {
+}: CaseStudiesResultsProps) {
   const result = await searchCaseStudies(searchParams);
   const totalPages = Math.max(1, Math.ceil(result.total / result.limit));
 

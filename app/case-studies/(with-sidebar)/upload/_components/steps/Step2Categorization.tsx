@@ -36,9 +36,7 @@ export default function Step2Categorization() {
   }, []);
 
   useEffect(() => {
-    if (typeof window !== "undefined" && (window as any).ECL?.autoInit) {
-      (window as any).ECL.autoInit();
-    }
+    globalThis.ECL?.autoInit?.();
   }, []);
 
   const techOptions = useMemo(
@@ -72,7 +70,7 @@ export default function Step2Categorization() {
           id="cs-technology-label"
           className="ecl-form-label"
         >
-          Technology
+          Technology{" "}
           <span
             className="ecl-form-label__required"
             role="note"
@@ -123,7 +121,7 @@ export default function Step2Categorization() {
           id="cs-calculation-label"
           className="ecl-form-label"
         >
-          Calculation type
+          Calculation type{" "}
           <span
             className="ecl-form-label__required"
             role="note"

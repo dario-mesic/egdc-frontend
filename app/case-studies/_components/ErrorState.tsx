@@ -2,19 +2,30 @@
 
 import { useEffect, useState } from "react";
 
-type Props = {
+type ErrorStateProps = Readonly<{
   error: Error & { digest?: string };
   reset: () => void;
   title?: string;
   message?: string;
-};
+}>;
+
+function runResetWithEcl(reset: () => void) {
+  requestAnimationFrame(() => {
+    reset();
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        globalThis.dispatchEvent(new Event("ecl:autoinit"));
+      });
+    });
+  });
+}
 
 export default function ErrorState({
   error,
   reset,
   title = "Something went wrong",
   message = "We couldn’t load this content right now. Please try again.",
-}: Props) {
+}: ErrorStateProps) {
   const [clicked, setClicked] = useState(false);
 
   useEffect(() => {
@@ -24,16 +35,8 @@ export default function ErrorState({
 
   const onRetry = () => {
     if (clicked) return;
-
     setClicked(true);
-    requestAnimationFrame(() => {
-      reset();
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          window.dispatchEvent(new Event("ecl:autoinit"));
-        });
-      });
-    });
+    runResetWithEcl(reset);
   };
 
   return (

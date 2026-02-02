@@ -2,10 +2,12 @@
 
 import ErrorState from "../_components/ErrorState";
 
-export default function Error(props: {
+type RouteErrorProps = Readonly<{
   error: Error & { digest?: string };
   reset: () => void;
-}) {
+}>;
+
+export default function RouteError(props: RouteErrorProps) {
   return (
     <ErrorState
       {...props}

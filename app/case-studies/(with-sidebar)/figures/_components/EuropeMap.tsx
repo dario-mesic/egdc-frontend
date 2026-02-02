@@ -1,8 +1,12 @@
-import fs from "fs";
-import path from "path";
+import fs from "node:fs";
+import path from "node:path";
 import type { StatsResponse } from "../page";
 import { iso3ToIso2 } from "@/app/case-studies/_lib/iso";
 import ClientEuropeMap from "./ClientEuropeMap";
+
+type EuropeMapProps = Readonly<{
+  stats: StatsResponse;
+}>;
 
 function colorForCount(count: number): string {
   if (count <= 0) return "var(--ecl-color-grey-75)";
@@ -13,6 +17,7 @@ function colorForCount(count: number): string {
 }
 
 function injectCountryFills(svg: string, counts: Map<string, number>) {
+  // eslint-disable-next-line unicorn/prefer-string-replace-all
   return svg.replace(
     /<path\b([^>]*?)\bid="([a-z]{2})"([^>]*?)>/gi,
     (full, pre, id, post) => {
@@ -20,8 +25,8 @@ function injectCountryFills(svg: string, counts: Map<string, number>) {
       const count = counts.get(iso2) ?? 0;
       const fill = colorForCount(count);
 
-      const cleanedPre = pre.replace(/\sfill="[^"]*"/g, "");
-      const cleanedPost = post.replace(/\sfill="[^"]*"/g, "");
+      const cleanedPre = pre.replaceAll(/\sfill="[^"]*"/g, "");
+      const cleanedPost = post.replaceAll(/\sfill="[^"]*"/g, "");
 
       return `<path${cleanedPre} class="europe-country" id="${iso2}" fill="${fill}"${cleanedPost} role="button" aria-label="${iso2}">`;
     },
@@ -35,7 +40,7 @@ function normalizeSvg(svg: string) {
   );
 }
 
-export default function EuropeMap({ stats }: { stats: StatsResponse }) {
+export default function EuropeMap({ stats }: EuropeMapProps) {
   const svg = fs.readFileSync(
     path.join(process.cwd(), "data/europe.svg"),
     "utf8",

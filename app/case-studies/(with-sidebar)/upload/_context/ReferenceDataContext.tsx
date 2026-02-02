@@ -5,13 +5,15 @@ import type { ReferenceData } from "../../../_types/referenceData";
 
 const ReferenceDataContext = createContext<ReferenceData | null>(null);
 
+type ReferenceDataProviderProps = Readonly<{
+  value: ReferenceData;
+  children: React.ReactNode;
+}>;
+
 export function ReferenceDataProvider({
   value,
   children,
-}: {
-  value: ReferenceData;
-  children: React.ReactNode;
-}) {
+}: ReferenceDataProviderProps) {
   return (
     <ReferenceDataContext.Provider value={value}>
       {children}
@@ -23,7 +25,7 @@ export function useReferenceData() {
   const ctx = useContext(ReferenceDataContext);
   if (!ctx)
     throw new Error(
-      "useReferenceData must be used within ReferenceDataProvider"
+      "useReferenceData must be used within ReferenceDataProvider",
     );
   return {
     ...ctx,

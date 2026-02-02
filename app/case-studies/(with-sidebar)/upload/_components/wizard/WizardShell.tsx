@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import WizardStepper, { WizardStep } from "./WizardStepper";
+import WizardStepper from "./WizardStepper";
 
 export type WizardStepDef = {
   id: number;
@@ -9,41 +9,38 @@ export type WizardStepDef = {
   description?: string;
 };
 
-type Props = {
+type WizardShellProps = Readonly<{
   steps: WizardStepDef[];
   activeStep: number;
   onStepChange: (id: number) => void;
-  maxReachableStep?: number;
-  maxVisitedStep?: number;
   maxUnlockedStep?: number;
   children: React.ReactNode;
   footer?: React.ReactNode;
-};
+}>;
 
 export default function WizardShell({
   steps,
   activeStep,
   onStepChange,
-  maxReachableStep = activeStep,
   maxUnlockedStep = activeStep,
   children,
   footer,
-}: Props) {
+}: WizardShellProps) {
   const stepperSteps = useMemo(
     () =>
-      steps.map((s) => ({
-        ...s,
-        state:
-          s.id < activeStep
-            ? "done"
-            : s.id === activeStep
-            ? "current"
-            : "upcoming",
+      steps.map((s) => {
+        let state: "done" | "current" | "upcoming" = "upcoming";
 
-        isUnlocked: s.id <= maxUnlockedStep,
-        isReachableNow: s.id <= maxReachableStep,
-      })),
-    [steps, activeStep, maxUnlockedStep, maxReachableStep]
+        if (s.id < activeStep) state = "done";
+        else if (s.id === activeStep) state = "current";
+
+        return {
+          ...s,
+          state,
+          isUnlocked: s.id <= maxUnlockedStep,
+        };
+      }),
+    [steps, activeStep, maxUnlockedStep],
   );
 
   const canGoTo = (id: number) => id <= maxUnlockedStep;
@@ -54,7 +51,6 @@ export default function WizardShell({
         <div className="ecl-u-mb-l">
           <WizardStepper
             steps={stepperSteps as any}
-            maxReachableStep={maxReachableStep}
             maxUnlockedStep={maxUnlockedStep}
             onStepClick={(id) => {
               if (canGoTo(id)) onStepChange(id);

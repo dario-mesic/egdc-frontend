@@ -5,7 +5,7 @@ export type Unit = {
 
 export type BenefitType = {
   label: string;
-  code: "environmental" | "economic" | "social" | string;
+  code: "environmental" | "economic" | "social";
 };
 
 export type Benefit = {

@@ -3,14 +3,14 @@
 import { useEffect } from "react";
 import ClientIcon from "@/app/case-studies/_components/icons/ClientIcon";
 
-type Props = {
+type NotificationProps = Readonly<{
   variant: "success" | "error";
   title: string;
   description?: string;
   children?: React.ReactNode;
   onClose?: () => void;
   autoDismissMs?: number;
-};
+}>;
 
 export default function Notification({
   variant,
@@ -19,7 +19,7 @@ export default function Notification({
   children,
   onClose,
   autoDismissMs = 5000,
-}: Props) {
+}: NotificationProps) {
   useEffect(() => {
     if (!autoDismissMs) return;
 

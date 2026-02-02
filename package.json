@@ -10,8 +10,10 @@
     "postinstall": "node scripts/copy-ecl.mjs"
   },
   "dependencies": {
+    "@countrystatecity/countries": "^1.0.5",
     "@ecl/icon": "^5.0.0-alpha.22.2",
     "@ecl/preset-ec": "^5.0.0-alpha.22.2",
+    "@szhsin/react-autocomplete": "^1.2.0",
     "next": "16.1.1",
     "nextjs-toploader": "^3.9.17",
     "react": "19.2.3",

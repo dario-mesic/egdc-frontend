@@ -22,6 +22,27 @@ type FieldKey =
 type Errors = Partial<Record<FieldKey, string>>;
 type Touched = Partial<Record<FieldKey, boolean>>;
 
+function isBlank(s: string) {
+  return s.trim() === "";
+}
+
+function validateName(name: string): string | undefined {
+  if (isBlank(name)) return "Name is required.";
+  if (name.length > 80) return "Maximum 80 characters.";
+  return undefined;
+}
+
+function validateValue(value: string): string | undefined {
+  if (isBlank(value)) return "Value is required.";
+
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "Value must be a number.";
+  if (!Number.isInteger(n)) return "Value must be an integer.";
+  if (n < 0) return "Value must be greater than or equal 0.";
+
+  return undefined;
+}
+
 export default function Step5Benefits() {
   const { benefit_types, benefit_units } = useReferenceData();
   const { data, setMetadata, setStepValidity } = useWizardData();
@@ -73,7 +94,7 @@ export default function Step5Benefits() {
   }, [environmentalCode]);
 
   useEffect(() => {
-    if ((window as any)?.ECL?.autoInit) (window as any).ECL.autoInit();
+    globalThis.ECL?.autoInit?.();
   }, []);
 
   const typeOptions = useMemo(
@@ -96,7 +117,7 @@ export default function Step5Benefits() {
       benefits: rows.map((r) => ({
         type_code: r.benefitType,
         name: r.name,
-        value: r.value.trim() === "" ? NaN : Number(r.value),
+        value: r.value.trim() === "" ? Number.NaN : Number(r.value),
         unit_code: r.unit,
       })),
     });
@@ -138,23 +159,19 @@ export default function Step5Benefits() {
     for (const r of rows) {
       const base = r.id;
 
-      if (!r.benefitType.trim())
+      const benefitTypeBlank = isBlank(r.benefitType);
+      if (benefitTypeBlank) {
         e[`${base}:benefitType`] = "Benefit type is required.";
-
-      if (!r.name.trim()) e[`${base}:name`] = "Name is required.";
-      else if (r.name.length > 80) e[`${base}:name`] = "Maximum 80 characters.";
-
-      if (!r.value.trim()) e[`${base}:value`] = "Value is required.";
-      else {
-        const n = Number(r.value);
-        if (!Number.isFinite(n)) e[`${base}:value`] = "Value must be a number.";
-        else if (!Number.isInteger(n))
-          e[`${base}:value`] = "Value must be an integer.";
-        else if (n < 0)
-          e[`${base}:value`] = "Value must be greater than or equal 0.";
       }
 
-      if (!r.unit.trim()) e[`${base}:unit`] = "Unit is required.";
+      const nameError = validateName(r.name);
+      if (nameError) e[`${base}:name`] = nameError;
+
+      const valueError = validateValue(r.value);
+      if (valueError) e[`${base}:value`] = valueError;
+
+      const unitBlank = isBlank(r.unit);
+      if (unitBlank) e[`${base}:unit`] = "Unit is required.";
     }
 
     return e;
@@ -202,7 +219,7 @@ export default function Step5Benefits() {
                 htmlFor={`benefit-type-${row.id}`}
                 className="ecl-form-label"
               >
-                Benefit type
+                Benefit type{" "}
                 <span
                   className="ecl-form-label__required"
                   role="note"
@@ -249,7 +266,7 @@ export default function Step5Benefits() {
                 htmlFor={`benefit-name-${row.id}`}
                 className="ecl-form-label"
               >
-                Name
+                Name{" "}
                 <span
                   className="ecl-form-label__required"
                   role="note"
@@ -286,7 +303,7 @@ export default function Step5Benefits() {
                 htmlFor={`benefit-value-${row.id}`}
                 className="ecl-form-label"
               >
-                Value
+                Value{" "}
                 <span
                   className="ecl-form-label__required"
                   role="note"
@@ -319,7 +336,7 @@ export default function Step5Benefits() {
                 htmlFor={`benefit-unit-${row.id}`}
                 className="ecl-form-label"
               >
-                Unit
+                Unit{" "}
                 <span
                   className="ecl-form-label__required"
                   role="note"

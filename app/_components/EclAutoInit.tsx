@@ -4,6 +4,10 @@ import Script from "next/script";
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 
+type EclAutoInitProps = Readonly<{
+  rootId?: string;
+}>;
+
 function markReady() {
   document.documentElement.classList.add("ecl-ready");
 }
@@ -21,9 +25,7 @@ function hasDatepickerNodes(root: ParentNode) {
 }
 
 function duetReady() {
-  return (
-    typeof window !== "undefined" && !!customElements.get("duet-date-picker")
-  );
+  return !!globalThis.customElements?.get?.("duet-date-picker");
 }
 
 function autoInitWithRetry(root: Element, maxTries = 40) {
@@ -42,9 +44,9 @@ function autoInitWithRetry(root: Element, maxTries = 40) {
       return;
     }
 
-    if (window.ECL?.autoInit) {
-      requestAnimationFrame(() => {
-        window.ECL!.autoInit!(root);
+    if (globalThis.ECL?.autoInit) {
+      globalThis.requestAnimationFrame(() => {
+        globalThis.ECL?.autoInit?.(root);
         markReady();
       });
       return;
@@ -56,11 +58,7 @@ function autoInitWithRetry(root: Element, maxTries = 40) {
   attempt();
 }
 
-export default function EclAutoInit({
-  rootId = "app-root",
-}: {
-  rootId?: string;
-}) {
+export default function EclAutoInit({ rootId = "app-root" }: EclAutoInitProps) {
   const pathname = usePathname();
   const loadedRef = useRef(false);
 

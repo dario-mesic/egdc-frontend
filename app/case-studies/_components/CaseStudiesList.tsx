@@ -5,13 +5,17 @@ import { compactLocations } from "../_lib/locations";
 import { iso2CountryName } from "../_lib/iso";
 import ClientIcon from "../_components/icons/ClientIcon";
 
+type CaseStudyiesListProps = Readonly<{
+  caseStudies: CaseStudy[];
+}>;
+
 function formatValue(value: number) {
   return new Intl.NumberFormat("en-GB").format(value);
 }
 
 function benefit(cs: CaseStudy, code: string) {
   const b = (cs.benefits ?? []).find(
-    (x) => x.type?.code?.toLowerCase() === code.toLowerCase()
+    (x) => x.type?.code?.toLowerCase() === code.toLowerCase(),
   );
   if (!b) return "—";
   return `${formatValue(b.value)} ${b.unit?.code ?? ""} — ${
@@ -27,9 +31,7 @@ function normalizeUrl(url?: string | null) {
 
 export default function CaseStudiesList({
   caseStudies,
-}: {
-  caseStudies: CaseStudy[];
-}) {
+}: CaseStudyiesListProps) {
   return (
     <div className="ecl-u-mt-l">
       {caseStudies.map((cs) => {

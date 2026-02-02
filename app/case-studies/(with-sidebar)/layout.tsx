@@ -1,9 +1,9 @@
 import SidebarNav from "../_components/SidebarNav";
-export default function CasesLayout({
-  children,
-}: {
+
+type CasesLayoutProps = Readonly<{
   children: React.ReactNode;
-}) {
+}>;
+export default function CasesLayout({ children }: CasesLayoutProps) {
   return (
     <div className="min-h-screen">
       <div className="ecl-row min-[1140px]:min-h-screen ecl-u-pa-2xl ecl-u-d-flex ecl-u-align-items-stretch min-[1140px]:flex-nowrap">

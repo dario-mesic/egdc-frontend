@@ -6,7 +6,7 @@ import ClientIcon from "./icons/ClientIcon";
 
 const OPTIONS = [5, 10, 15, 25];
 
-export default function PageSizeSelect({ id = "page-size" }: { id?: string }) {
+export default function PageSizeSelect() {
   const router = useRouter();
   const sp = useSearchParams();
   const [isPending, startTransition] = useTransition();
@@ -18,6 +18,7 @@ export default function PageSizeSelect({ id = "page-size" }: { id?: string }) {
     <div className="ecl-form-group ecl-u-mb-none">
       <div className="ecl-select__container ecl-select__container--m">
         <select
+          id="page-size"
           className="ecl-select"
           name="limit"
           data-ecl-auto-init="Select"

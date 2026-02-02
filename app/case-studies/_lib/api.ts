@@ -1,16 +1,18 @@
 export class ApiError extends Error {
   status: number;
   url: string;
+  cause?: unknown;
 
-  constructor(message: string, status: number, url: string) {
+  constructor(message: string, status: number, url: string, cause?: unknown) {
     super(message);
     this.name = "ApiError";
     this.status = status;
     this.url = url;
+    this.cause = cause;
   }
 }
 
-export const API_BASE = process.env.API_BASE_URL!;
+export const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL!;
 
 export async function fetchJson<T>(
   url: string,
@@ -21,10 +23,13 @@ export async function fetchJson<T>(
     res = await fetch(url, {
       cache: "no-store",
       ...init,
-      headers: { Accept: "application/json", ...(init?.headers ?? {}) },
+      headers: {
+        Accept: "application/json",
+        ...init?.headers,
+      },
     });
   } catch (e) {
-    throw new ApiError("Network error", 0, url);
+    throw new ApiError("Network error", 0, url, e);
   }
 
   if (!res.ok) {

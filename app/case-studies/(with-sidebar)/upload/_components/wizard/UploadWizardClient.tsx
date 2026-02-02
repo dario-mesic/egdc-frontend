@@ -9,6 +9,7 @@ import {
 } from "../steps/index";
 import type { ReferenceData } from "../../../../_types/referenceData";
 import { ReferenceDataProvider } from "../../_context/ReferenceDataContext";
+import { useReferenceData } from "../../_context/ReferenceDataContext";
 import {
   WizardDataProvider,
   useWizardData,
@@ -22,23 +23,30 @@ import {
   step5Schema,
 } from "../../_lib/schemas/steps";
 import Notification from "@/app/case-studies/_components/Notification";
+import Modal from "../Modal";
+import CaseStudyDetails from "@/app/case-studies/_components/CaseStudyDetails";
+
 import { useRouter } from "next/navigation";
+import { CaseStudyDetail } from "@/app/case-studies/_types/caseStudyDetail";
 
 type SubmitState = "idle" | "submitting" | "success" | "error";
+
+type WizardInnerProps = Readonly<{
+  activeStep: number;
+  setActiveStep: React.Dispatch<React.SetStateAction<number>>;
+  maxUnlockedStep: number;
+  setMaxUnlockedStep: React.Dispatch<React.SetStateAction<number>>;
+}>;
 
 function WizardInner({
   activeStep,
   setActiveStep,
   maxUnlockedStep,
   setMaxUnlockedStep,
-}: {
-  activeStep: number;
-  setActiveStep: React.Dispatch<React.SetStateAction<number>>;
-  maxUnlockedStep: number;
-  setMaxUnlockedStep: React.Dispatch<React.SetStateAction<number>>;
-}) {
+}: WizardInnerProps) {
   const router = useRouter();
   const { data } = useWizardData();
+  const refData = useReferenceData();
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
   const [submitError, setSubmitError] = useState("");
   const isLast = activeStep === uploadStepCount;
@@ -68,12 +76,6 @@ function WizardInner({
     return schema.safeParse(data.metadata).success;
   }, [activeStep, data.metadata, data.files, stepSchemaMap]);
 
-  const maxReachableStep = useMemo(() => {
-    return isCurrentStepValid
-      ? Math.min(uploadStepCount, activeStep + 1)
-      : activeStep;
-  }, [activeStep, isCurrentStepValid]);
-
   async function handleNext() {
     if (!isCurrentStepValid) return;
 
@@ -90,7 +92,6 @@ function WizardInner({
     });
 
     if (!parsed.success) {
-      console.log(parsed.error.format());
       return;
     }
 
@@ -125,11 +126,161 @@ function WizardInner({
       router.replace("/case-studies");
     } catch (e) {
       setSubmitState("error");
-      setSubmitError("Network error. Please try again.");
+      setSubmitError(
+        e instanceof Error ? e.message : "Network error. Please try again.",
+      );
     }
   }
 
+  const logoUrl = useMemo(() => {
+    if (!data.files.file_logo) return null;
+    return URL.createObjectURL(data.files.file_logo);
+  }, [data.files.file_logo]);
+
+  useEffect(() => {
+    return () => {
+      if (logoUrl) URL.revokeObjectURL(logoUrl);
+    };
+  }, [logoUrl]);
+
+  const previewCs = useMemo<CaseStudyDetail>(() => {
+    const md: any = data.metadata;
+
+    const tech =
+      md.tech ??
+      (md.tech_code
+        ? refData.technologies.find((t) => t.code === md.tech_code)
+        : null) ??
+      null;
+
+    const calc_type =
+      md.calc_type ??
+      (md.calc_type_code
+        ? refData.calculation_types.find((c) => c.code === md.calc_type_code)
+        : null) ??
+      null;
+
+    const funding_type =
+      md.funding_type ??
+      (md.funding_type_code
+        ? refData.funding_types.find((f) => f.code === md.funding_type_code)
+        : null) ??
+      null;
+
+    const methodLang =
+      (md.methodology_language_code &&
+        refData.languages.find(
+          (l) => l.code === md.methodology_language_code,
+        )) ||
+      refData.languages.find((l) => l.code === "en")!;
+
+    const datasetLang =
+      (md.dataset_language_code &&
+        refData.languages.find((l) => l.code === md.dataset_language_code)) ||
+      refData.languages.find((l) => l.code === "en")!;
+
+    const addresses = (md.addresses ?? []).map((a: any, i: number) => ({
+      id: a.id ?? -(i + 1),
+      post_name: a.post_name ?? "",
+      admin_unit_l1: a.admin_unit_l1 ?? "",
+      case_study_id: -1,
+    }));
+
+    return {
+      id: -1,
+      title: md.title ?? "Untitled case study",
+      short_description: md.short_description ?? null,
+
+      tech_code: tech?.code ?? md.tech_code ?? null,
+      calc_type_code: calc_type?.code ?? md.calc_type_code ?? null,
+      funding_type_code: funding_type?.code ?? md.funding_type_code ?? null,
+
+      logo_id: null,
+      methodology_id: null,
+      dataset_id: null,
+
+      addresses,
+      benefits: (md.benefits ?? []).map((b: any, i: number) => {
+        const typeCode =
+          b.type?.code ?? b.type_code ?? b.benefit_type_code ?? b.type ?? null;
+
+        const unitCode =
+          b.unit?.code ?? b.unit_code ?? b.benefit_unit_code ?? b.unit ?? null;
+
+        const type =
+          typeof typeCode === "string"
+            ? (refData.benefit_types.find((t) => t.code === typeCode) ?? null)
+            : null;
+
+        const unit =
+          typeof unitCode === "string"
+            ? (refData.benefit_units.find((u) => u.code === unitCode) ?? null)
+            : null;
+
+        return {
+          id: b.id ?? -(i + 1),
+          name: b.name ?? "",
+          value: Number(b.value ?? 0),
+          type: type
+            ? { code: type.code, label: type.label }
+            : (b.type ?? null),
+          unit: unit
+            ? { code: unit.code, label: unit.label }
+            : (b.unit ?? null),
+        };
+      }),
+
+      is_provided_by: md.is_provided_by ?? [],
+      is_funded_by: md.is_funded_by ?? [],
+      is_used_by: md.is_used_by ?? [],
+
+      long_description: md.long_description ?? null,
+      problem_solved: md.problem_solved ?? null,
+      created_date: md.created_date ?? null,
+
+      tech,
+      calc_type,
+      funding_type,
+
+      logo: logoUrl
+        ? { id: -1, url: logoUrl, alt_text: md.title ?? null }
+        : null,
+
+      methodology: data.files.file_methodology
+        ? {
+            id: -1,
+            name: data.files.file_methodology.name,
+            url: "",
+            language: methodLang,
+          }
+        : null,
+
+      dataset: data.files.file_dataset
+        ? {
+            id: -1,
+            name: data.files.file_dataset.name,
+            url: "",
+            language: datasetLang,
+          }
+        : null,
+    };
+  }, [
+    data.metadata,
+    data.files.file_methodology,
+    data.files.file_dataset,
+    logoUrl,
+    refData.technologies,
+    refData.benefit_types,
+    refData.benefit_units,
+    refData.calculation_types,
+    refData.funding_types,
+    refData.languages,
+  ]);
+
   const isSubmitting = submitState === "submitting";
+  let nextLabel = "Continue";
+
+  if (isLast) nextLabel = "Preview";
   return (
     <>
       {submitState === "error" && (
@@ -143,11 +294,41 @@ function WizardInner({
           }}
         />
       )}
+      <Modal
+        id="cs-preview-modal"
+        title="Preview case study"
+        triggerLabel="Preview"
+        triggerClassName="hidden"
+        modalClassName="w-[95vw]! min-w-0! max-w-none!"
+        footer={
+          <>
+            <button
+              className="ecl-button ecl-button--secondary ecl-modal__button"
+              type="button"
+              data-ecl-modal-close
+              disabled={isSubmitting}
+            >
+              Back to edit
+            </button>
+
+            <button
+              className="ecl-button ecl-button--primary ecl-modal__button"
+              type="button"
+              onClick={handleNext}
+              disabled={!isCurrentStepValid || isSubmitting}
+            >
+              {isSubmitting ? "Submitting…" : "Confirm & submit"}
+            </button>
+          </>
+        }
+        isBlocking={isSubmitting}
+      >
+        <CaseStudyDetails cs={previewCs} preview />
+      </Modal>
       <WizardShell
         steps={uploadStepDefs as any}
         activeStep={activeStep}
         onStepChange={setActiveStep}
-        maxReachableStep={maxReachableStep}
         maxUnlockedStep={maxUnlockedStep}
         footer={
           <div className="ecl-u-d-flex ecl-u-align-items-center ecl-u-justify-content-between">
@@ -164,15 +345,21 @@ function WizardInner({
               <button
                 type="button"
                 className="ecl-button ecl-button--primary"
-                onClick={handleNext}
+                onClick={
+                  isLast
+                    ? () => {
+                        (
+                          document.getElementById(
+                            `cs-preview-modal-toggle`,
+                          ) as HTMLButtonElement | null
+                        )?.click();
+                      }
+                    : handleNext
+                }
                 disabled={!isCurrentStepValid || isSubmitting}
                 aria-disabled={!isCurrentStepValid || isSubmitting}
               >
-                {isLast
-                  ? isSubmitting
-                    ? "Submitting…"
-                    : "Submit"
-                  : "Continue"}
+                {nextLabel}
               </button>
             </div>
           </div>
@@ -198,11 +385,13 @@ function WizardInner({
   );
 }
 
+type UploadWizardClientProps = Readonly<{
+  referenceData: ReferenceData;
+}>;
+
 export default function UploadWizardClient({
   referenceData,
-}: {
-  referenceData: ReferenceData;
-}) {
+}: UploadWizardClientProps) {
   const [activeStep, setActiveStep] = useState(1);
   const [maxUnlockedStep, setMaxUnlockedStep] = useState(1);
   return (

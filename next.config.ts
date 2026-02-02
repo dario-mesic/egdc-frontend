@@ -2,6 +2,10 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   devIndicators: false,
+  serverExternalPackages: ["@countrystatecity/countries"],
+  outputFileTracingIncludes: {
+    "*": ["./node_modules/@countrystatecity/countries/**"],
+  },
   async headers() {
     return [
       {

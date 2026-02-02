@@ -19,7 +19,12 @@ function formatValue(value: number) {
   return new Intl.NumberFormat("en-GB").format(value);
 }
 
-function LegendItem({ color, label }: { color: string; label: string }) {
+type LegendItemProps = Readonly<{
+  color: string;
+  label: string;
+}>;
+
+function LegendItem({ color, label }: LegendItemProps) {
   return (
     <div className="ecl-u-d-flex ecl-u-align-items-center gap-2">
       <span
@@ -32,15 +37,13 @@ function LegendItem({ color, label }: { color: string; label: string }) {
   );
 }
 
-function TooltipCard({
-  country,
-  pinned,
-  onClose,
-}: {
+type TooltipCardProps = Readonly<{
   country: CountryInfo;
   pinned: boolean;
   onClose?: () => void;
-}) {
+}>;
+
+function TooltipCard({ country, pinned, onClose }: TooltipCardProps) {
   return (
     <div
       className="relative w-65 rounded-xl border border-gray-200 bg-white shadow-lg after:content-['']
@@ -114,13 +117,12 @@ function TooltipCard({
   );
 }
 
-export default function ClientEuropeMap({
-  svg,
-  byIso2,
-}: {
+type ClientEuropeMapProps = Readonly<{
   svg: string;
   byIso2: Record<string, CountryInfo>;
-}) {
+}>;
+
+export default function ClientEuropeMap({ svg, byIso2 }: ClientEuropeMapProps) {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
 
   const [hoverIso2, setHoverIso2] = useState<string | null>(null);
@@ -143,6 +145,22 @@ export default function ClientEuropeMap({
   useEffect(() => {
     const el = wrapperRef.current;
     if (!el) return;
+
+    const interactivePaths = el.querySelectorAll<SVGPathElement>(
+      "path.europe-country, path[id]",
+    );
+
+    interactivePaths.forEach((p) => {
+      const id = p.getAttribute("id")?.toLowerCase();
+      if (!id || !byIso2[id]) return;
+
+      p.setAttribute("tabindex", "0");
+      p.setAttribute("role", "button");
+      p.setAttribute(
+        "aria-label",
+        `Show details for ${byIso2[id].country_label}`,
+      );
+    });
 
     const getIso2FromTarget = (target: EventTarget | null) => {
       if (!(target instanceof Element)) return null;
@@ -197,14 +215,41 @@ export default function ClientEuropeMap({
       setHoverPos(null);
     };
 
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+
+      const iso2 = getIso2FromTarget(e.target);
+      if (!iso2) return;
+
+      e.preventDefault();
+
+      const target = e.target as Element;
+      const rect = target.getBoundingClientRect();
+      const wrapperRect = el.getBoundingClientRect();
+      const pos = {
+        x: rect.left - wrapperRect.left + rect.width / 2,
+        y: rect.top - wrapperRect.top + rect.height / 2,
+      };
+
+      setPinned((prev) => {
+        if (prev?.iso2 === iso2) return null;
+        return { iso2, x: pos.x, y: pos.y };
+      });
+
+      setHoverIso2(null);
+      setHoverPos(null);
+    };
+
     el.addEventListener("pointermove", onPointerMove);
     el.addEventListener("pointerleave", onPointerLeave);
     el.addEventListener("click", onClick);
+    el.addEventListener("keydown", onKeyDown);
 
     return () => {
       el.removeEventListener("pointermove", onPointerMove);
       el.removeEventListener("pointerleave", onPointerLeave);
       el.removeEventListener("click", onClick);
+      el.removeEventListener("keydown", onKeyDown);
     };
   }, [byIso2, pinned?.iso2]);
 
