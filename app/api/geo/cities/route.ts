@@ -1,11 +1,35 @@
 import { NextResponse } from "next/server";
-import { getAllCitiesOfCountry } from "@countrystatecity/countries";
+import {
+  getAllCitiesOfCountry,
+  isValidCountryCode,
+} from "@countrystatecity/countries";
 
+const ISO2_ALIASES: Record<string, string> = {
+  EL: "GR",
+  UK: "GB",
+};
+
+async function normalizeIso2(code: string): Promise<string | null> {
+  const upper = code.trim().toUpperCase();
+
+  if (upper.length === 2 && (await isValidCountryCode(upper))) {
+    return upper;
+  }
+
+  const aliased = ISO2_ALIASES[upper];
+  if (aliased && (await isValidCountryCode(aliased))) {
+    return aliased;
+  }
+
+  return null;
+}
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
-  const country = (searchParams.get("country") ?? "").trim().toUpperCase();
+  const rawCountry = searchParams.get("country") ?? "";
 
-  if (country.length !== 2) {
+  const country = await normalizeIso2(rawCountry);
+
+  if (!country) {
     return NextResponse.json({ cities: [] }, { status: 400 });
   }
 

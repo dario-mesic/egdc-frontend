@@ -35,30 +35,18 @@ export default function Modal({
   const dialogRef = useRef<HTMLDialogElement | null>(null);
 
   useEffect(() => {
-    globalThis.ECL?.autoInit?.();
-  }, []);
-
-  useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
 
     const onCancel = (e: Event) => {
       if (!isBlocking) return;
-      e.preventDefault(); // blocks ESC close
-    };
-
-    const onClose = () => {
-      if (!isBlocking) return;
-
-      if (!dialog.open) dialog.showModal();
+      e.preventDefault();
     };
 
     dialog.addEventListener("cancel", onCancel);
-    dialog.addEventListener("close", onClose);
 
     return () => {
       dialog.removeEventListener("cancel", onCancel);
-      dialog.removeEventListener("close", onClose);
     };
   }, [isBlocking]);
 
@@ -97,6 +85,8 @@ export default function Modal({
                 className="ecl-button ecl-button--tertiary ecl-modal__close ecl-button--icon-only"
                 type="button"
                 data-ecl-modal-close
+                disabled={isBlocking}
+                aria-disabled={isBlocking}
               >
                 <span className="ecl-button__container">
                   <span className="ecl-button__label" data-ecl-label="true">

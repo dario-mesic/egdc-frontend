@@ -9,7 +9,6 @@ import {
 } from "../steps/index";
 import type { ReferenceData } from "../../../../_types/referenceData";
 import { ReferenceDataProvider } from "../../_context/ReferenceDataContext";
-import { useReferenceData } from "../../_context/ReferenceDataContext";
 import {
   WizardDataProvider,
   useWizardData,
@@ -25,11 +24,19 @@ import {
 import Notification from "@/app/case-studies/_components/Notification";
 import Modal from "../Modal";
 import CaseStudyDetails from "@/app/case-studies/_components/CaseStudyDetails";
-
+import { API_BASE } from "@/app/case-studies/_lib/api";
 import { useRouter } from "next/navigation";
 import { CaseStudyDetail } from "@/app/case-studies/_types/caseStudyDetail";
 
-type SubmitState = "idle" | "submitting" | "success" | "error";
+type AsyncState<T extends string> =
+  | "idle"
+  | T
+  | "success"
+  | "error"
+  | "loading";
+
+type SubmitState = AsyncState<"submitting">;
+type PreviewState = AsyncState<"previewing">;
 
 type WizardInnerProps = Readonly<{
   activeStep: number;
@@ -46,9 +53,11 @@ function WizardInner({
 }: WizardInnerProps) {
   const router = useRouter();
   const { data } = useWizardData();
-  const refData = useReferenceData();
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
   const [submitError, setSubmitError] = useState("");
+  const [previewState, setPreviewState] = useState<PreviewState>("idle");
+  const [previewError, setPreviewError] = useState("");
+  const [previewCs, setPreviewCs] = useState<CaseStudyDetail | null>(null);
   const isLast = activeStep === uploadStepCount;
 
   const stepSchemaMap = useMemo(() => {
@@ -76,6 +85,38 @@ function WizardInner({
     return schema.safeParse(data.metadata).success;
   }, [activeStep, data.metadata, data.files, stepSchemaMap]);
 
+  const previewLogoUrl = useMemo(() => {
+    if (!data.files.file_logo) return null;
+    return URL.createObjectURL(data.files.file_logo);
+  }, [data.files.file_logo]);
+
+  useEffect(() => {
+    return () => {
+      if (previewLogoUrl) URL.revokeObjectURL(previewLogoUrl);
+    };
+  }, [previewLogoUrl]);
+
+  function buildFormData(parsed: {
+    metadata: any;
+    files: {
+      file_logo: File;
+      file_methodology?: File | null;
+      file_dataset?: File | null;
+    };
+  }) {
+    const fd = new FormData();
+    fd.append("metadata", JSON.stringify(parsed.metadata));
+    fd.append("file_logo", parsed.files.file_logo);
+
+    if (parsed.files.file_methodology) {
+      fd.append("file_methodology", parsed.files.file_methodology);
+    }
+    if (parsed.files.file_dataset) {
+      fd.append("file_dataset", parsed.files.file_dataset);
+    }
+    return fd;
+  }
+
   async function handleNext() {
     if (!isCurrentStepValid) return;
 
@@ -95,17 +136,7 @@ function WizardInner({
       return;
     }
 
-    const fd = new FormData();
-    fd.append("metadata", JSON.stringify(parsed.data.metadata));
-
-    fd.append("file_logo", parsed.data.files.file_logo);
-
-    if (parsed.data.files.file_methodology) {
-      fd.append("file_methodology", parsed.data.files.file_methodology);
-    }
-    if (parsed.data.files.file_dataset) {
-      fd.append("file_dataset", parsed.data.files.file_dataset);
-    }
+    const fd = buildFormData(parsed.data);
 
     setSubmitState("submitting");
     setSubmitError("");
@@ -123,7 +154,8 @@ function WizardInner({
         return;
       }
       sessionStorage.setItem("case-study-created", "1");
-      router.replace("/case-studies");
+
+      globalThis.location.replace("/case-studies");
     } catch (e) {
       setSubmitState("error");
       setSubmitError(
@@ -132,155 +164,65 @@ function WizardInner({
     }
   }
 
-  const logoUrl = useMemo(() => {
-    if (!data.files.file_logo) return null;
-    return URL.createObjectURL(data.files.file_logo);
-  }, [data.files.file_logo]);
+  async function handlePreview() {
+    if (!isCurrentStepValid) return;
 
-  useEffect(() => {
-    return () => {
-      if (logoUrl) URL.revokeObjectURL(logoUrl);
-    };
-  }, [logoUrl]);
+    const parsed = wizardPayloadSchema.safeParse({
+      metadata: data.metadata,
+      files: data.files,
+    });
 
-  const previewCs = useMemo<CaseStudyDetail>(() => {
-    const md: any = data.metadata;
+    if (!parsed.success) return;
 
-    const tech =
-      md.tech ??
-      (md.tech_code
-        ? refData.technologies.find((t) => t.code === md.tech_code)
-        : null) ??
-      null;
+    setPreviewState("loading");
+    setPreviewError("");
+    setPreviewCs(null);
 
-    const calc_type =
-      md.calc_type ??
-      (md.calc_type_code
-        ? refData.calculation_types.find((c) => c.code === md.calc_type_code)
-        : null) ??
-      null;
+    try {
+      const fd = buildFormData(parsed.data);
 
-    const funding_type =
-      md.funding_type ??
-      (md.funding_type_code
-        ? refData.funding_types.find((f) => f.code === md.funding_type_code)
-        : null) ??
-      null;
+      const res = await fetch(`${API_BASE}/api/v1/case-studies/preview`, {
+        method: "POST",
+        body: fd,
+      });
 
-    const methodLang =
-      (md.methodology_language_code &&
-        refData.languages.find(
-          (l) => l.code === md.methodology_language_code,
-        )) ||
-      refData.languages.find((l) => l.code === "en")!;
+      if (!res.ok) {
+        const txt = await res.text();
+        setPreviewState("error");
+        setPreviewError(txt || "Failed to generate preview.");
+        return;
+      }
 
-    const datasetLang =
-      (md.dataset_language_code &&
-        refData.languages.find((l) => l.code === md.dataset_language_code)) ||
-      refData.languages.find((l) => l.code === "en")!;
+      const json = (await res.json()) as CaseStudyDetail;
+      const fixed: CaseStudyDetail = {
+        ...json,
 
-    const addresses = (md.addresses ?? []).map((a: any, i: number) => ({
-      id: a.id ?? -(i + 1),
-      post_name: a.post_name ?? "",
-      admin_unit_l1: a.admin_unit_l1 ?? "",
-      case_study_id: -1,
-    }));
+        logo: previewLogoUrl
+          ? {
+              id: json.logo?.id ?? -1,
+              alt_text: json.logo?.alt_text ?? json.title ?? null,
+              url: previewLogoUrl,
+            }
+          : (json.logo ?? null),
+      };
+      setPreviewCs(fixed);
+      setPreviewState("success");
 
-    return {
-      id: -1,
-      title: md.title ?? "Untitled case study",
-      short_description: md.short_description ?? null,
-
-      tech_code: tech?.code ?? md.tech_code ?? null,
-      calc_type_code: calc_type?.code ?? md.calc_type_code ?? null,
-      funding_type_code: funding_type?.code ?? md.funding_type_code ?? null,
-
-      logo_id: null,
-      methodology_id: null,
-      dataset_id: null,
-
-      addresses,
-      benefits: (md.benefits ?? []).map((b: any, i: number) => {
-        const typeCode =
-          b.type?.code ?? b.type_code ?? b.benefit_type_code ?? b.type ?? null;
-
-        const unitCode =
-          b.unit?.code ?? b.unit_code ?? b.benefit_unit_code ?? b.unit ?? null;
-
-        const type =
-          typeof typeCode === "string"
-            ? (refData.benefit_types.find((t) => t.code === typeCode) ?? null)
-            : null;
-
-        const unit =
-          typeof unitCode === "string"
-            ? (refData.benefit_units.find((u) => u.code === unitCode) ?? null)
-            : null;
-
-        return {
-          id: b.id ?? -(i + 1),
-          name: b.name ?? "",
-          value: Number(b.value ?? 0),
-          type: type
-            ? { code: type.code, label: type.label }
-            : (b.type ?? null),
-          unit: unit
-            ? { code: unit.code, label: unit.label }
-            : (b.unit ?? null),
-        };
-      }),
-
-      is_provided_by: md.is_provided_by ?? [],
-      is_funded_by: md.is_funded_by ?? [],
-      is_used_by: md.is_used_by ?? [],
-
-      long_description: md.long_description ?? null,
-      problem_solved: md.problem_solved ?? null,
-      created_date: md.created_date ?? null,
-
-      tech,
-      calc_type,
-      funding_type,
-
-      logo: logoUrl
-        ? { id: -1, url: logoUrl, alt_text: md.title ?? null }
-        : null,
-
-      methodology: data.files.file_methodology
-        ? {
-            id: -1,
-            name: data.files.file_methodology.name,
-            url: "",
-            language: methodLang,
-          }
-        : null,
-
-      dataset: data.files.file_dataset
-        ? {
-            id: -1,
-            name: data.files.file_dataset.name,
-            url: "",
-            language: datasetLang,
-          }
-        : null,
-    };
-  }, [
-    data.metadata,
-    data.files.file_methodology,
-    data.files.file_dataset,
-    logoUrl,
-    refData.technologies,
-    refData.benefit_types,
-    refData.benefit_units,
-    refData.calculation_types,
-    refData.funding_types,
-    refData.languages,
-  ]);
+      (
+        document.getElementById(
+          "cs-preview-modal-toggle",
+        ) as HTMLButtonElement | null
+      )?.click();
+    } catch (e) {
+      setPreviewState("error");
+      setPreviewError(e instanceof Error ? e.message : "Preview failed.");
+    }
+  }
 
   const isSubmitting = submitState === "submitting";
   let nextLabel = "Continue";
 
-  if (isLast) nextLabel = "Preview";
+  if (isLast) nextLabel = previewState === "loading" ? "Preparing…" : "Preview";
   return (
     <>
       {submitState === "error" && (
@@ -323,7 +265,17 @@ function WizardInner({
         }
         isBlocking={isSubmitting}
       >
-        <CaseStudyDetails cs={previewCs} preview />
+        {previewState === "loading" ? (
+          <div className="ecl-u-pa-l">Generating preview…</div>
+        ) : previewState === "error" ? (
+          <div className="ecl-feedback-message ecl-feedback-message--error ecl-u-pa-l">
+            {previewError || "Failed to generate preview."}
+          </div>
+        ) : previewCs ? (
+          <CaseStudyDetails cs={previewCs} preview />
+        ) : (
+          <div className="ecl-u-pa-l">No preview available.</div>
+        )}
       </Modal>
       <WizardShell
         steps={uploadStepDefs as any}
@@ -345,19 +297,17 @@ function WizardInner({
               <button
                 type="button"
                 className="ecl-button ecl-button--primary"
-                onClick={
-                  isLast
-                    ? () => {
-                        (
-                          document.getElementById(
-                            `cs-preview-modal-toggle`,
-                          ) as HTMLButtonElement | null
-                        )?.click();
-                      }
-                    : handleNext
+                onClick={isLast ? handlePreview : handleNext}
+                disabled={
+                  !isCurrentStepValid ||
+                  isSubmitting ||
+                  previewState === "loading"
                 }
-                disabled={!isCurrentStepValid || isSubmitting}
-                aria-disabled={!isCurrentStepValid || isSubmitting}
+                aria-disabled={
+                  !isCurrentStepValid ||
+                  isSubmitting ||
+                  previewState === "loading"
+                }
               >
                 {nextLabel}
               </button>
