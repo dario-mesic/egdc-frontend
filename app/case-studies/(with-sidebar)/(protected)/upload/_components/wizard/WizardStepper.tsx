@@ -54,12 +54,6 @@ function getVisualState(
   return step.state;
 }
 
-function statusText(state: WizardStepState) {
-  if (state === "done") return "Completed";
-  if (state === "current") return "In progress";
-  return "Upcoming";
-}
-
 export default function WizardStepper({
   steps,
   onStepClick,
@@ -161,66 +155,45 @@ export default function WizardStepper({
         </div>
       </div>
 
-      <ol className="sm:hidden space-y-4">
-        {steps.map((step, i) => {
+      <ol className="sm:hidden grid grid-cols-3 gap-x-3 gap-y-4">
+        {steps.map((step) => {
           const Comp: any = clickable ? "button" : "div";
-          const isLast = i === steps.length - 1;
           const isCurrent = step.state === "current";
-
           const visualState = getVisualState(step, maxUnlockedStep);
-          const connectorFilled = visualState === "done";
-          const label = statusText(visualState);
 
           return (
-            <li key={step.id} className="relative">
-              <div className="ecl-u-d-flex ecl-u-align-items-start gap-3">
-                <div className="relative ecl-u-d-flex ecl-u-flex-column ecl-u-align-items-center">
-                  <span
-                    className={[
-                      "ecl-u-d-flex ecl-u-align-items-center ecl-u-justify-content-center",
-                      "ecl-u-border-all rounded-full",
-                      "w-10 h-10 shrink-0",
-                      circleClasses(visualState),
-                    ].join(" ")}
-                    aria-hidden="true"
-                  >
-                    <span className="font-semibold">{step.id}</span>
-                  </span>
-
-                  {!isLast && (
-                    <span
-                      className={[
-                        "ecl-u-mt-s w-1 flex-1 rounded-full",
-                        barTrackClasses(),
-                      ].join(" ")}
-                      aria-hidden="true"
-                    >
-                      <span
-                        className={[
-                          "ecl-u-d-block ecl-u-width-100 rounded-full transition-all duration-300",
-                          connectorFilled ? barFillClasses() : "",
-                        ].join(" ")}
-                        style={{ height: connectorFilled ? "100%" : "0%" }}
-                      />
-                    </span>
-                  )}
-                </div>
-                <Comp
-                  type={clickable ? "button" : undefined}
-                  onClick={clickable ? () => onStepClick(step.id) : undefined}
+            <li
+              key={step.id}
+              className="ecl-u-d-flex ecl-u-justify-content-center"
+            >
+              <Comp
+                type={clickable ? "button" : undefined}
+                onClick={clickable ? () => onStepClick(step.id) : undefined}
+                className={[
+                  "group ecl-u-d-inline-flex ecl-u-flex-column ecl-u-align-items-center",
+                  "ecl-u-bg-transparent ecl-u-pa-none",
+                  "focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
+                  textClasses(visualState),
+                  clickable ? "hover:opacity-90" : "",
+                ].join(" ")}
+                aria-current={isCurrent ? "step" : undefined}
+              >
+                <span
                   className={[
-                    "flex-1 text-left",
-                    "rounded-xl px-3 py-2",
-                    "focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
-                    textClasses(visualState),
-                    clickable ? "hover:bg-black/5" : "",
+                    "ecl-u-d-flex ecl-u-align-items-center ecl-u-justify-content-center",
+                    "ecl-u-border-all rounded-full",
+                    "w-10 h-10 shrink-0",
+                    circleClasses(visualState),
                   ].join(" ")}
-                  aria-current={isCurrent ? "step" : undefined}
+                  aria-hidden="true"
                 >
-                  <div className="font-medium leading-snug">{step.title}</div>
-                  <div className="text-sm opacity-70">{label}</div>
-                </Comp>
-              </div>
+                  <span className="font-semibold">{step.id}</span>
+                </span>
+
+                <span className="ecl-u-mt-s text-center font-medium leading-tight text-xs px-1 whitespace-normal">
+                  {step.title}
+                </span>
+              </Comp>
             </li>
           );
         })}

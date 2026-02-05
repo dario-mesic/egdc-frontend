@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useTransition } from "react";
+import { useEffect, useId, useTransition, useOptimistic } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import ClientIcon from "@/app/case-studies/_components/icons/ClientIcon";
 
@@ -31,6 +31,10 @@ const OPTIONS = [
   },
 ] as const;
 
+type SortBy = "created_date" | "title";
+type SortOrder = "asc" | "desc";
+type SortKey = `${SortBy}-${SortOrder}`;
+
 export default function SortPopover() {
   const router = useRouter();
   const sp = useSearchParams();
@@ -38,24 +42,30 @@ export default function SortPopover() {
   const popoverId = useId();
   const groupName = useId();
 
-  const sortBy = (sp.get("sort_by") ?? "created_date") as
-    | "created_date"
-    | "title";
-  const sortOrder = (sp.get("sort_order") ?? "desc") as "asc" | "desc";
+  const sortBy = (sp.get("sort_by") ?? "created_date") as SortBy;
+  const sortOrder = (sp.get("sort_order") ?? "desc") as SortOrder;
 
-  const selectedKey = `${sortBy}-${sortOrder}`;
+  const urlSelectedKey = `${sortBy}-${sortOrder}` as SortKey;
+
+  const [optimisticSelectedKey, setOptimisticSelectedKey] = useOptimistic<
+    SortKey,
+    SortKey
+  >(urlSelectedKey, (_current, next) => next);
 
   useEffect(() => {
     globalThis.ECL?.autoInit?.();
   }, []);
 
-  const apply = (next: { sort_by: string; sort_order: string }) => {
+  const apply = (next: { sort_by: SortBy; sort_order: SortOrder }) => {
+    const nextKey = `${next.sort_by}-${next.sort_order}` as SortKey;
+
     const params = new URLSearchParams(sp.toString());
     params.set("sort_by", next.sort_by);
     params.set("sort_order", next.sort_order);
     params.delete("page");
 
     startTransition(() => {
+      setOptimisticSelectedKey(nextKey);
       router.push(`?${params.toString()}`);
     });
   };
@@ -98,7 +108,7 @@ export default function SortPopover() {
               <legend className="ecl-u-sr-only">Sort options</legend>
 
               {OPTIONS.map((o) => {
-                const value = `${o.sort_by}-${o.sort_order}`;
+                const value = `${o.sort_by}-${o.sort_order}` as SortKey;
                 const inputId = `${popoverId}-${o.id}`;
 
                 return (
@@ -109,7 +119,7 @@ export default function SortPopover() {
                       className="ecl-radio__input"
                       type="radio"
                       value={value}
-                      checked={selectedKey === value}
+                      checked={optimisticSelectedKey === value} // ✅ important
                       disabled={isPending}
                       onChange={() =>
                         apply({ sort_by: o.sort_by, sort_order: o.sort_order })

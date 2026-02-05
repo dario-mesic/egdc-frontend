@@ -28,7 +28,7 @@ export const step5Schema = baseMetadataSchema
   .pick({ benefits: true })
   .superRefine((val, ctx) => {
     const hasEnvironmental = (val.benefits ?? []).some(
-      (b) => (b.type_code || "").toLowerCase() === "environmental"
+      (b) => (b.type_code || "").toLowerCase() === "environmental",
     );
 
     if (!hasEnvironmental) {

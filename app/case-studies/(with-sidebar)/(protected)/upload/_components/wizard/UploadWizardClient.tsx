@@ -7,7 +7,7 @@ import {
   uploadStepDefs,
   uploadStepComponents,
 } from "../steps/index";
-import type { ReferenceData } from "../../../../_types/referenceData";
+import type { ReferenceData } from "../../../../../_types/referenceData";
 import { ReferenceDataProvider } from "../../_context/ReferenceDataContext";
 import {
   WizardDataProvider,
@@ -155,7 +155,7 @@ function WizardInner({
       }
       sessionStorage.setItem("case-study-created", "1");
 
-      globalThis.location.replace("/case-studies");
+      globalThis.location.replace("/case-studies/my");
     } catch (e) {
       setSubmitState("error");
       setSubmitError(

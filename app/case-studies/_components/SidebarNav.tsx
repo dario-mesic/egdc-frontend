@@ -25,8 +25,12 @@ export default function SidebarNav() {
 
       <Link
         className="ecl-link ecl-link--primary  ecl-u-d-block  ecl-u-type-align-center ecl-u-mb-l"
-        aria-current={pathname === "/case-studies/upload" ? "page" : undefined}
-        href="/case-studies/upload"
+        aria-current={
+          pathname === "/case-studies/upload" || pathname === "/case-studies/my"
+            ? "page"
+            : undefined
+        }
+        href="/case-studies/my"
       >
         Upload/Modify case studies
       </Link>

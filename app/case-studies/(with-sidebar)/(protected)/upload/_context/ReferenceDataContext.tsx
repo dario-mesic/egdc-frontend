@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext } from "react";
-import type { ReferenceData } from "../../../_types/referenceData";
+import type { ReferenceData } from "../../../../_types/referenceData";
 
 const ReferenceDataContext = createContext<ReferenceData | null>(null);
 

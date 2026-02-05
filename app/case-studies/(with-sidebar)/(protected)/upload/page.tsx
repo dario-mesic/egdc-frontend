@@ -1,6 +1,9 @@
-import UploadGateClient from "./_components/UploadGateClient";
-import type { ReferenceData, Organization } from "../../_types/referenceData";
-import { API_BASE, fetchJson } from "../../_lib/api";
+import UploadWizardClient from "../upload/_components/wizard/UploadWizardClient";
+import type {
+  ReferenceData,
+  Organization,
+} from "../../../_types/referenceData";
+import { API_BASE, fetchJson } from "../../../_lib/api";
 
 async function getReferenceData(): Promise<ReferenceData> {
   return fetchJson(`${API_BASE}/api/v1/reference-data/`);
@@ -15,8 +18,12 @@ export default async function UploadPage() {
     getReferenceData(),
     getOrganizations(),
   ]);
-
   return (
-    <UploadGateClient referenceData={{ ...referenceData, organizations }} />
+    <UploadWizardClient
+      referenceData={{
+        ...referenceData,
+        organizations,
+      }}
+    />
   );
 }

@@ -8,15 +8,16 @@ export default function LoginPage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (sessionStorage.getItem("upload-authed") === "1") {
-      router.replace("/case-studies/upload");
+    if (sessionStorage.getItem("cs-authed") === "1") {
+      router.replace("/case-studies/my");
     }
   }, [router]);
 
   return (
     <Login
       onSuccess={() => {
-        router.replace("/case-studies/upload");
+        sessionStorage.setItem("cs-authed", "1");
+        router.replace("/case-studies/my");
       }}
     />
   );

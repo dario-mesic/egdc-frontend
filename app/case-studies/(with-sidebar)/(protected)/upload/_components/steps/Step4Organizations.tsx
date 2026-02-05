@@ -4,9 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import ClientIcon from "@/app/case-studies/_components/icons/ClientIcon";
 import { useReferenceData } from "../../_context/ReferenceDataContext";
 import { useWizardData } from "../../_context/WizardDataContext";
-import type { Organization } from "../../../../_types/referenceData";
+import type { Organization } from "../../../../../_types/referenceData";
 import { createOrganizationSchema } from "../../_lib/schemas/organization";
-import Modal from "@/app/case-studies/(with-sidebar)/upload/_components/Modal";
+import Modal from "@/app/case-studies/(with-sidebar)/(protected)/upload/_components/Modal";
 
 type FormState = {
   providedBy: string;
@@ -415,112 +415,114 @@ export default function Step4Organizations() {
         If you do not find the organization you are looking for in the list, you
         can add it using the <strong>“Add organization”</strong> option below.
       </p>
-      <div className="ecl-form-group ecl-u-mb-m">
-        <label htmlFor="cs-provided-by" className="ecl-form-label">
-          Provided By{" "}
-          <span
-            className="ecl-form-label__required"
-            role="note"
-            aria-label="required"
-          >
-            *
-          </span>
-        </label>
+      <div className="w-full max-w-2xl lg:max-w-4xl">
+        <div className="ecl-form-group ecl-u-mb-m">
+          <label htmlFor="cs-provided-by" className="ecl-form-label">
+            Provided By{" "}
+            <span
+              className="ecl-form-label__required"
+              role="note"
+              aria-label="required"
+            >
+              *
+            </span>
+          </label>
 
-        <div className="ecl-select__container ecl-select__container--m">
-          <select
-            id="cs-provided-by"
-            className="ecl-select"
-            value={form.providedBy}
-            onChange={(e) => {
-              const v = e.target.value;
-              setForm((p) => ({ ...p, providedBy: v }));
-              setMetadata({ provider_org_id: toIdOrUndefined(v) });
-            }}
-            onBlur={() => setTouchedProvided(true)}
-            required
-            data-ecl-auto-init="Select"
-          >
-            <option value="" disabled>
-              Select provided by...
-            </option>
-            {orgOptions.map((o) => (
-              <option key={o.id} value={String(o.id)}>
-                {o.name}
+          <div className="ecl-select__container ecl-select__container--m">
+            <select
+              id="cs-provided-by"
+              className="ecl-select"
+              value={form.providedBy}
+              onChange={(e) => {
+                const v = e.target.value;
+                setForm((p) => ({ ...p, providedBy: v }));
+                setMetadata({ provider_org_id: toIdOrUndefined(v) });
+              }}
+              onBlur={() => setTouchedProvided(true)}
+              required
+              data-ecl-auto-init="Select"
+            >
+              <option value="" disabled>
+                Select provided by...
               </option>
-            ))}
-          </select>
+              {orgOptions.map((o) => (
+                <option key={o.id} value={String(o.id)}>
+                  {o.name}
+                </option>
+              ))}
+            </select>
 
-          <div className="ecl-select__icon">
-            <ClientIcon className="wt-icon-ecl--corner-arrow-down ecl-icon ecl-icon--xs " />
+            <div className="ecl-select__icon">
+              <ClientIcon className="wt-icon-ecl--corner-arrow-down ecl-icon ecl-icon--xs " />
+            </div>
+          </div>
+
+          {providedError ? (
+            <div className="ecl-feedback-message ecl-feedback-message--error ecl-u-mt-2xs">
+              {providedError}
+            </div>
+          ) : null}
+        </div>
+
+        <div className="ecl-form-group ecl-u-mb-m">
+          <label htmlFor="cs-funded-by" className="ecl-form-label">
+            Funded By
+          </label>
+
+          <div className="ecl-select__container ecl-select__container--m">
+            <select
+              id="cs-funded-by"
+              className="ecl-select"
+              value={form.fundedBy}
+              onChange={(e) => {
+                const v = e.target.value;
+                setForm((p) => ({ ...p, fundedBy: v }));
+                setMetadata({ funder_org_id: toIdOrUndefined(v) });
+              }}
+              data-ecl-auto-init="Select"
+            >
+              <option value="">-</option>
+              {orgOptions.map((o) => (
+                <option key={o.id} value={String(o.id)}>
+                  {o.name}
+                </option>
+              ))}
+            </select>
+
+            <div className="ecl-select__icon">
+              <ClientIcon className="wt-icon-ecl--corner-arrow-down ecl-icon ecl-icon--xs " />
+            </div>
           </div>
         </div>
 
-        {providedError ? (
-          <div className="ecl-feedback-message ecl-feedback-message--error ecl-u-mt-2xs">
-            {providedError}
-          </div>
-        ) : null}
-      </div>
+        <div className="ecl-form-group ecl-u-mb-m">
+          <label htmlFor="cs-used-by" className="ecl-form-label">
+            Used By
+          </label>
 
-      <div className="ecl-form-group ecl-u-mb-m">
-        <label htmlFor="cs-funded-by" className="ecl-form-label">
-          Funded By
-        </label>
+          <div className="ecl-select__container ecl-select__container--m">
+            <select
+              id="cs-used-by"
+              className="ecl-select"
+              value={form.usedBy}
+              onChange={(e) => {
+                const v = e.target.value;
+                setForm((p) => ({ ...p, usedBy: v }));
+                setMetadata({ used_by_org_id: toIdOrUndefined(v) });
+              }}
+              data-ecl-auto-init="Select"
+            >
+              <option value="">-</option>
+              {orgOptions.map((o) => (
+                <option key={o.id} value={String(o.id)}>
+                  {o.name}
+                </option>
+              ))}
+            </select>
 
-        <div className="ecl-select__container ecl-select__container--m">
-          <select
-            id="cs-funded-by"
-            className="ecl-select"
-            value={form.fundedBy}
-            onChange={(e) => {
-              const v = e.target.value;
-              setForm((p) => ({ ...p, fundedBy: v }));
-              setMetadata({ funder_org_id: toIdOrUndefined(v) });
-            }}
-            data-ecl-auto-init="Select"
-          >
-            <option value="">-</option>
-            {orgOptions.map((o) => (
-              <option key={o.id} value={String(o.id)}>
-                {o.name}
-              </option>
-            ))}
-          </select>
-
-          <div className="ecl-select__icon">
-            <ClientIcon className="wt-icon-ecl--corner-arrow-down ecl-icon ecl-icon--xs " />
-          </div>
-        </div>
-      </div>
-
-      <div className="ecl-form-group ecl-u-mb-m">
-        <label htmlFor="cs-used-by" className="ecl-form-label">
-          Used By
-        </label>
-
-        <div className="ecl-select__container ecl-select__container--m">
-          <select
-            id="cs-used-by"
-            className="ecl-select"
-            value={form.usedBy}
-            onChange={(e) => {
-              const v = e.target.value;
-              setForm((p) => ({ ...p, usedBy: v }));
-              setMetadata({ used_by_org_id: toIdOrUndefined(v) });
-            }}
-            data-ecl-auto-init="Select"
-          >
-            <option value="">-</option>
-            {orgOptions.map((o) => (
-              <option key={o.id} value={String(o.id)}>
-                {o.name}
-              </option>
-            ))}
-          </select>
-
-          <div className="ecl-select__icon">
-            <ClientIcon className="wt-icon-ecl--corner-arrow-down ecl-icon ecl-icon--xs " />
+            <div className="ecl-select__icon">
+              <ClientIcon className="wt-icon-ecl--corner-arrow-down ecl-icon ecl-icon--xs " />
+            </div>
           </div>
         </div>
       </div>

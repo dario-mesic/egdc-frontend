@@ -1,10 +1,9 @@
 "use client";
 
-import { useTransition } from "react";
+import { useTransition, useOptimistic } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 type MatchType = "partial" | "exact";
-const KEY = "caseStudies.match_type";
 
 export default function MatchTypeToggle() {
   const router = useRouter();
@@ -14,13 +13,19 @@ export default function MatchTypeToggle() {
   const matchType: MatchType =
     sp.get("match_type") === "partial" ? "partial" : "exact";
 
+  const [optimisticMatchType, setOptimisticMatchType] = useOptimistic<
+    MatchType,
+    MatchType
+  >(matchType, (_current, next) => next);
+
   const apply = (next: MatchType) => {
     const params = new URLSearchParams(sp.toString());
     params.set("match_type", next);
     params.delete("page");
 
     startTransition(() => {
-      router.push(`?${params.toString()}`);
+      setOptimisticMatchType(next);
+      router.replace(`?${params.toString()}`);
     });
   };
 
@@ -35,7 +40,7 @@ export default function MatchTypeToggle() {
             className="ecl-radio__input"
             type="radio"
             value="exact"
-            checked={matchType === "exact"}
+            checked={optimisticMatchType === "exact"}
             disabled={isPending}
             onChange={() => apply("exact")}
           />
@@ -53,7 +58,7 @@ export default function MatchTypeToggle() {
             className="ecl-radio__input"
             type="radio"
             value="partial"
-            checked={matchType === "partial"}
+            checked={optimisticMatchType === "partial"}
             disabled={isPending}
             onChange={() => apply("partial")}
           />

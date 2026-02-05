@@ -4,10 +4,10 @@ import type { CaseStudyDetail } from "../_types/caseStudyDetail";
 import { compactLocations } from "../_lib/locations";
 import { iso2CountryName } from "../_lib/iso";
 import ClientIcon from "../_components/icons/ClientIcon";
+import MyEditButton from "./MyEditButton";
 
 type Props = Readonly<{
   cs: CaseStudyDetail;
-  /** When true: hide "Back to case studies" link + show file names instead of download links */
   preview?: boolean;
 }>;
 
@@ -23,20 +23,23 @@ function benefit(cs: CaseStudyDetail, code: string) {
   return `${formatValue(b.value)} ${b.unit?.code ?? ""} — ${b.name ?? ""}`.trim();
 }
 
-export default function CaseStudyView({ cs, preview = false }: Props) {
+export default function CaseStudyDetails({ cs, preview = false }: Props) {
   const provider = cs.is_provided_by?.[0] ?? null;
   const locations = compactLocations(cs.addresses);
 
   return (
     <div className="ecl-u-pa-xl">
       {!preview && (
-        <Link
-          href="/case-studies"
-          className="ecl-link ecl-link--default ecl-link--icon ecl-u-d-inline-flex ecl-u-align-items-center ecl-u-mb-m"
-        >
-          <ClientIcon className="wt-icon-ecl--arrow-left ecl-icon ecl-icon--l ecl-link__icon" />
-          <span className="ecl-link__label">Back to case studies</span>
-        </Link>
+        <div className="ecl-u-d-flex ecl-u-flex-wrap ecl-u-align-items-center ecl-u-justify-content-between ecl-u-mb-m">
+          <Link
+            href="/case-studies"
+            className="ecl-link ecl-link--default ecl-link--icon ecl-u-d-inline-flex ecl-u-align-items-center ecl-u-mb-m"
+          >
+            <ClientIcon className="wt-icon-ecl--arrow-left ecl-icon ecl-icon--l ecl-link__icon" />
+            <span className="ecl-link__label">Back to case studies</span>
+          </Link>
+          <MyEditButton caseStudyId={cs.id} />
+        </div>
       )}
 
       <div className="ecl-row">
@@ -101,7 +104,7 @@ export default function CaseStudyView({ cs, preview = false }: Props) {
 
                 <div className="ecl-u-bg-grey-75 ecl-u-pa-m ecl-u-mt-m ecl-u-d-flex ecl-u-flex-column gap-3">
                   {/* Methodology */}
-                  <div className="ecl-file" data-ecl-file>
+                  <div className="ecl-file ecl-u-max-width-100" data-ecl-file>
                     <div
                       className={[
                         "ecl-file__container",

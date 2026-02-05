@@ -58,7 +58,11 @@ export default function Modal({
         id={toggleId}
         aria-controls={dialogId}
         aria-haspopup="dialog"
-        onClick={onOpen}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onOpen?.();
+        }}
       >
         {triggerLabel}
       </button>

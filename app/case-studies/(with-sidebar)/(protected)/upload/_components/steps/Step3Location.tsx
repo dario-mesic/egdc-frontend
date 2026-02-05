@@ -272,170 +272,179 @@ export default function Step3Location() {
       <p className="ecl-u-type-paragraph ecl-u-mb-l">
         Specify the geographical location relevant to this case study.
       </p>
+      <div className="w-full max-w-2xl lg:max-w-4xl">
+        <div className="ecl-form-group ecl-u-mb-m">
+          <label className="ecl-form-label" htmlFor="cs-country">
+            Country <span className="ecl-u-type-color-error">*</span>
+          </label>{" "}
+          <div className="relative">
+            <input
+              {...getInputProps()}
+              id="cs-country"
+              autoComplete="new-password"
+              autoCorrect="off"
+              autoCapitalize="none"
+              spellCheck={false}
+              required
+              onBlur={() => touch("country")}
+              className="ecl-text-input ecl-u-width-100 pr-10"
+            />
 
-      <div className="ecl-form-group ecl-u-mb-m">
-        <label className="ecl-form-label" htmlFor="cs-country">
-          Country <span className="ecl-u-type-color-error">*</span>
-        </label>{" "}
-        <div className="relative">
-          <input
-            id="cs-country"
-            required
-            onBlur={() => touch("country")}
-            className="ecl-text-input ecl-u-width-100 pr-10"
-            {...getInputProps()}
-          />
+            {!isInputEmpty ? (
+              <button
+                type="button"
+                aria-label="Clear country"
+                {...countryClearProps}
+                onClick={(e) => {
+                  countryClearProps.onClick?.(e);
+                  setCountrySelected(undefined);
+                  setCitySelected(undefined);
+                  setCities([]);
+                  setForm((p) => ({ ...p, country: "", cityRegion: "" }));
+                  syncAddresses("", "");
+                }}
+                className="absolute right-10 top-1/2 -translate-y-1/2 ecl-u-pa-none ecl-u-d-flex ecl-u-align-items-center leading-none"
+              >
+                <ClientIcon className="wt-icon-close wt-icon--s" />
+              </button>
+            ) : null}
 
-          {!isInputEmpty ? (
             <button
               type="button"
-              aria-label="Clear country"
-              {...countryClearProps}
-              onClick={(e) => {
-                countryClearProps.onClick?.(e);
-                setCountrySelected(undefined);
-                setCitySelected(undefined);
-                setCities([]);
-                setForm((p) => ({ ...p, country: "", cityRegion: "" }));
-                syncAddresses("", "");
-              }}
-              className="absolute right-10 top-1/2 -translate-y-1/2 ecl-u-pa-none ecl-u-d-flex ecl-u-align-items-center leading-none"
+              aria-label="Toggle country list"
+              {...getToggleProps()}
+              className="ecl-select__icon ecl-u-bg-transparent"
             >
-              <ClientIcon className="wt-icon-close wt-icon--s" />
+              <ClientIcon className="wt-icon-corner-arrow-down wt-icon--s" />
             </button>
-          ) : null}
 
-          <button
-            type="button"
-            aria-label="Toggle country list"
-            {...getToggleProps()}
-            className="ecl-select__icon ecl-u-bg-transparent"
-          >
-            <ClientIcon className="wt-icon-corner-arrow-down wt-icon--s" />
-          </button>
-
-          <ul
-            {...getListProps()}
-            className={[
-              open ? "ecl-u-d-block" : "ecl-u-d-none",
-              "absolute left-0 right-0 z-20",
-              "ecl-u-bg-white",
-              "ecl-u-border-all ecl-u-border-width-1 ecl-u-border-style-solid ecl-u-border-color-black",
-              "ecl-u-ma-none ecl-u-pa-none",
-              "ecl-u-mt-2xs",
-              "max-h-64 overflow-auto",
-            ].join(" ")}
-          >
-            {filteredCountries.length ? (
-              filteredCountries.map((item, index) => (
-                <li
-                  key={item.code}
-                  {...getItemProps({ item, index })}
-                  className={[
-                    "ecl-u-ph-s ecl-u-pv-xs",
-                    focusIndex === index ? "bg-[#0078D7]" : "ecl-u-bg-white",
-                    focusIndex === index
-                      ? "ecl-u-type-color-white"
-                      : "ecl-u-type-color-black",
-                  ].join(" ")}
-                >
-                  {item.label}
+            <ul
+              {...getListProps()}
+              className={[
+                open ? "ecl-u-d-block" : "ecl-u-d-none",
+                "absolute left-0 right-0 z-20",
+                "ecl-u-bg-white",
+                "ecl-u-border-all ecl-u-border-width-1 ecl-u-border-style-solid ecl-u-border-color-black",
+                "ecl-u-ma-none ecl-u-pa-none",
+                "ecl-u-mt-2xs",
+                "max-h-64 overflow-auto",
+              ].join(" ")}
+            >
+              {filteredCountries.length ? (
+                filteredCountries.map((item, index) => (
+                  <li
+                    key={item.code}
+                    {...getItemProps({ item, index })}
+                    className={[
+                      "ecl-u-ph-s ecl-u-pv-xs",
+                      focusIndex === index ? "bg-[#0078D7]" : "ecl-u-bg-white",
+                      focusIndex === index
+                        ? "ecl-u-type-color-white"
+                        : "ecl-u-type-color-black",
+                    ].join(" ")}
+                  >
+                    {item.label}
+                  </li>
+                ))
+              ) : (
+                <li className="ecl-u-ph-s ecl-u-pv-xs ecl-u-type-color-black">
+                  No results
                 </li>
-              ))
-            ) : (
-              <li className="ecl-u-ph-s ecl-u-pv-xs ecl-u-type-color-black">
-                No results
-              </li>
-            )}
-          </ul>
-        </div>
-        {showError("country") ? (
-          <div className="ecl-feedback-message ecl-feedback-message--error ecl-u-mt-2xs">
-            {showError("country")}
+              )}
+            </ul>
           </div>
-        ) : null}
-      </div>
+          {showError("country") ? (
+            <div className="ecl-feedback-message ecl-feedback-message--error ecl-u-mt-2xs">
+              {showError("country")}
+            </div>
+          ) : null}
+        </div>
 
-      <div className="ecl-form-group ecl-u-mb-m">
-        <label className="ecl-form-label" htmlFor="cs-city-region">
-          City / Region
-        </label>
-        <div className="relative">
-          <input
-            id="cs-city-region"
-            disabled={!hasValidCountry || citiesLoading}
-            onBlur={() => touch("cityRegion")}
-            className="ecl-text-input ecl-u-width-100 pr-10"
-            {...getCityInputProps()}
-          />
+        <div className="ecl-form-group ecl-u-mb-m">
+          <label className="ecl-form-label" htmlFor="cs-city-region">
+            City / Region
+          </label>
+          <div className="relative">
+            <input
+              {...getCityInputProps()}
+              id="cs-city-region"
+              autoComplete="new-password"
+              autoCorrect="off"
+              autoCapitalize="none"
+              spellCheck={false}
+              disabled={!hasValidCountry || citiesLoading}
+              onBlur={() => touch("cityRegion")}
+              className="ecl-text-input ecl-u-width-100 pr-10"
+            />
 
-          {!isCityInputEmpty ? (
+            {!isCityInputEmpty ? (
+              <button
+                type="button"
+                aria-label="Clear city"
+                {...cityClearProps}
+                onClick={(e) => {
+                  cityClearProps.onClick?.(e);
+                  setCitySelected(undefined);
+                  set("cityRegion", "");
+                  syncAddresses(form.country, "");
+                }}
+                className="absolute right-10 top-1/2 -translate-y-1/2 ecl-u-pa-none ecl-u-d-flex ecl-u-align-items-center leading-none"
+              >
+                <ClientIcon className="wt-icon-close wt-icon--s" />
+              </button>
+            ) : null}
+
             <button
               type="button"
-              aria-label="Clear city"
-              {...cityClearProps}
-              onClick={(e) => {
-                cityClearProps.onClick?.(e);
-                setCitySelected(undefined);
-                set("cityRegion", "");
-                syncAddresses(form.country, "");
-              }}
-              className="absolute right-10 top-1/2 -translate-y-1/2 ecl-u-pa-none ecl-u-d-flex ecl-u-align-items-center leading-none"
+              aria-label="Toggle city list"
+              {...getCityToggleProps()}
+              className="ecl-select__icon ecl-u-bg-transparent"
+              disabled={!hasValidCountry || citiesLoading}
             >
-              <ClientIcon className="wt-icon-close wt-icon--s" />
+              <ClientIcon className="wt-icon-corner-arrow-down wt-icon--s" />
             </button>
-          ) : null}
 
-          <button
-            type="button"
-            aria-label="Toggle city list"
-            {...getCityToggleProps()}
-            className="ecl-select__icon ecl-u-bg-transparent"
-            disabled={!hasValidCountry || citiesLoading}
-          >
-            <ClientIcon className="wt-icon-corner-arrow-down wt-icon--s" />
-          </button>
-
-          <ul
-            {...getCityListProps()}
-            className={[
-              cityOpen ? "ecl-u-d-block" : "ecl-u-d-none",
-              "absolute left-0 right-0 z-20",
-              "ecl-u-bg-white",
-              "ecl-u-border-all ecl-u-border-width-1 ecl-u-border-style-solid ecl-u-border-color-black",
-              "ecl-u-ma-none ecl-u-pa-none",
-              "ecl-u-mt-2xs",
-              "max-h-64 overflow-auto",
-            ].join(" ")}
-          >
-            {citiesLoading ? (
-              <li className="ecl-u-ph-s ecl-u-pv-xs ecl-u-type-color-black">
-                Loading…
-              </li>
-            ) : filteredCities.length ? (
-              filteredCities.map((item, index) => (
-                <li
-                  key={item.id}
-                  {...getCityItemProps({ item, index })}
-                  className={[
-                    "ecl-u-ph-s ecl-u-pv-xs",
-                    cityFocusIndex === index
-                      ? "bg-[#0078D7]"
-                      : "ecl-u-bg-white",
-                    cityFocusIndex === index
-                      ? "ecl-u-type-color-white"
-                      : "ecl-u-type-color-black",
-                  ].join(" ")}
-                >
-                  {item.name}
+            <ul
+              {...getCityListProps()}
+              className={[
+                cityOpen ? "ecl-u-d-block" : "ecl-u-d-none",
+                "absolute left-0 right-0 z-20",
+                "ecl-u-bg-white",
+                "ecl-u-border-all ecl-u-border-width-1 ecl-u-border-style-solid ecl-u-border-color-black",
+                "ecl-u-ma-none ecl-u-pa-none",
+                "ecl-u-mt-2xs",
+                "max-h-64 overflow-auto",
+              ].join(" ")}
+            >
+              {citiesLoading ? (
+                <li className="ecl-u-ph-s ecl-u-pv-xs ecl-u-type-color-black">
+                  Loading…
                 </li>
-              ))
-            ) : (
-              <li className="ecl-u-ph-s ecl-u-pv-xs ecl-u-type-color-black">
-                No results
-              </li>
-            )}
-          </ul>
+              ) : filteredCities.length ? (
+                filteredCities.map((item, index) => (
+                  <li
+                    key={item.id}
+                    {...getCityItemProps({ item, index })}
+                    className={[
+                      "ecl-u-ph-s ecl-u-pv-xs",
+                      cityFocusIndex === index
+                        ? "bg-[#0078D7]"
+                        : "ecl-u-bg-white",
+                      cityFocusIndex === index
+                        ? "ecl-u-type-color-white"
+                        : "ecl-u-type-color-black",
+                    ].join(" ")}
+                  >
+                    {item.name}
+                  </li>
+                ))
+              ) : (
+                <li className="ecl-u-ph-s ecl-u-pv-xs ecl-u-type-color-black">
+                  No results
+                </li>
+              )}
+            </ul>
+          </div>
         </div>
       </div>
     </>

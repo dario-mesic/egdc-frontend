@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
-import { createOrganizationSchema } from "@/app/case-studies/(with-sidebar)/upload/_lib/schemas/organization";
+import { createOrganizationSchema } from "@/app/case-studies/(with-sidebar)/(protected)/upload/_lib/schemas/organization";
 
 export const runtime = "nodejs";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+const API_BASE_URL = process.env.API_BASE_URL ?? "http://localhost:8000";
 const TARGET = `${API_BASE_URL}/api/v1/organizations/`;
 
 export async function POST(req: Request) {

@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   devIndicators: false,
+  output: "standalone",
   serverExternalPackages: ["@countrystatecity/countries"],
   outputFileTracingIncludes: {
     "*": ["./node_modules/@countrystatecity/countries/**"],
@@ -29,10 +30,11 @@ const nextConfig: NextConfig = {
     ];
   },
   async rewrites() {
+    const apiBase = process.env.API_BASE_URL || "http://127.0.0.1:8000";
     return [
       {
         source: "/static/uploads/:path*",
-        destination: "http://127.0.0.1:8000/static/uploads/:path*",
+        destination: `${apiBase}/static/uploads/:path*`,
       },
     ];
   },

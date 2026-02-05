@@ -27,8 +27,8 @@ export default function Login({ onSuccess }: LoginProps) {
     setError("");
     if (!canSubmit) return;
 
-    if (form.username === "admin" && form.password === "admin") {
-      sessionStorage.setItem("upload-authed", "1");
+    if (form.username === "custodian1" && form.password === "custodian1") {
+      sessionStorage.setItem("cs-authed", "1");
       onSuccess();
       return;
     }
