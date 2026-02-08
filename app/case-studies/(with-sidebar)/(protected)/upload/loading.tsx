@@ -1,4 +1,4 @@
-import LoadingIndicator from "../_components/LoadingIndicator";
+import LoadingIndicator from "../../../_components/LoadingIndicator";
 export default function Loading() {
   return (
     <div className="ecl-u-d-flex ecl-u-flex-column h-[calc(100vh-200px)] min-h-100">

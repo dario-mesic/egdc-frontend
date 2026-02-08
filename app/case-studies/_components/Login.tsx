@@ -36,8 +36,8 @@ export default function Login({ onSuccess }: LoginProps) {
     setError("Please enter a correct username and password.");
   }
   return (
-    <div className="ecl-u-bg-grey-25 min-h-screen ecl-u-d-flex ecl-u-align-items-center ecl-u-justify-content-center ecl-u-pa-l">
-      <div className="ecl-container" style={{ maxWidth: 520 }}>
+    <div className="ecl-u-bg-grey-25 min-h-screen ecl-u-d-flex ecl-u-align-items-center ecl-u-justify-content-center ">
+      <div className="ecl-container max-w-130!">
         <article className="ecl-card ecl-u-width-100">
           <div className="ecl-card__body">
             <div className="ecl-u-d-flex ecl-u-flex-column ecl-u-align-items-center ecl-u-mb-l">

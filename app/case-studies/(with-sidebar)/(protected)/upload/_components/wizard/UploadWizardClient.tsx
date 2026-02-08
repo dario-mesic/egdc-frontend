@@ -155,7 +155,7 @@ function WizardInner({
       }
       sessionStorage.setItem("case-study-created", "1");
 
-      globalThis.location.replace("/case-studies/my");
+      globalThis.location.replace("/case-studies");
     } catch (e) {
       setSubmitState("error");
       setSubmitError(

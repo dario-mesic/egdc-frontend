@@ -71,20 +71,21 @@ export default async function CaseStudiesPageShell({
       <CreatedNotification />
 
       <div className="ecl-row ecl-u-align-items-end ecl-u-mb-s">
-        <div className="ecl-col-12 ecl-col-l-8 ecl-col-xl-9">
+        {/* Search */}
+        <div className="ecl-col-12 ecl-col-l-8 ecl-col-xl-9 order-0">
           <Search />
         </div>
 
-        <div className="ecl-col-12 ecl-col-l-4 ecl-col-xl-3">
-          <Filters referenceData={referenceData} facets={facets} />
-        </div>
-      </div>
-
-      <div className="ecl-row ecl-u-mb-s">
-        <div className="ecl-col-12">
+        {/* Toggle */}
+        <div className="ecl-col-12 order-1 ecl-u-mt-s min-[1140px]:order-2 min-[1140px]:ecl-u-mt-none">
           <div className="ecl-u-d-flex ecl-u-align-items-center ecl-u-justify-content-between gap-3">
             <MatchTypeToggle />
           </div>
+        </div>
+
+        {/* Filters */}
+        <div className="ecl-col-12 ecl-col-l-4 ecl-col-xl-3 order-2 min-[1140px]:order-1">
+          <Filters referenceData={referenceData} facets={facets} />
         </div>
       </div>
 

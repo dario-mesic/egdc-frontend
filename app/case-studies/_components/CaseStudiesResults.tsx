@@ -63,7 +63,7 @@ export default async function CaseStudiesResults({
         <div className="ecl-row ecl-u-mb-s">
           <div className="ecl-col-12">
             <div className="ecl-u-d-flex ecl-u-align-items-center ecl-u-justify-content-between gap-4">
-              <span className="ecl-u-type-paragraph ecl-u-type-italic">
+              <span className="ecl-u-type-s ecl-u-type-italic">
                 Case studies found (0)
               </span>
               <SortPopover />
@@ -92,7 +92,7 @@ export default async function CaseStudiesResults({
       <div className="ecl-row ecl-u-mb-s">
         <div className="ecl-col-12">
           <div className="ecl-u-d-flex ecl-u-align-items-center ecl-u-justify-content-between gap-4">
-            <span className="ecl-u-type-paragraph ecl-u-type-italic">
+            <span className="ecl-u-type-s ecl-u-type-italic">
               Case studies found ({result.total})
             </span>
             <SortPopover />
@@ -102,7 +102,10 @@ export default async function CaseStudiesResults({
       <div className="ecl-row">
         <div className="ecl-col-12">
           <div className="ecl-u-d-flex ecl-u-flex-column max-h-[calc(100vh-200px)] min-h-90">
-            <div className="flex-1 min-h-0 overflow-y-auto">
+            <div
+              id="case-studies-scroll"
+              className="flex-1 min-h-0 overflow-y-auto"
+            >
               <CaseStudiesList caseStudies={result.items} />
             </div>
 

@@ -5,6 +5,7 @@ import { compactLocations } from "../_lib/locations";
 import { iso2CountryName } from "../_lib/iso";
 import ClientIcon from "../_components/icons/ClientIcon";
 import MyEditButton from "./MyEditButton";
+import BackToCaseStudiesLink from "./BackToCaseStudiesLink";
 
 type Props = Readonly<{
   cs: CaseStudyDetail;
@@ -31,13 +32,7 @@ export default function CaseStudyDetails({ cs, preview = false }: Props) {
     <div className="ecl-u-pa-xl">
       {!preview && (
         <div className="ecl-u-d-flex ecl-u-flex-wrap ecl-u-align-items-center ecl-u-justify-content-between ecl-u-mb-m">
-          <Link
-            href="/case-studies"
-            className="ecl-link ecl-link--default ecl-link--icon ecl-u-d-inline-flex ecl-u-align-items-center ecl-u-mb-m"
-          >
-            <ClientIcon className="wt-icon-ecl--arrow-left ecl-icon ecl-icon--l ecl-link__icon" />
-            <span className="ecl-link__label">Back to case studies</span>
-          </Link>
+          <BackToCaseStudiesLink />
           <MyEditButton caseStudyId={cs.id} />
         </div>
       )}
@@ -112,8 +107,8 @@ export default function CaseStudyDetails({ cs, preview = false }: Props) {
                       ].join(" ")}
                     >
                       <ClientIcon className="wt-icon-ecl--file ecl-icon ecl-icon--2xl ecl-file__icon ecl-u-flex-shrink-0" />
-                      <div className="ecl-file__info">
-                        <div className="ecl-file__title">
+                      <div className="ecl-file__info min-w-0">
+                        <div className=" ecl-file__title wrap-anywhere leading-snug max-sm:text-base">
                           {cs.methodology?.url
                             ? (cs.methodology.name ?? "Methodology report")
                             : preview && cs.methodology?.name
@@ -161,8 +156,8 @@ export default function CaseStudyDetails({ cs, preview = false }: Props) {
                         ].join(" ")}
                       >
                         <ClientIcon className="wt-icon-ecl--spreadsheet ecl-icon ecl-icon--2xl ecl-file__icon ecl-icon--secondary ecl-u-flex-shrink-0" />
-                        <div className="ecl-file__info">
-                          <div className="ecl-file__title">
+                        <div className="ecl-file__info min-w-0">
+                          <div className="ecl-file__title wrap-anywhere leading-snug max-sm:text-base">
                             {cs.dataset?.url
                               ? (cs.dataset.name ?? "Dataset")
                               : preview && cs.dataset?.name

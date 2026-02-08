@@ -70,3 +70,7 @@ fieldset.ecl-select__multiple-group.is-collapsed
   > legend.ecl-select__multiple-group__toggle::after {
   transform: rotate(0deg);
 }
+
+.ecl-select__multiple-dropdown {
+  z-index: 52 !important;
+}

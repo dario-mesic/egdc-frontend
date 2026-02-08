@@ -13,7 +13,7 @@ function formatValue(value: number, unitCode: string) {
       return `${formatted} €`;
     case "PERCENT":
     case "%":
-      return `${value} %`;
+      return `${formatted} %`;
     default:
       return formatted;
   }
@@ -21,7 +21,7 @@ function formatValue(value: number, unitCode: string) {
 
 function labelFromType(typeCode: string) {
   return typeCode
-    .replaceAll(/_/g, " ")
+    .replaceAll("_", " ")
     .toLowerCase()
     .replace(/^\w/, (c) => c.toUpperCase());
 }

@@ -73,7 +73,7 @@ export default function SortPopover() {
   return (
     <div className="ecl-popover" data-ecl-auto-init="Popover">
       <button
-        className="ecl-button ecl-button--tertiary ecl-popover__toggle"
+        className="ecl-button ecl-button--tertiary ecl-popover__toggle ecl-u-pa-s"
         type="button"
         aria-controls={popoverId}
         data-ecl-popover-toggle

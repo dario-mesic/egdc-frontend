@@ -56,7 +56,7 @@ function TooltipCard({ country, pinned, onClose }: TooltipCardProps) {
       after:border-white
       after:border-x-transparent
       after:border-b-transparent"
-      onClick={(e) => e.stopPropagation()}
+      onPointerDown={(e) => e.stopPropagation()}
     >
       <div className="flex items-center gap-2 border-b border-gray-100 px-3 py-2">
         <ClientIcon
@@ -305,7 +305,7 @@ export default function ClientEuropeMap({ svg, byIso2 }: ClientEuropeMapProps) {
       ) : null}
 
       <div className="ecl-u-mt-m ecl-u-d-flex ecl-u-flex-column gap-2 sm:flex-row! sm:items-center sm:justify-end">
-        <div className="ecl-u-d-flex ecl-u-flex-wrap ecl-u-align-items-center gap-x-4 gap-y-2 text-xs text-gray-700">
+        <div className="ecl-u-d-flex ecl-u-flex-wrap ecl-u-align-items-center gap-x-3 gap-y-4 text-xs text-gray-700">
           <LegendItem color="var(--ecl-color-grey-75)" label="0" />
           <LegendItem color="var(--ecl-color-primary-200)" label="1–2" />
           <LegendItem color="var(--ecl-color-primary-400)" label="3–5" />

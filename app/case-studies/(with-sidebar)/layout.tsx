@@ -6,7 +6,7 @@ type CasesLayoutProps = Readonly<{
 export default function CasesLayout({ children }: CasesLayoutProps) {
   return (
     <div className="min-h-screen">
-      <div className="ecl-row min-[1140px]:min-h-screen ecl-u-pa-2xl ecl-u-d-flex ecl-u-align-items-stretch min-[1140px]:flex-nowrap">
+      <div className="ecl-row min-[1140px]:min-h-screen ecl-u-pa-xl ecl-u-d-flex ecl-u-align-items-stretch min-[1140px]:flex-nowrap">
         <aside
           className="
             ecl-u-width-100

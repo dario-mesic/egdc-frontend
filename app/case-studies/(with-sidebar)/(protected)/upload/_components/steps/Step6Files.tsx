@@ -11,7 +11,9 @@ type SingleFileDropzoneProps = Readonly<{
   accept: Accept;
   disabled?: boolean;
   file?: File;
-  onDropFile: (f: File) => void;
+  error?: string;
+  onDropFile: (f?: File, errorCode?: string) => void;
+  onReject?: (message: string) => void;
   onClear: () => void;
   className?: string;
 }>;
@@ -90,24 +92,41 @@ function SingleFileDropzone({
   accept,
   disabled,
   file,
+  error,
   onDropFile,
   onClear,
   className,
 }: SingleFileDropzoneProps) {
-  const { getRootProps, getInputProps, isDragAccept, isDragReject } =
-    useDropzone({
-      multiple: false,
-      disabled,
-      accept,
-      onDrop: (acceptedFiles) => {
-        const f = acceptedFiles?.[0];
-        if (f) onDropFile(f);
-      },
-    });
+  const {
+    getRootProps,
+    getInputProps,
+    isDragAccept,
+    isDragReject,
+    isDragActive,
+  } = useDropzone({
+    multiple: false,
+    disabled,
+    accept,
+    onDrop: (acceptedFiles, fileRejections) => {
+      if (fileRejections.length > 0) {
+        const code = fileRejections[0]?.errors?.[0]?.code;
+        onDropFile(undefined, code);
+        return;
+      }
+
+      const f = acceptedFiles?.[0];
+      if (f) onDropFile(f);
+    },
+  });
 
   let borderClass = "ecl-u-border-color-grey-300";
-  if (isDragAccept) borderClass = "ecl-u-border-color-success";
-  else if (isDragReject) borderClass = "ecl-u-border-color-error";
+  if (isDragActive) {
+    if (isDragAccept) borderClass = "ecl-u-border-color-success";
+    else if (isDragReject) borderClass = "ecl-u-border-color-error";
+  } else {
+    if (error) borderClass = "ecl-u-border-color-error";
+    else if (file) borderClass = "ecl-u-border-color-success"; // optional
+  }
 
   return (
     <div className={className}>
@@ -311,8 +330,16 @@ export default function Step6Files() {
             label="Drag and drop PDF file here, or click to select"
             accept={{ "application/pdf": [".pdf"] }}
             file={data.files.file_methodology}
-            onDropFile={(f) => {
+            error={methodologyError}
+            onDropFile={(f, errorCode) => {
               setTouched((p) => ({ ...p, methodology: true }));
+              if (errorCode === "file-invalid-type") {
+                setFiles({ file_methodology: undefined });
+                clearNative(methodologyRef);
+                setFileError("methodology", "Only PDF files are allowed.");
+                return;
+              }
+
               syncFileToNativeInput(methodologyRef, f);
               onPickMethodology(f);
             }}
@@ -458,8 +485,18 @@ export default function Step6Files() {
                 [".xlsx"],
             }}
             file={data.files.file_dataset}
-            onDropFile={(f) => {
+            error={datasetError}
+            onDropFile={(f, errorCode) => {
               setTouched((p) => ({ ...p, dataset: true }));
+              if (errorCode === "file-invalid-type") {
+                setFiles({ file_dataset: undefined });
+                clearNative(datasetRef);
+                setFileError(
+                  "dataset",
+                  "Only CSV, XLS, and XLSX files are allowed.",
+                );
+                return;
+              }
               syncFileToNativeInput(datasetRef, f);
               onPickDataset(f);
             }}
@@ -602,8 +639,15 @@ export default function Step6Files() {
             label="Drag and drop PNG/JPG file here, or click to select"
             accept={{ "image/png": [".png"], "image/jpeg": [".jpg", ".jpeg"] }}
             file={data.files.file_logo}
-            onDropFile={(f) => {
+            error={logoError}
+            onDropFile={(f, errorCode) => {
               setTouched((p) => ({ ...p, logo: true }));
+              if (errorCode === "file-invalid-type") {
+                setFiles({ file_logo: undefined });
+                clearNative(logoRef);
+                setFileError("logo", "Only PNG/JPG/JPEG files are allowed.");
+                return;
+              }
               syncFileToNativeInput(logoRef, f);
               onPickLogo(f);
             }}
