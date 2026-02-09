@@ -24,7 +24,6 @@ import {
 import Notification from "@/app/case-studies/_components/Notification";
 import Modal from "../Modal";
 import CaseStudyDetails from "@/app/case-studies/_components/CaseStudyDetails";
-import { API_BASE } from "@/app/case-studies/_lib/api";
 import { CaseStudyDetail } from "@/app/case-studies/_types/caseStudyDetail";
 
 type AsyncState<T extends string> =
@@ -179,7 +178,7 @@ function WizardInner({
     try {
       const fd = buildFormData(parsed.data);
 
-      const res = await fetch(`${API_BASE}/api/v1/case-studies/preview`, {
+      const res = await fetch("/api/case-studies/preview", {
         method: "POST",
         body: fd,
       });

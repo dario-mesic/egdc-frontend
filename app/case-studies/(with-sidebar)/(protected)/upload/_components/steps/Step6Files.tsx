@@ -172,6 +172,18 @@ function SingleFileDropzone({
   );
 }
 
+function resolveFieldError(
+  touchedField: boolean | undefined,
+  localError: string | undefined,
+  hasFile: boolean,
+  requiredMsg: string,
+) {
+  if (!touchedField) return undefined;
+  if (localError) return localError;
+  if (!hasFile) return requiredMsg;
+  return undefined;
+}
+
 export default function Step6Files() {
   const { languages } = useReferenceData();
   const { data, setFiles, setStepValidity, setMetadata } = useWizardData();
@@ -215,46 +227,40 @@ export default function Step6Files() {
     setErrors((p) => ({ ...p, [key]: message }));
   };
 
-  const handleDrop =
-    <K extends keyof LocalTouched>(
-      key: K,
-      ref: React.RefObject<HTMLInputElement | null>,
-    ) =>
-    (pick: (f?: File) => void, invalidTypeMessage: string) =>
-    (f?: File, errorCode?: string) => {
-      setTouched((p) => ({ ...p, [key]: true }));
+  const clearFileByKey = (key: keyof LocalTouched) => {
+    if (key === "methodology") setFiles({ file_methodology: undefined });
+    if (key === "dataset") setFiles({ file_dataset: undefined });
+    if (key === "logo") setFiles({ file_logo: undefined });
+  };
 
-      if (errorCode === "file-invalid-type") {
-        if (key === "methodology") setFiles({ file_methodology: undefined });
-        if (key === "dataset") setFiles({ file_dataset: undefined });
-        if (key === "logo") setFiles({ file_logo: undefined });
+  const handleDropFile = <K extends keyof LocalTouched>(args: {
+    key: K;
+    ref: React.RefObject<HTMLInputElement | null>;
+    pick: (f?: File) => void;
+    invalidTypeMessage: string;
+    file?: File;
+    errorCode?: string;
+  }) => {
+    const { key, ref, pick, invalidTypeMessage, file, errorCode } = args;
 
-        clearNative(ref);
-        setFileError(key, invalidTypeMessage);
-        return;
-      }
+    setTouched((p) => ({ ...p, [key]: true }));
 
-      syncFileToNativeInput(ref, f);
-      pick(f);
-    };
+    if (errorCode === "file-invalid-type") {
+      clearFileByKey(key);
+      clearNative(ref);
+      setFileError(key, invalidTypeMessage);
+      return;
+    }
+
+    syncFileToNativeInput(ref, file);
+    pick(file);
+  };
 
   const requiredMessages = {
     methodology: "Methodology report (PDF) is required.",
     dataset: "Calculator/Dataset (CSV/XLS/XLSX) is required.",
     logo: "Logo is required.",
   } as const;
-
-  function resolveFieldError(
-    touchedField: boolean | undefined,
-    localError: string | undefined,
-    hasFile: boolean,
-    requiredMsg: string,
-  ) {
-    if (!touchedField) return undefined;
-    if (localError) return localError;
-    if (!hasFile) return requiredMsg;
-    return undefined;
-  }
 
   useEffect(() => {
     globalThis.ECL?.autoInit?.();
@@ -378,10 +384,16 @@ export default function Step6Files() {
             accept={{ "application/pdf": [".pdf"] }}
             file={data.files.file_methodology}
             error={methodologyError}
-            onDropFile={handleDrop("methodology", methodologyRef)(
-              onPickMethodology,
-              "Only PDF files are allowed.",
-            )}
+            onDropFile={(file, errorCode) =>
+              handleDropFile({
+                key: "methodology",
+                ref: methodologyRef,
+                pick: onPickMethodology,
+                invalidTypeMessage: "Only PDF files are allowed.",
+                file,
+                errorCode,
+              })
+            }
             onClear={() => {
               setTouched((p) => ({ ...p, methodology: true }));
               syncFileToNativeInput(methodologyRef);
@@ -525,10 +537,17 @@ export default function Step6Files() {
             }}
             file={data.files.file_dataset}
             error={datasetError}
-            onDropFile={handleDrop("dataset", datasetRef)(
-              onPickDataset,
-              "Only CSV, XLS, and XLSX files are allowed.",
-            )}
+            onDropFile={(file, errorCode) =>
+              handleDropFile({
+                key: "dataset",
+                ref: datasetRef,
+                pick: onPickDataset,
+                invalidTypeMessage:
+                  "Only CSV, XLS, and XLSX files are allowed.",
+                file,
+                errorCode,
+              })
+            }
             onClear={() => {
               setTouched((p) => ({ ...p, dataset: true }));
               syncFileToNativeInput(datasetRef);
@@ -669,10 +688,16 @@ export default function Step6Files() {
             accept={{ "image/png": [".png"], "image/jpeg": [".jpg", ".jpeg"] }}
             file={data.files.file_logo}
             error={logoError}
-            onDropFile={handleDrop("logo", logoRef)(
-              onPickLogo,
-              "Only PNG/JPG/JPEG files are allowed.",
-            )}
+            onDropFile={(file, errorCode) =>
+              handleDropFile({
+                key: "logo",
+                ref: logoRef,
+                pick: onPickLogo,
+                invalidTypeMessage: "Only PNG/JPG/JPEG files are allowed.",
+                file,
+                errorCode,
+              })
+            }
             onClear={() => {
               setTouched((p) => ({ ...p, logo: true }));
               syncFileToNativeInput(logoRef);
