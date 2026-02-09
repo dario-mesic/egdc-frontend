@@ -3,9 +3,7 @@ export default function EgdcLayout() {
     <>
       <header className="w-full bg-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          {/* Top bar: mobile = hamburger | logo | search, desktop = centered logo */}
           <div className="flex items-center justify-between py-4 sm:py-6">
-            {/* Hamburger (mobile only) */}
             <button
               type="button"
               aria-label="Open menu"
@@ -26,16 +24,14 @@ export default function EgdcLayout() {
               </svg>
             </button>
 
-            {/* Logo */}
             <div className="flex flex-1 justify-center sm:justify-center">
               <img
                 src="https://www.greendigitalcoalition.eu/assets/uploads/2022/02/EGDC-Emblem-Colour-on-light-bg-LRES.png"
                 alt="European Green Digital Coalition"
-                className="h-[56px] sm:h-[90px] w-auto"
+                className="h-14 sm:h-22.5 w-auto"
               />
             </div>
 
-            {/* Search icon */}
             <button
               type="button"
               aria-label="Search"
@@ -55,7 +51,6 @@ export default function EgdcLayout() {
             </button>
           </div>
 
-          {/* Navigation row (desktop/tablet) */}
           <div className="hidden sm:flex relative items-center justify-center pb-6">
             <nav
               className="flex flex-wrap items-center justify-center gap-6 lg:gap-10
@@ -63,27 +58,50 @@ export default function EgdcLayout() {
                 tracking-[1px] uppercase
                 text-[#03141f]"
             >
-              <a href="#" className="text-gray-900">
+              <a
+                href="https://www.greendigitalcoalition.eu/declaration/"
+                target="_blank"
+                className="text-gray-900"
+              >
                 About
               </a>
-              <a href="#" className="text-gray-900">
+              <a
+                href="https://www.greendigitalcoalition.eu/coalition-members/"
+                target="_blank"
+                className="text-gray-900"
+              >
                 Members
               </a>
-              <a href="#" className="text-[#6aa84f]">
+              <a
+                href="https://www.greendigitalcoalition.eu/overview-of-egdc-methodologies/"
+                target="_blank"
+                className="text-[#6aa84f]"
+              >
                 Methodology
               </a>
-              <a href="#" className="text-gray-900">
+              <a
+                href="https://www.greendigitalcoalition.eu/news/"
+                target="_blank"
+                className="text-gray-900"
+              >
                 News &amp; Events
               </a>
-              <a href="#" className="text-gray-900">
+              <a
+                href="https://www.greendigitalcoalition.eu/contact/"
+                target="_blank"
+                className="text-gray-900"
+              >
                 Contact
               </a>
-              <a href="#" className="text-gray-900">
+              <a
+                href="https://www.greendigitalcoalition.eu/submit-a-digital-solution/"
+                target="_blank"
+                className="text-gray-900"
+              >
                 Contribute to EGDC Activities
               </a>
             </nav>
 
-            {/* Search icon (right aligned on desktop row) */}
             <div className="absolute right-0">
               <svg
                 width="18"
@@ -99,22 +117,20 @@ export default function EgdcLayout() {
             </div>
           </div>
 
-          {/* Optional: Mobile hint row (keeps spacing nice, but no real menu) */}
           <div className="sm:hidden pb-4">
             <div className="h-px w-full bg-gray-100" />
           </div>
         </div>
       </header>
 
-      {/* Hero */}
-      <section className="relative w-full h-[140px] sm:h-[195px] overflow-hidden">
+      <section className="relative w-full h-35 sm:h-48.75 overflow-hidden">
         <div
           className="
             absolute inset-0 -z-10 bg-cover bg-fixed
-            bg-[position:center_35%]
-            sm:bg-[position:center_30%]
-            md:bg-[position:center_25%]
-            lg:bg-[position:center_20%]
+            bg-position-[center_35%]
+            sm:bg-position-[center_30%]
+            md:bg-position-[center_25%]
+            lg:bg-position-[center_20%]
           "
           style={{
             backgroundImage:

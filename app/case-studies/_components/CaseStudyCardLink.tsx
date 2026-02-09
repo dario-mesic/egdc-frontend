@@ -4,17 +4,19 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ReactNode } from "react";
 
+type CaseStudyCardLinkProps = Readonly<{
+  href: string;
+  children: ReactNode;
+  className?: string;
+  prefetch?: boolean;
+}>;
+
 export default function CaseStudyCardLink({
   href,
   children,
   className,
   prefetch = false,
-}: {
-  href: string;
-  children: ReactNode;
-  className?: string;
-  prefetch?: boolean;
-}) {
+}: CaseStudyCardLinkProps) {
   const pathname = usePathname();
 
   return (

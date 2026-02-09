@@ -11,6 +11,10 @@ import { API_BASE, fetchJson } from "../../../../_lib/api";
 import Link from "next/link";
 import ClientIcon from "@/app/case-studies/_components/icons/ClientIcon";
 
+type MyCaseStudiesResultsProps = Readonly<{
+  searchParams: CaseStudySearchParams;
+}>;
+
 const appendAll = (
   params: URLSearchParams,
   key: string,
@@ -72,9 +76,7 @@ function sortLocal(
 
 export default async function MyCaseStudiesResults({
   searchParams,
-}: {
-  searchParams: CaseStudySearchParams;
-}) {
+}: MyCaseStudiesResultsProps) {
   const result = await searchCaseStudies(searchParams);
 
   const myAll = [...result.items]

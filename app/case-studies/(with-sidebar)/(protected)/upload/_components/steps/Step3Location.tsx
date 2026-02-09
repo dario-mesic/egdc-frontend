@@ -185,11 +185,10 @@ export default function Step3Location() {
     isEqual: (a?: CountryItem, b?: CountryItem) => a?.code === b?.code,
 
     value: form.country,
-    onChange: async (v?: string) => {
-      const next = v ?? "";
-      set("country", next);
+    onChange: async (v = "") => {
+      set("country", v);
 
-      const match = findCountryByLabel(next);
+      const match = findCountryByLabel(v);
 
       if (match) {
         set("cityRegion", "");
@@ -242,11 +241,10 @@ export default function Step3Location() {
       a?.name.trim().toLowerCase() === b?.name.trim().toLowerCase(),
 
     value: form.cityRegion,
-    onChange: (v?: string) => {
-      const next = v ?? "";
-      set("cityRegion", next);
+    onChange: (v = "") => {
+      set("cityRegion", v);
 
-      const match = findCityByLabel(next);
+      const match = findCityByLabel(v);
       syncAddresses(countrySelected?.code ?? "", match ? match.name : "");
     },
 
@@ -265,6 +263,39 @@ export default function Step3Location() {
 
   const countryClearProps = getClearProps();
   const cityClearProps = getCityClearProps();
+  const hasCountryValue = isInputEmpty === false;
+  const hasCityValue = isCityInputEmpty === false;
+  let cityListContent: React.ReactNode;
+
+  if (citiesLoading) {
+    cityListContent = (
+      <li className="ecl-u-ph-s ecl-u-pv-xs ecl-u-type-color-black">
+        Loading…
+      </li>
+    );
+  } else if (filteredCities.length > 0) {
+    cityListContent = filteredCities.map((item, index) => (
+      <li
+        key={item.id}
+        {...getCityItemProps({ item, index })}
+        className={[
+          "ecl-u-ph-s ecl-u-pv-xs",
+          cityFocusIndex === index ? "bg-[#0078D7]" : "ecl-u-bg-white",
+          cityFocusIndex === index
+            ? "ecl-u-type-color-white"
+            : "ecl-u-type-color-black",
+        ].join(" ")}
+      >
+        {item.name}
+      </li>
+    ));
+  } else {
+    cityListContent = (
+      <li className="ecl-u-ph-s ecl-u-pv-xs ecl-u-type-color-black">
+        No results
+      </li>
+    );
+  }
 
   return (
     <>
@@ -290,7 +321,7 @@ export default function Step3Location() {
               className="ecl-text-input ecl-u-width-100 pr-10"
             />
 
-            {!isInputEmpty ? (
+            {hasCountryValue ? (
               <button
                 type="button"
                 aria-label="Clear country"
@@ -377,7 +408,7 @@ export default function Step3Location() {
               className="ecl-text-input ecl-u-width-100 pr-10"
             />
 
-            {!isCityInputEmpty ? (
+            {hasCityValue ? (
               <button
                 type="button"
                 aria-label="Clear city"
@@ -416,33 +447,7 @@ export default function Step3Location() {
                 "max-h-64 overflow-auto",
               ].join(" ")}
             >
-              {citiesLoading ? (
-                <li className="ecl-u-ph-s ecl-u-pv-xs ecl-u-type-color-black">
-                  Loading…
-                </li>
-              ) : filteredCities.length ? (
-                filteredCities.map((item, index) => (
-                  <li
-                    key={item.id}
-                    {...getCityItemProps({ item, index })}
-                    className={[
-                      "ecl-u-ph-s ecl-u-pv-xs",
-                      cityFocusIndex === index
-                        ? "bg-[#0078D7]"
-                        : "ecl-u-bg-white",
-                      cityFocusIndex === index
-                        ? "ecl-u-type-color-white"
-                        : "ecl-u-type-color-black",
-                    ].join(" ")}
-                  >
-                    {item.name}
-                  </li>
-                ))
-              ) : (
-                <li className="ecl-u-ph-s ecl-u-pv-xs ecl-u-type-color-black">
-                  No results
-                </li>
-              )}
+              {cityListContent}
             </ul>
           </div>
         </div>

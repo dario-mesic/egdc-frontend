@@ -28,6 +28,22 @@ export default function CaseStudyDetails({ cs, preview = false }: Props) {
   const provider = cs.is_provided_by?.[0] ?? null;
   const locations = compactLocations(cs.addresses);
 
+  let methodologyTitle = "Methodology report (not available)";
+
+  if (cs.methodology?.url) {
+    methodologyTitle = cs.methodology.name ?? "Methodology report";
+  } else if (preview && cs.methodology?.name) {
+    methodologyTitle = cs.methodology.name;
+  }
+
+  let datasetTitle = "Dataset (not available)";
+
+  if (cs.dataset?.url) {
+    datasetTitle = cs.dataset.name ?? "Dataset";
+  } else if (preview && cs.dataset?.name) {
+    datasetTitle = cs.dataset.name;
+  }
+
   return (
     <div className="ecl-u-pa-xl">
       {!preview && (
@@ -98,7 +114,6 @@ export default function CaseStudyDetails({ cs, preview = false }: Props) {
                 </div>
 
                 <div className="ecl-u-bg-grey-75 ecl-u-pa-m ecl-u-mt-m ecl-u-d-flex ecl-u-flex-column gap-3">
-                  {/* Methodology */}
                   <div className="ecl-file ecl-u-max-width-100" data-ecl-file>
                     <div
                       className={[
@@ -109,25 +124,19 @@ export default function CaseStudyDetails({ cs, preview = false }: Props) {
                       <ClientIcon className="wt-icon-ecl--file ecl-icon ecl-icon--2xl ecl-file__icon ecl-u-flex-shrink-0" />
                       <div className="ecl-file__info min-w-0">
                         <div className=" ecl-file__title wrap-anywhere leading-snug max-sm:text-base">
-                          {cs.methodology?.url
-                            ? (cs.methodology.name ?? "Methodology report")
-                            : preview && cs.methodology?.name
-                              ? cs.methodology.name
-                              : "Methodology report (not available)"}
+                          {methodologyTitle}
                         </div>
                       </div>
                     </div>
 
                     {cs.methodology && (
                       <div className="ecl-file__footer">
-                        {/* Language: always visible (preview + normal) */}
                         <div className="ecl-file__language">
                           {cs.methodology.language.label}
                         </div>
 
                         <div className="ecl-file__meta" />
 
-                        {/* Download: only in non-preview mode */}
                         {!preview && cs.methodology.url && (
                           <div className="ecl-file__action mt-0!">
                             <Link
@@ -146,7 +155,6 @@ export default function CaseStudyDetails({ cs, preview = false }: Props) {
                     )}
                   </div>
 
-                  {/* Dataset */}
                   {(preview ? !!cs.dataset?.name : !!cs.dataset?.url) && (
                     <div className="ecl-file" data-ecl-file>
                       <div
@@ -158,11 +166,7 @@ export default function CaseStudyDetails({ cs, preview = false }: Props) {
                         <ClientIcon className="wt-icon-ecl--spreadsheet ecl-icon ecl-icon--2xl ecl-file__icon ecl-icon--secondary ecl-u-flex-shrink-0" />
                         <div className="ecl-file__info min-w-0">
                           <div className="ecl-file__title wrap-anywhere leading-snug max-sm:text-base">
-                            {cs.dataset?.url
-                              ? (cs.dataset.name ?? "Dataset")
-                              : preview && cs.dataset?.name
-                                ? cs.dataset.name
-                                : "Dataset (not available)"}
+                            {datasetTitle}
                           </div>
                         </div>
                       </div>

@@ -25,7 +25,6 @@ import Notification from "@/app/case-studies/_components/Notification";
 import Modal from "../Modal";
 import CaseStudyDetails from "@/app/case-studies/_components/CaseStudyDetails";
 import { API_BASE } from "@/app/case-studies/_lib/api";
-import { useRouter } from "next/navigation";
 import { CaseStudyDetail } from "@/app/case-studies/_types/caseStudyDetail";
 
 type AsyncState<T extends string> =
@@ -45,13 +44,33 @@ type WizardInnerProps = Readonly<{
   setMaxUnlockedStep: React.Dispatch<React.SetStateAction<number>>;
 }>;
 
+function buildFormData(parsed: {
+  metadata: any;
+  files: {
+    file_logo: File;
+    file_methodology?: File | null;
+    file_dataset?: File | null;
+  };
+}) {
+  const fd = new FormData();
+  fd.append("metadata", JSON.stringify(parsed.metadata));
+  fd.append("file_logo", parsed.files.file_logo);
+
+  if (parsed.files.file_methodology) {
+    fd.append("file_methodology", parsed.files.file_methodology);
+  }
+  if (parsed.files.file_dataset) {
+    fd.append("file_dataset", parsed.files.file_dataset);
+  }
+  return fd;
+}
+
 function WizardInner({
   activeStep,
   setActiveStep,
   maxUnlockedStep,
   setMaxUnlockedStep,
 }: WizardInnerProps) {
-  const router = useRouter();
   const { data } = useWizardData();
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
   const [submitError, setSubmitError] = useState("");
@@ -95,27 +114,6 @@ function WizardInner({
       if (previewLogoUrl) URL.revokeObjectURL(previewLogoUrl);
     };
   }, [previewLogoUrl]);
-
-  function buildFormData(parsed: {
-    metadata: any;
-    files: {
-      file_logo: File;
-      file_methodology?: File | null;
-      file_dataset?: File | null;
-    };
-  }) {
-    const fd = new FormData();
-    fd.append("metadata", JSON.stringify(parsed.metadata));
-    fd.append("file_logo", parsed.files.file_logo);
-
-    if (parsed.files.file_methodology) {
-      fd.append("file_methodology", parsed.files.file_methodology);
-    }
-    if (parsed.files.file_dataset) {
-      fd.append("file_dataset", parsed.files.file_dataset);
-    }
-    return fd;
-  }
 
   async function handleNext() {
     if (!isCurrentStepValid) return;
@@ -223,6 +221,22 @@ function WizardInner({
   let nextLabel = "Continue";
 
   if (isLast) nextLabel = previewState === "loading" ? "Preparing…" : "Preview";
+
+  let previewBody: React.ReactNode = (
+    <div className="ecl-u-pa-l">No preview available.</div>
+  );
+
+  if (previewState === "loading") {
+    previewBody = <div className="ecl-u-pa-l">Generating preview…</div>;
+  } else if (previewState === "error") {
+    previewBody = (
+      <div className="ecl-feedback-message ecl-feedback-message--error ecl-u-pa-l">
+        {previewError || "Failed to generate preview."}
+      </div>
+    );
+  } else if (previewCs) {
+    previewBody = <CaseStudyDetails cs={previewCs} preview />;
+  }
   return (
     <>
       {submitState === "error" && (
@@ -265,17 +279,7 @@ function WizardInner({
         }
         isBlocking={isSubmitting}
       >
-        {previewState === "loading" ? (
-          <div className="ecl-u-pa-l">Generating preview…</div>
-        ) : previewState === "error" ? (
-          <div className="ecl-feedback-message ecl-feedback-message--error ecl-u-pa-l">
-            {previewError || "Failed to generate preview."}
-          </div>
-        ) : previewCs ? (
-          <CaseStudyDetails cs={previewCs} preview />
-        ) : (
-          <div className="ecl-u-pa-l">No preview available.</div>
-        )}
+        {previewBody}
       </Modal>
       <WizardShell
         steps={uploadStepDefs as any}

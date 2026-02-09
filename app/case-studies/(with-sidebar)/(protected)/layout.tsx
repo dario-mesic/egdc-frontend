@@ -3,11 +3,11 @@
 import { useLayoutEffect, useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
-export default function ProtectedLayout({
-  children,
-}: {
+type ProtectedLayoutProps = Readonly<{
   children: React.ReactNode;
-}) {
+}>;
+
+export default function ProtectedLayout({ children }: ProtectedLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
 
@@ -15,7 +15,6 @@ export default function ProtectedLayout({
     "checking",
   );
 
-  // Runs before paint (so no "Redirecting…" flash)
   useLayoutEffect(() => {
     const ok = sessionStorage.getItem("cs-authed") === "1";
     setStatus(ok ? "authed" : "guest");

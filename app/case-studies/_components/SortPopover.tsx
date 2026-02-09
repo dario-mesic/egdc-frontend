@@ -31,9 +31,12 @@ const OPTIONS = [
   },
 ] as const;
 
-type SortBy = "created_date" | "title";
-type SortOrder = "asc" | "desc";
+type SortBy = (typeof OPTIONS)[number]["sort_by"];
+type SortOrder = (typeof OPTIONS)[number]["sort_order"];
 type SortKey = `${SortBy}-${SortOrder}`;
+
+const toKey = (sort_by: SortBy, sort_order: SortOrder): SortKey =>
+  `${sort_by}-${sort_order}`;
 
 export default function SortPopover() {
   const router = useRouter();
@@ -42,10 +45,10 @@ export default function SortPopover() {
   const popoverId = useId();
   const groupName = useId();
 
-  const sortBy = (sp.get("sort_by") ?? "created_date") as SortBy;
-  const sortOrder = (sp.get("sort_order") ?? "desc") as SortOrder;
+  const sortBy: SortBy = (sp.get("sort_by") ?? "created_date") as SortBy;
+  const sortOrder: SortOrder = (sp.get("sort_order") ?? "desc") as SortOrder;
 
-  const urlSelectedKey = `${sortBy}-${sortOrder}` as SortKey;
+  const urlSelectedKey = toKey(sortBy, sortOrder);
 
   const [optimisticSelectedKey, setOptimisticSelectedKey] = useOptimistic<
     SortKey,
@@ -57,7 +60,7 @@ export default function SortPopover() {
   }, []);
 
   const apply = (next: { sort_by: SortBy; sort_order: SortOrder }) => {
-    const nextKey = `${next.sort_by}-${next.sort_order}` as SortKey;
+    const nextKey = toKey(next.sort_by, next.sort_order);
 
     const params = new URLSearchParams(sp.toString());
     params.set("sort_by", next.sort_by);
@@ -108,7 +111,7 @@ export default function SortPopover() {
               <legend className="ecl-u-sr-only">Sort options</legend>
 
               {OPTIONS.map((o) => {
-                const value = `${o.sort_by}-${o.sort_order}` as SortKey;
+                const value = toKey(o.sort_by, o.sort_order);
                 const inputId = `${popoverId}-${o.id}`;
 
                 return (
@@ -119,7 +122,7 @@ export default function SortPopover() {
                       className="ecl-radio__input"
                       type="radio"
                       value={value}
-                      checked={optimisticSelectedKey === value} // ✅ important
+                      checked={optimisticSelectedKey === value}
                       disabled={isPending}
                       onChange={() =>
                         apply({ sort_by: o.sort_by, sort_order: o.sort_order })

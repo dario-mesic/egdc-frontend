@@ -15,8 +15,8 @@ export default function Login({ onSuccess }: LoginProps) {
   const [error, setError] = useState("");
 
   const errors = {
-    username: !form.username.trim() ? "Username is required." : "",
-    password: !form.password ? "Password is required." : "",
+    username: form.username.trim() === "" ? "Username is required." : "",
+    password: form.password === "" ? "Password is required." : "",
   };
 
   const canSubmit = !errors.username && !errors.password;

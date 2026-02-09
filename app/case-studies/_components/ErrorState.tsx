@@ -44,7 +44,9 @@ export default function ErrorState({
       <div className="ecl-u-d-flex ecl-u-flex-column ecl-u-justify-content-center ecl-u-align-items-center ecl-u-bg-grey-25 ecl-u-pa-l ecl-u-border-all ecl-u-border-color-grey-50 ecl-u-text-align-center">
         <h2 className="ecl-u-type-heading-4 ecl-u-mb-s">{title}</h2>
 
-        <p className="ecl-u-type-paragraph ecl-u-mb-m">{message}</p>
+        <p className="ecl-u-type-paragraph ecl-u-type-align-center ecl-u-mb-m">
+          {message}
+        </p>
 
         <button
           className="ecl-button ecl-button--primary"

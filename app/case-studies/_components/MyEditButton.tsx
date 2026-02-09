@@ -4,9 +4,13 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import ClientIcon from "../_components/icons/ClientIcon";
 
+type MyEditButtonProps = Readonly<{
+  caseStudyId: number;
+}>;
+
 const MY_IDS = new Set([4, 12, 11]);
 
-export default function MyEditButton({ caseStudyId }: { caseStudyId: number }) {
+export default function MyEditButton({ caseStudyId }: MyEditButtonProps) {
   const [authed, setAuthed] = useState(false);
 
   useEffect(() => {
