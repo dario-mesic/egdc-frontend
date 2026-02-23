@@ -4,7 +4,6 @@ import Filters from "../_components/Filters";
 import MatchTypeToggle from "../_components/MatchTypeToggle";
 import LoadingIndicator from "../_components/LoadingIndicator";
 import CreatedNotification from "../_components/CreatedNotification";
-import type { ReferenceData } from "../_types/referenceData";
 import type { CaseStudySearchParams } from "../_types/search";
 import type { SearchFacets } from "../_types/facets";
 import { API_BASE, fetchJson } from "../_lib/api";
@@ -18,10 +17,6 @@ type CaseStudiesPageShellProps = Readonly<{
 
 async function getFacets(): Promise<SearchFacets> {
   return fetchJson(`${API_BASE}/api/v1/search/facets/`);
-}
-
-async function getReferenceData(): Promise<ReferenceData> {
-  return fetchJson(`${API_BASE}/api/v1/reference-data/`);
 }
 
 function suspenseKeyFrom(sp: CaseStudySearchParams) {
@@ -61,10 +56,7 @@ export default async function CaseStudiesPageShell({
   Results,
 }: CaseStudiesPageShellProps) {
   const resolved = await searchParams;
-  const [referenceData, facets] = await Promise.all([
-    getReferenceData(),
-    getFacets(),
-  ]);
+  const facets = await getFacets();
 
   return (
     <>
@@ -85,7 +77,7 @@ export default async function CaseStudiesPageShell({
 
         {/* Filters */}
         <div className="ecl-col-12 ecl-col-l-4 ecl-col-xl-3 order-2 min-[1140px]:order-1">
-          <Filters referenceData={referenceData} facets={facets} />
+          <Filters facets={facets} />
         </div>
       </div>
 

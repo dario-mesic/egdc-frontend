@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import ClientIcon from "@/app/case-studies/_components/icons/ClientIcon";
-import { useReferenceData } from "../../_context/ReferenceDataContext";
+import { useReferenceData } from "../../../../../_context/ReferenceDataContext";
 import { useWizardData } from "../../_context/WizardDataContext";
 import type { Organization } from "../../../../../_types/referenceData";
 import { createOrganizationSchema } from "../../_lib/schemas/organization";
@@ -153,6 +153,9 @@ function AddOrganizationModal({ onCreated }: AddOrganizationModalProps) {
   const showError = (k: keyof OrgFormState) =>
     touched[k] ? errors[k] : undefined;
 
+  const nameError = showError("name");
+  const sectorError = showError("sector_code");
+  const orgTypeError = showError("org_type_code");
   return (
     <Modal
       id="add-org-modal"
@@ -204,7 +207,10 @@ function AddOrganizationModal({ onCreated }: AddOrganizationModalProps) {
         </div>
         <input
           id="org-name"
-          className="ecl-text-input ecl-u-width-100"
+          className={[
+            "ecl-text-input ecl-u-width-100",
+            nameError ? "ecl-u-border-color-error" : "",
+          ].join(" ")}
           maxLength={80}
           value={form.name}
           required
@@ -213,16 +219,18 @@ function AddOrganizationModal({ onCreated }: AddOrganizationModalProps) {
           onBlur={() => touch("name")}
           aria-describedby="org-name-helper"
         />
-        {showError("name") ? (
+        {nameError ? (
           <div className="ecl-feedback-message ecl-feedback-message--error ecl-u-mt-2xs">
-            {showError("name")}
+            <ClientIcon className="wt-icon--error ecl-icon ecl-icon--s ecl-feedback-message__icon " />
+            {nameError}
           </div>
         ) : null}
       </div>
 
       <div className="ecl-form-group ecl-u-mb-m">
         <label htmlFor="org-description" className="ecl-form-label">
-          Description
+          Description{" "}
+          <span className="ecl-form-label__optional">(optional)</span>
         </label>
         <div className="ecl-help-block" id="org-description-helper">
           Max. 160 characters ({form.description.length}/160)
@@ -242,6 +250,7 @@ function AddOrganizationModal({ onCreated }: AddOrganizationModalProps) {
         />
         {showError("description") ? (
           <div className="ecl-feedback-message ecl-feedback-message--error ecl-u-mt-2xs">
+            <ClientIcon className="wt-icon--error ecl-icon ecl-icon--s ecl-feedback-message__icon " />
             {showError("description")}
           </div>
         ) : null}
@@ -249,7 +258,8 @@ function AddOrganizationModal({ onCreated }: AddOrganizationModalProps) {
 
       <div className="ecl-form-group ecl-u-mb-m">
         <label htmlFor="org-website-url" className="ecl-form-label">
-          Website URL
+          Website URL{" "}
+          <span className="ecl-form-label__optional">(optional)</span>
         </label>
         <input
           id="org-website-url"
@@ -264,6 +274,7 @@ function AddOrganizationModal({ onCreated }: AddOrganizationModalProps) {
         />
         {showError("website_url") ? (
           <div className="ecl-feedback-message ecl-feedback-message--error ecl-u-mt-2xs">
+            <ClientIcon className="wt-icon--error ecl-icon ecl-icon--s ecl-feedback-message__icon " />
             {showError("website_url")}
           </div>
         ) : null}
@@ -281,10 +292,13 @@ function AddOrganizationModal({ onCreated }: AddOrganizationModalProps) {
           </span>
         </label>
 
-        <div className="ecl-select__container ecl-select__container--m">
+        <div className="ecl-select__container ecl-select__container--m ecl-u-width-100">
           <select
             id="org-sector"
-            className="ecl-select"
+            className={[
+              "ecl-select",
+              sectorError ? "ecl-u-border-color-error" : "",
+            ].join(" ")}
             value={form.sector_code}
             required
             disabled={saving}
@@ -307,9 +321,10 @@ function AddOrganizationModal({ onCreated }: AddOrganizationModalProps) {
             <ClientIcon className="wt-icon-ecl--corner-arrow-down ecl-icon ecl-icon--xs" />
           </div>
         </div>
-        {showError("sector_code") ? (
+        {sectorError ? (
           <div className="ecl-feedback-message ecl-feedback-message--error ecl-u-mt-2xs">
-            {showError("sector_code")}
+            <ClientIcon className="wt-icon--error ecl-icon ecl-icon--s ecl-feedback-message__icon " />
+            {sectorError}
           </div>
         ) : null}
       </div>
@@ -325,10 +340,13 @@ function AddOrganizationModal({ onCreated }: AddOrganizationModalProps) {
             *
           </span>
         </label>
-        <div className="ecl-select__container ecl-select__container--m">
+        <div className="ecl-select__container ecl-select__container--m ecl-u-width-100">
           <select
             id="org-org-type"
-            className="ecl-select"
+            className={[
+              "ecl-select",
+              orgTypeError ? "ecl-u-border-color-error" : "",
+            ].join(" ")}
             value={form.org_type_code}
             required
             disabled={saving}
@@ -351,9 +369,10 @@ function AddOrganizationModal({ onCreated }: AddOrganizationModalProps) {
             <ClientIcon className="wt-icon-ecl--corner-arrow-down ecl-icon ecl-icon--xs" />
           </div>
         </div>
-        {showError("org_type_code") ? (
+        {orgTypeError ? (
           <div className="ecl-feedback-message ecl-feedback-message--error ecl-u-mt-2xs">
-            {showError("org_type_code")}
+            <ClientIcon className="wt-icon--error ecl-icon ecl-icon--s ecl-feedback-message__icon " />
+            {orgTypeError}
           </div>
         ) : null}
       </div>
@@ -428,10 +447,13 @@ export default function Step4Organizations() {
             </span>
           </label>
 
-          <div className="ecl-select__container ecl-select__container--m">
+          <div className="ecl-select__container ecl-select__container--m ecl-u-width-100">
             <select
               id="cs-provided-by"
-              className="ecl-select"
+              className={[
+                "ecl-select",
+                providedError ? "ecl-u-border-color-error" : "",
+              ].join(" ")}
               value={form.providedBy}
               onChange={(e) => {
                 const v = e.target.value;
@@ -459,6 +481,7 @@ export default function Step4Organizations() {
 
           {providedError ? (
             <div className="ecl-feedback-message ecl-feedback-message--error ecl-u-mt-2xs">
+              <ClientIcon className="wt-icon--error ecl-icon ecl-icon--s ecl-feedback-message__icon " />
               {providedError}
             </div>
           ) : null}
@@ -466,10 +489,11 @@ export default function Step4Organizations() {
 
         <div className="ecl-form-group ecl-u-mb-m">
           <label htmlFor="cs-funded-by" className="ecl-form-label">
-            Funded By
+            Funded By{" "}
+            <span className="ecl-form-label__optional">(optional)</span>
           </label>
 
-          <div className="ecl-select__container ecl-select__container--m">
+          <div className="ecl-select__container ecl-select__container--m ecl-u-width-100">
             <select
               id="cs-funded-by"
               className="ecl-select"
@@ -497,10 +521,10 @@ export default function Step4Organizations() {
 
         <div className="ecl-form-group ecl-u-mb-m">
           <label htmlFor="cs-used-by" className="ecl-form-label">
-            Used By
+            Used By <span className="ecl-form-label__optional">(optional)</span>
           </label>
 
-          <div className="ecl-select__container ecl-select__container--m">
+          <div className="ecl-select__container ecl-select__container--m ecl-u-width-100">
             <select
               id="cs-used-by"
               className="ecl-select"

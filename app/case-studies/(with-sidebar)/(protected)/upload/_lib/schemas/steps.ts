@@ -8,11 +8,25 @@ export const step1Schema = baseMetadataSchema.pick({
   created_date: true,
 });
 
-export const step2Schema = baseMetadataSchema.pick({
-  tech_code: true,
-  calc_type_code: true,
-  funding_type_code: true,
-});
+export const step2Schema = baseMetadataSchema
+  .pick({
+    tech_code: true,
+    calc_type_code: true,
+    funding_type_code: true,
+    funding_programme_url: true,
+  })
+  .superRefine((val, ctx) => {
+    const isPublic = (val.funding_type_code ?? "").toLowerCase() === "public";
+    const url = (val.funding_programme_url ?? "").trim();
+
+    if (isPublic && !url) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["funding_programme_url"],
+        message: "Funding programme URL is required for public funding.",
+      });
+    }
+  });
 
 export const step3Schema = baseMetadataSchema.pick({
   addresses: true,

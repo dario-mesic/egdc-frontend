@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useWizardData } from "../../_context/WizardDataContext";
+import ClientIcon from "@/app/case-studies/_components/icons/ClientIcon";
 
 function todayISODate() {
   const d = new Date();
@@ -106,20 +107,36 @@ export default function Step1Basic() {
   const touch = (k: keyof FormState) =>
     setTouched((p) => ({ ...p, [k]: true }));
 
+  const titleErr = showError("title");
+  const shortErr = showError("shortDescription");
+  const longErr = showError("longDescription");
+  const problemErr = showError("problemSolved");
+  const dateErr = showError("creationDate");
+
   return (
     <>
       <h2 className="ecl-u-type-heading-3 ecl-u-mb-m">Basic information</h2>
       <div className="w-full  xl:max-w-4xl">
         <div className="ecl-form-group ecl-u-mb-m">
           <label className="ecl-form-label" htmlFor="cs-title">
-            Title <span className="ecl-u-type-color-error">*</span>
+            Title{" "}
+            <span
+              className="ecl-form-label__required"
+              role="note"
+              aria-label="required"
+            >
+              *
+            </span>
           </label>
           <div className="ecl-help-block" id="cs-title-helper">
             Max. 80 characters ({form.title.length}/80)
           </div>
           <input
             id="cs-title"
-            className="ecl-text-input ecl-u-width-100"
+            className={[
+              "ecl-text-input ecl-u-width-100",
+              titleErr ? "ecl-u-border-color-error" : "",
+            ].join(" ")}
             value={form.title}
             required
             maxLength={80}
@@ -131,23 +148,34 @@ export default function Step1Basic() {
             onBlur={() => touch("title")}
             aria-describedby="cs-title-helper"
           />
-          {showError("title") ? (
+          {titleErr ? (
             <div className="ecl-feedback-message ecl-feedback-message--error ecl-u-mt-2xs">
-              {showError("title")}
+              <ClientIcon className="wt-icon--error ecl-icon ecl-icon--s ecl-feedback-message__icon " />
+              {titleErr}
             </div>
           ) : null}
         </div>
 
         <div className="ecl-form-group ecl-u-mb-m">
           <label className="ecl-form-label" htmlFor="cs-short">
-            Short description <span className="ecl-u-type-color-error">*</span>
+            Short description{" "}
+            <span
+              className="ecl-form-label__required"
+              role="note"
+              aria-label="required"
+            >
+              *
+            </span>
           </label>
           <div className="ecl-help-block" id="cs-short-helper">
             Max. 160 characters ({form.shortDescription.length}/160)
           </div>
           <textarea
             id="cs-short"
-            className="ecl-text-area ecl-u-width-100"
+            className={[
+              "ecl-text-area ecl-u-width-100",
+              shortErr ? "ecl-u-border-color-error" : "",
+            ].join(" ")}
             maxLength={160}
             rows={3}
             value={form.shortDescription}
@@ -160,23 +188,34 @@ export default function Step1Basic() {
             onBlur={() => touch("shortDescription")}
             aria-describedby="cs-short-helper"
           />
-          {showError("shortDescription") ? (
+          {shortErr ? (
             <div className="ecl-feedback-message ecl-feedback-message--error ecl-u-mt-2xs">
-              {showError("shortDescription")}
+              <ClientIcon className="wt-icon--error ecl-icon ecl-icon--s ecl-feedback-message__icon " />
+              {shortErr}
             </div>
           ) : null}
         </div>
 
         <div className="ecl-form-group ecl-u-mb-m">
           <label className="ecl-form-label" htmlFor="cs-long">
-            Long description <span className="ecl-u-type-color-error">*</span>
+            Long description{" "}
+            <span
+              className="ecl-form-label__required"
+              role="note"
+              aria-label="required"
+            >
+              *
+            </span>
           </label>
           <div className="ecl-help-block" id="cs-long-helper">
             Max. 1000 characters ({form.longDescription.length}/1000)
           </div>
           <textarea
             id="cs-long"
-            className="ecl-text-area ecl-u-width-100"
+            className={[
+              "ecl-text-area ecl-u-width-100",
+              longErr ? "ecl-u-border-color-error" : "",
+            ].join(" ")}
             maxLength={1000}
             rows={6}
             value={form.longDescription}
@@ -189,23 +228,34 @@ export default function Step1Basic() {
             onBlur={() => touch("longDescription")}
             aria-describedby="cs-long-helper"
           />
-          {showError("longDescription") ? (
+          {longErr ? (
             <div className="ecl-feedback-message ecl-feedback-message--error ecl-u-mt-2xs">
-              {showError("longDescription")}
+              <ClientIcon className="wt-icon--error ecl-icon ecl-icon--s ecl-feedback-message__icon " />
+              {longErr}
             </div>
           ) : null}
         </div>
 
         <div className="ecl-form-group ecl-u-mb-m">
           <label className="ecl-form-label" htmlFor="cs-problem">
-            Problem solved <span className="ecl-u-type-color-error">*</span>
+            Problem solved{" "}
+            <span
+              className="ecl-form-label__required"
+              role="note"
+              aria-label="required"
+            >
+              *
+            </span>
           </label>
           <div className="ecl-help-block" id="cs-problem-helper">
             Max. 1000 characters ({form.problemSolved.length}/1000)
           </div>
           <textarea
             id="cs-problem"
-            className="ecl-text-area ecl-u-width-100"
+            className={[
+              "ecl-text-area ecl-u-width-100",
+              problemErr ? "ecl-u-border-color-error" : "",
+            ].join(" ")}
             maxLength={1000}
             rows={4}
             value={form.problemSolved}
@@ -218,20 +268,31 @@ export default function Step1Basic() {
             onBlur={() => touch("problemSolved")}
             aria-describedby="cs-problem-helper"
           />
-          {showError("problemSolved") ? (
+          {problemErr ? (
             <div className="ecl-feedback-message ecl-feedback-message--error ecl-u-mt-2xs">
-              {showError("problemSolved")}
+              <ClientIcon className="wt-icon--error ecl-icon ecl-icon--s ecl-feedback-message__icon " />
+              {problemErr}
             </div>
           ) : null}
         </div>
 
         <div className="ecl-form-group ecl-u-mb-m">
           <label className="ecl-form-label" htmlFor="cs-creation-date">
-            Creation date <span className="ecl-u-type-color-error">*</span>
+            Creation date{" "}
+            <span
+              className="ecl-form-label__required"
+              role="note"
+              aria-label="required"
+            >
+              *
+            </span>
           </label>
 
           <div
-            className="ecl-datepicker ecl-u-width-100"
+            className={[
+              "ecl-datepicker ecl-u-width-100",
+              dateErr ? "ecl-u-border-color-error" : "",
+            ].join(" ")}
             data-ecl-auto-init="Datepicker"
             data-ecl-datepicker-toggle=""
           >
@@ -243,9 +304,10 @@ export default function Step1Basic() {
             />
           </div>
 
-          {showError("creationDate") ? (
+          {dateErr ? (
             <div className="ecl-feedback-message ecl-feedback-message--error ecl-u-mt-2xs">
-              {showError("creationDate")}
+              <ClientIcon className="wt-icon--error ecl-icon ecl-icon--s ecl-feedback-message__icon " />
+              {dateErr}
             </div>
           ) : null}
         </div>

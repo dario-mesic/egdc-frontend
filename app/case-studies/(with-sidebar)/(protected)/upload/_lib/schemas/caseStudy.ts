@@ -11,6 +11,7 @@ export const benefitSchema = z.object({
     .int("Value must be an integer")
     .nonnegative("Value must be >= 0"),
   unit_code: z.string().min(1, "Unit is required"),
+  functional_unit: z.string().min(1, "Functional unit is required"),
 });
 
 export const addressSchema = z.object({
@@ -39,6 +40,10 @@ export const baseMetadataSchema = z.object({
   tech_code: z.string().min(1, "Technology is required"),
   calc_type_code: z.string().min(1, "Calculation type is required"),
   funding_type_code: z.string().optional().nullable(),
+  funding_programme_url: z
+    .url("Funding programme URL must be a valid URL.")
+    .optional()
+    .nullable(),
 
   addresses: z.array(addressSchema).min(1, "At least one address is required"),
 
@@ -51,6 +56,9 @@ export const baseMetadataSchema = z.object({
     .string()
     .min(1, "Methodology language is required"),
   dataset_language_code: z.string().min(1, "Dataset language is required"),
+  additional_language_code: z
+    .string()
+    .min(1, "Additional document language is required"),
 });
 
 export const metadataSchema = baseMetadataSchema.superRefine((val, ctx) => {
@@ -64,6 +72,35 @@ export const metadataSchema = baseMetadataSchema.superRefine((val, ctx) => {
       path: ["benefits"],
       message: 'At least one benefit must be of type "Environmental".',
     });
+  }
+
+  const isPublic = (val.funding_type_code || "").toLowerCase() === "public";
+  if (isPublic) {
+    const url = (val.funding_programme_url ?? "").trim();
+    if (!url) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["funding_programme_url"],
+        message: "Funding programme URL is required for public funding.",
+      });
+    } else {
+      const ok = z.string().url().safeParse(url).success;
+      if (!ok) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["funding_programme_url"],
+          message: "Funding programme URL must be a valid URL.",
+        });
+      }
+    }
+  } else {
+    if (val.funding_programme_url) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["funding_programme_url"],
+        message: "Funding programme URL is only allowed for public funding.",
+      });
+    }
   }
 });
 
@@ -79,6 +116,7 @@ export const wizardPayloadSchema = z.object({
       message: "Calculator/Dataset is required",
     }),
     file_logo: z.instanceof(File, { message: "Logo file is required" }),
+    file_additional: z.instanceof(File).optional(),
   }),
 });
 

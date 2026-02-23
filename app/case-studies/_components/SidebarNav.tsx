@@ -12,7 +12,7 @@ export default function SidebarNav() {
         aria-current={pathname === "/case-studies" ? "page" : undefined}
         href="/case-studies"
       >
-        Search in past case studies
+        Explore case studies
       </Link>
 
       <Link
@@ -20,7 +20,7 @@ export default function SidebarNav() {
         aria-current={pathname === "/case-studies/figures" ? "page" : undefined}
         href="/case-studies/figures"
       >
-        EGDC in figures
+        EGDC scoreboard
       </Link>
 
       <Link
@@ -32,7 +32,7 @@ export default function SidebarNav() {
         }
         href="/case-studies/my"
       >
-        Upload/Modify case studies
+        Manage case studies
       </Link>
     </nav>
   );

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useWizardData } from "../../_context/WizardDataContext";
-import { useReferenceData } from "../../_context/ReferenceDataContext";
+import { useReferenceData } from "../../../../../_context/ReferenceDataContext";
 import ClientIcon from "@/app/case-studies/_components/icons/ClientIcon";
 import { useDropzone, type Accept } from "react-dropzone";
 
@@ -22,11 +22,13 @@ type LocalTouched = {
   methodology?: boolean;
   dataset?: boolean;
   logo?: boolean;
+  additional?: boolean;
 };
 type LocalErrors = {
   methodology?: string;
   dataset?: string;
   logo?: string;
+  additional?: string;
 };
 
 const IDS = {
@@ -52,6 +54,11 @@ const IDS = {
   datasetLanguage: {
     input: "cs-dataset-language",
     label: "cs-dataset-language-label",
+  },
+  additional: {
+    input: "cs-additional",
+    label: "cs-additional-label",
+    helper: "cs-additional-helper",
   },
 } as const;
 
@@ -193,15 +200,18 @@ export default function Step6Files() {
   const methodologyRef = useRef<HTMLInputElement | null>(null);
   const datasetRef = useRef<HTMLInputElement | null>(null);
   const logoRef = useRef<HTMLInputElement | null>(null);
+  const additionalRef = useRef<HTMLInputElement | null>(null);
 
   const hasMethodology = !!data.files.file_methodology;
   const hasDatasetFile = !!data.files.file_dataset;
   const hasLogo = !!data.files.file_logo;
+  const hasAdditional = !!data.files.file_additional;
 
   const [resetKeys, setResetKeys] = useState({
     methodology: 0,
     dataset: 0,
     logo: 0,
+    additional: 0,
   });
 
   const bumpResetKey = (k: keyof typeof resetKeys) =>
@@ -212,12 +222,13 @@ export default function Step6Files() {
   };
 
   const clearPickedFile = (
-    key: "methodology" | "dataset" | "logo",
+    key: "methodology" | "dataset" | "logo" | "additional",
     ref: React.RefObject<HTMLInputElement | null>,
   ) => {
     if (key === "methodology") setFiles({ file_methodology: undefined });
     if (key === "dataset") setFiles({ file_dataset: undefined });
     if (key === "logo") setFiles({ file_logo: undefined });
+    if (key === "additional") setFiles({ file_additional: undefined });
 
     clearNative(ref);
     bumpResetKey(key);
@@ -231,6 +242,7 @@ export default function Step6Files() {
     if (key === "methodology") setFiles({ file_methodology: undefined });
     if (key === "dataset") setFiles({ file_dataset: undefined });
     if (key === "logo") setFiles({ file_logo: undefined });
+    if (key === "additional") setFiles({ file_additional: undefined });
   };
 
   const handleDropFile = <K extends keyof LocalTouched>(args: {
@@ -330,6 +342,27 @@ export default function Step6Files() {
     }
 
     setFiles({ file_logo: file });
+  };
+
+  const onPickAdditional = (file?: File) => {
+    setFileError("additional", "");
+
+    if (!file) {
+      clearPickedFile("additional", additionalRef);
+      return;
+    }
+
+    if (!isPdf(file)) {
+      clearNative(additionalRef);
+      setFiles({ file_additional: undefined });
+      setFileError("additional", "Only PDF files are allowed.");
+      return;
+    }
+
+    setFiles({ file_additional: file });
+    if (!data.metadata.additional_language_code) {
+      setMetadata({ additional_language_code: "en" });
+    }
   };
 
   const syncFileToNativeInput = (
@@ -473,6 +506,7 @@ export default function Step6Files() {
                   id={`${IDS.methodology.input}-error`}
                   className="ecl-feedback-message ecl-feedback-message--error ecl-u-mt-2xs"
                 >
+                  <ClientIcon className="wt-icon--error ecl-icon ecl-icon--s ecl-feedback-message__icon " />
                   {methodologyError}
                 </div>
               ) : null}
@@ -524,7 +558,145 @@ export default function Step6Files() {
           </div>
         )}
         <hr className="ecl-separator ecl-u-mb-m" />
+        <div className="ecl-u-d-flex ecl-u-flex-wrap ecl-u-align-items-start gap-3 ecl-u-mb-l">
+          <SingleFileDropzone
+            className="w-full sm:w-125"
+            label="Drag and drop PDF file here, or click to select"
+            accept={{ "application/pdf": [".pdf"] }}
+            file={data.files.file_additional}
+            error={touched.additional ? errors.additional : undefined}
+            onDropFile={(file, errorCode) =>
+              handleDropFile({
+                key: "additional",
+                ref: additionalRef,
+                pick: onPickAdditional,
+                invalidTypeMessage: "Only PDF files are allowed.",
+                file,
+                errorCode,
+              })
+            }
+            onClear={() => {
+              setTouched((p) => ({ ...p, additional: true }));
+              syncFileToNativeInput(additionalRef);
+              onPickAdditional();
+            }}
+          />
 
+          <div className="ecl-u-flex-grow-1" style={{ minWidth: 320 }}>
+            <div
+              key={`additional-${resetKeys.additional}`}
+              className="ecl-form-group"
+              data-ecl-file-upload-group="true"
+              data-ecl-auto-init="FileUpload"
+            >
+              <label
+                htmlFor={IDS.additional.input}
+                id={IDS.additional.label}
+                className="ecl-form-label"
+              >
+                Additional document (PDF){" "}
+                <span className="ecl-form-label__optional">(optional)</span>
+              </label>
+
+              <div className="ecl-help-block" id={IDS.additional.helper}>
+                Upload a <strong>PDF</strong>.
+              </div>
+
+              <input
+                ref={additionalRef}
+                type="file"
+                className="ecl-file-upload"
+                data-ecl-file-upload-input
+                data-ecl-auto-init="FileUpload"
+                id={IDS.additional.input}
+                name="file_additional"
+                accept="application/pdf,.pdf"
+                aria-describedby={[
+                  IDS.additional.label,
+                  IDS.additional.helper,
+                  touched.additional && errors.additional
+                    ? `${IDS.additional.input}-error`
+                    : "",
+                ].join(" ")}
+                onChange={(e) => {
+                  setTouched((p) => ({ ...p, additional: true }));
+                  onPickAdditional(e.currentTarget.files?.[0]);
+                }}
+              />
+
+              <label
+                className="ecl-file-upload__button-container"
+                htmlFor={IDS.additional.input}
+              >
+                <span
+                  className="ecl-file-upload__button ecl-button ecl-button--primary"
+                  data-ecl-file-upload-button
+                  data-ecl-file-upload-label-choose="Choose file"
+                  data-ecl-file-upload-label-replace="Replace file"
+                >
+                  Choose file
+                </span>
+              </label>
+
+              <ul
+                className="ecl-file-upload__list"
+                data-ecl-file-upload-list
+                aria-live="polite"
+              />
+
+              {touched.additional && errors.additional ? (
+                <div
+                  id={`${IDS.additional.input}-error`}
+                  className="ecl-feedback-message ecl-feedback-message--error ecl-u-mt-2xs"
+                >
+                  <ClientIcon className="wt-icon--error ecl-icon ecl-icon--s ecl-feedback-message__icon " />
+                  {errors.additional}
+                </div>
+              ) : null}
+            </div>
+          </div>
+        </div>
+        {hasAdditional && (
+          <div className="ecl-form-group ecl-u-mb-l">
+            <label htmlFor={IDS.additional.input} className="ecl-form-label">
+              Additional document language{" "}
+              <span
+                className="ecl-form-label__required"
+                role="note"
+                aria-label="required"
+              >
+                *
+              </span>
+            </label>
+
+            <div className="ecl-select__container ecl-select__container--m ecl-u-width-100 sm:w-125!">
+              <select
+                id={IDS.additional.input}
+                className="ecl-select"
+                value={data.metadata.additional_language_code ?? ""}
+                onChange={(e) =>
+                  setMetadata({ additional_language_code: e.target.value })
+                }
+                required
+                data-ecl-auto-init="Select"
+              >
+                <option value="" disabled>
+                  Select a language…
+                </option>
+                {languages.map((l) => (
+                  <option key={l.code} value={l.code}>
+                    {l.label}
+                  </option>
+                ))}
+              </select>
+
+              <div className="ecl-select__icon">
+                <ClientIcon className="wt-icon-ecl--corner-arrow-down ecl-icon ecl-icon--xs" />
+              </div>
+            </div>
+          </div>
+        )}
+        <hr className="ecl-separator ecl-u-mb-m" />
         <div className="ecl-u-d-flex ecl-u-flex-wrap ecl-u-align-items-start gap-3 ecl-u-mb-l">
           <SingleFileDropzone
             className="w-full sm:w-125"
@@ -632,6 +804,7 @@ export default function Step6Files() {
                   id={`${IDS.dataset.input}-error`}
                   className="ecl-feedback-message ecl-feedback-message--error ecl-u-mt-2xs"
                 >
+                  <ClientIcon className="wt-icon--error ecl-icon ecl-icon--s ecl-feedback-message__icon " />
                   {datasetError}
                 </div>
               ) : null}
@@ -777,6 +950,7 @@ export default function Step6Files() {
                   id={`${IDS.logo.input}-error`}
                   className="ecl-feedback-message ecl-feedback-message--error ecl-u-mt-2xs"
                 >
+                  <ClientIcon className="wt-icon--error ecl-icon ecl-icon--s ecl-feedback-message__icon " />
                   {logoError}
                 </div>
               ) : null}

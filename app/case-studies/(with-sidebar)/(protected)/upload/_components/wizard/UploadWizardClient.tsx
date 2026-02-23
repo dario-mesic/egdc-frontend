@@ -7,8 +7,11 @@ import {
   uploadStepDefs,
   uploadStepComponents,
 } from "../steps/index";
-import type { ReferenceData } from "../../../../../_types/referenceData";
-import { ReferenceDataProvider } from "../../_context/ReferenceDataContext";
+import type { Organization } from "../../../../../_types/referenceData";
+import {
+  ReferenceDataProvider,
+  useReferenceData,
+} from "../../../../../_context/ReferenceDataContext";
 import {
   WizardDataProvider,
   useWizardData,
@@ -49,6 +52,7 @@ function buildFormData(parsed: {
     file_logo: File;
     file_methodology?: File | null;
     file_dataset?: File | null;
+    file_additional?: File | null;
   };
 }) {
   const fd = new FormData();
@@ -60,6 +64,9 @@ function buildFormData(parsed: {
   }
   if (parsed.files.file_dataset) {
     fd.append("file_dataset", parsed.files.file_dataset);
+  }
+  if (parsed.files.file_additional) {
+    fd.append("file_additional", parsed.files.file_additional);
   }
   return fd;
 }
@@ -339,14 +346,17 @@ function WizardInner({
 }
 
 type UploadWizardClientProps = Readonly<{
-  referenceData: ReferenceData;
+  organizations: Organization[];
 }>;
 
-export default function UploadWizardClient({
-  referenceData,
-}: UploadWizardClientProps) {
+function UploadWizardWithRefData({ organizations }: UploadWizardClientProps) {
+  const baseRefData = useReferenceData();
   const [activeStep, setActiveStep] = useState(1);
   const [maxUnlockedStep, setMaxUnlockedStep] = useState(1);
+  const referenceData = useMemo(
+    () => ({ ...baseRefData, organizations }),
+    [baseRefData, organizations],
+  );
   return (
     <ReferenceDataProvider value={referenceData}>
       <WizardDataProvider>
@@ -359,4 +369,8 @@ export default function UploadWizardClient({
       </WizardDataProvider>
     </ReferenceDataProvider>
   );
+}
+
+export default function UploadWizardClient(props: UploadWizardClientProps) {
+  return <UploadWizardWithRefData {...props} />;
 }

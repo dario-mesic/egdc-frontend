@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import type { ReferenceData } from "../_types/referenceData";
+import { useReferenceData } from "../_context/ReferenceDataContext";
 import type { SearchFacets } from "../_types/facets";
 
 const FILTER_KEYS = [
@@ -17,7 +17,6 @@ const FILTER_KEYS = [
 ] as const;
 
 type FiltersProps = Readonly<{
-  referenceData: ReferenceData;
   facets: SearchFacets;
 }>;
 
@@ -99,7 +98,8 @@ function initCollapsibleGroups(dropdownEl: HTMLElement) {
   }
 }
 
-export default function Filters({ referenceData, facets }: FiltersProps) {
+export default function Filters({ facets }: FiltersProps) {
+  const referenceData = useReferenceData();
   const router = useRouter();
   const sp = useSearchParams();
   const selectRef = useRef<HTMLSelectElement | null>(null);
@@ -169,7 +169,15 @@ export default function Filters({ referenceData, facets }: FiltersProps) {
       items: referenceData.technologies,
       facetMap: facetMaps.tech_code,
     },
-  ].sort((a, b) => a.label.localeCompare(b.label));
+  ]
+    .map((g) => {
+      const visibleItems = g.items.filter(
+        (o) => (g.facetMap.get(o.code.toLowerCase()) ?? 0) > 0,
+      );
+      return { ...g, visibleItems };
+    })
+    .filter((g) => g.visibleItems.length > 0)
+    .sort((a, b) => a.label.localeCompare(b.label));
   const defaultValue = useMemo(() => {
     const values: string[] = [];
     FILTER_KEYS.forEach((key) => {
@@ -249,16 +257,10 @@ export default function Filters({ referenceData, facets }: FiltersProps) {
         >
           {optGroups.map((group) => (
             <optgroup key={group.key} label={group.label}>
-              {group.items.map((o) => {
+              {group.visibleItems.map((o) => {
                 const count = group.facetMap.get(o.code.toLowerCase()) ?? 0;
-                const enabled = count > 0;
-
                 return (
-                  <option
-                    key={o.code}
-                    value={`${group.key}:${o.code}`}
-                    disabled={!enabled}
-                  >
+                  <option key={o.code} value={`${group.key}:${o.code}`}>
                     {o.label} ({count})
                   </option>
                 );

@@ -8,7 +8,7 @@ export type AddressLike = {
 export type CompactLocation = {
   key: string;
   city: string;
-  iso2: string | null;
+  iso3: string | null;
 };
 
 export function uniqueFlagIso2s(addresses?: AddressLike[]): string[] {
@@ -68,7 +68,7 @@ export function compactLocations(
   addresses?: {
     post_name?: string | null;
     admin_unit_l1?: string | null;
-  }[]
+  }[],
 ): CompactLocation[] {
   const seen = new Set<string>();
   const out: CompactLocation[] = [];
@@ -77,13 +77,13 @@ export function compactLocations(
     const city = a.post_name?.trim();
     if (!city) return;
 
-    const iso2 = iso3ToIso2(a.admin_unit_l1 ?? null);
-    const key = `${city}__${iso2 ?? ""}`;
+    const iso3 = (a.admin_unit_l1 ?? "").trim().toUpperCase() || null;
+    const key = `${city}__${iso3 ?? ""}`;
 
     if (seen.has(key)) return;
     seen.add(key);
 
-    out.push({ key, city, iso2 });
+    out.push({ key, city, iso3 });
   });
 
   return out;

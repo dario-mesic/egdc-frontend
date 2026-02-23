@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useReferenceData } from "../../_context/ReferenceDataContext";
+import { useReferenceData } from "../../../../../_context/ReferenceDataContext";
 import ClientIcon from "@/app/case-studies/_components/icons/ClientIcon";
 import { useWizardData } from "../../_context/WizardDataContext";
 
@@ -9,7 +9,36 @@ type FormState = {
   technology: string;
   calculationType: string;
   fundingType: string;
+  fundingProgrammeUrl: string;
 };
+
+function isValidUrl(v: string) {
+  try {
+    new URL(v.trim());
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function validateFundingProgrammeUrl(
+  isPublic: boolean,
+  touched: boolean,
+  value: string,
+): string | null {
+  if (!isPublic || !touched) return null;
+
+  const url = value.trim();
+  if (!url) {
+    return "Funding programme URL is required for public funding.";
+  }
+
+  if (!isValidUrl(url)) {
+    return "Funding programme URL must be a valid URL.";
+  }
+
+  return null;
+}
 
 export default function Step2Categorization() {
   const { technologies, calculation_types, funding_types } = useReferenceData();
@@ -19,11 +48,13 @@ export default function Step2Categorization() {
     technology: "",
     calculationType: "",
     fundingType: "",
+    fundingProgrammeUrl: "",
   });
 
   const [touched, setTouched] = useState({
     technology: false,
     calculationType: false,
+    fundingProgrammeUrl: false,
   });
 
   useEffect(() => {
@@ -31,6 +62,8 @@ export default function Step2Categorization() {
       technology: (data.metadata.tech_code as string) ?? "",
       calculationType: (data.metadata.calc_type_code as string) ?? "",
       fundingType: (data.metadata.funding_type_code as string) ?? "",
+      fundingProgrammeUrl:
+        (data.metadata.funding_programme_url as string) ?? "",
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -59,7 +92,22 @@ export default function Step2Categorization() {
     touched.calculationType && !form.calculationType
       ? "Calculation type is required."
       : null;
+  const isPublicFunding = (form.fundingType || "").toLowerCase() === "public";
 
+  const fundingProgrammeUrlError = validateFundingProgrammeUrl(
+    isPublicFunding,
+    touched.fundingProgrammeUrl,
+    form.fundingProgrammeUrl,
+  );
+
+  useEffect(() => {
+    const isPublic = (form.fundingType || "").toLowerCase() === "public";
+    if (!isPublic && form.fundingProgrammeUrl) {
+      setForm((p) => ({ ...p, fundingProgrammeUrl: "" }));
+      setMetadata({ funding_programme_url: null });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.fundingType]);
   return (
     <>
       <h2 className="ecl-u-type-heading-3 ecl-u-mb-m">Categorization</h2>
@@ -80,10 +128,13 @@ export default function Step2Categorization() {
             </span>
           </label>
 
-          <div className="ecl-select__container ecl-select__container--m">
+          <div className="ecl-select__container ecl-select__container--m ecl-u-width-100">
             <select
               id="cs-technology"
-              className="ecl-select"
+              className={[
+                "ecl-select ",
+                techError ? "ecl-u-border-color-error" : "",
+              ].join(" ")}
               value={form.technology}
               onChange={(e) => {
                 const v = e.target.value;
@@ -110,6 +161,7 @@ export default function Step2Categorization() {
           </div>
           {techError ? (
             <div className="ecl-feedback-message ecl-feedback-message--error ecl-u-mt-2xs">
+              <ClientIcon className="wt-icon--error ecl-icon ecl-icon--s ecl-feedback-message__icon " />
               {techError}
             </div>
           ) : null}
@@ -131,10 +183,13 @@ export default function Step2Categorization() {
             </span>
           </label>
 
-          <div className="ecl-select__container ecl-select__container--m">
+          <div className="ecl-select__container ecl-select__container--m ecl-u-width-100">
             <select
               id="cs-calculation"
-              className="ecl-select"
+              className={[
+                "ecl-select",
+                calcError ? "ecl-u-border-color-error" : "",
+              ].join(" ")}
               value={form.calculationType}
               onChange={(e) => {
                 const v = e.target.value;
@@ -163,6 +218,7 @@ export default function Step2Categorization() {
           </div>
           {calcError ? (
             <div className="ecl-feedback-message ecl-feedback-message--error ecl-u-mt-2xs">
+              <ClientIcon className="wt-icon--error ecl-icon ecl-icon--s ecl-feedback-message__icon " />
               {calcError}
             </div>
           ) : null}
@@ -170,10 +226,11 @@ export default function Step2Categorization() {
 
         <div className="ecl-form-group ecl-u-mb-m">
           <label htmlFor="cs-funding" className="ecl-form-label">
-            Funding type
+            Funding type{" "}
+            <span className="ecl-form-label__optional">(optional)</span>
           </label>
 
-          <div className="ecl-select__container ecl-select__container--m">
+          <div className="ecl-select__container ecl-select__container--m ecl-u-width-100">
             <select
               id="cs-funding"
               className="ecl-select"
@@ -199,6 +256,46 @@ export default function Step2Categorization() {
             </div>
           </div>
         </div>
+        {isPublicFunding && (
+          <div className="ecl-form-group ecl-u-mb-m">
+            <label
+              htmlFor="cs-funding-programme-url"
+              className="ecl-form-label"
+            >
+              Funding programme URL{" "}
+              <span
+                className="ecl-form-label__required"
+                role="note"
+                aria-label="required"
+              >
+                *
+              </span>
+            </label>
+
+            <input
+              id="cs-funding-programme-url"
+              type="url"
+              className="ecl-text-input ecl-u-width-100"
+              value={form.fundingProgrammeUrl}
+              onChange={(e) => {
+                const v = e.target.value;
+                setForm((p) => ({ ...p, fundingProgrammeUrl: v }));
+                setMetadata({ funding_programme_url: v });
+              }}
+              onBlur={() =>
+                setTouched((p) => ({ ...p, fundingProgrammeUrl: true }))
+              }
+              required
+            />
+
+            {fundingProgrammeUrlError ? (
+              <div className="ecl-feedback-message ecl-feedback-message--error ecl-u-mt-2xs">
+                <ClientIcon className="wt-icon--error ecl-icon ecl-icon--s ecl-feedback-message__icon " />
+                {fundingProgrammeUrlError}
+              </div>
+            ) : null}
+          </div>
+        )}
       </div>
     </>
   );

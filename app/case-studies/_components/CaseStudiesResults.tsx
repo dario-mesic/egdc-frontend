@@ -57,7 +57,28 @@ export default async function CaseStudiesResults({
   const result = await searchCaseStudies(searchParams);
   const totalPages = Math.max(1, Math.ceil(result.total / result.limit));
 
+  const hasAny = (v?: string | string[]) =>
+    Array.isArray(v) ? v.length > 0 : Boolean(v);
+
+  const hasSearch = Boolean(searchParams.q);
+
+  const hasFilters =
+    hasAny(searchParams.sector) ||
+    hasAny(searchParams.tech_code) ||
+    hasAny(searchParams.funding_type_code) ||
+    hasAny(searchParams.calc_type_code) ||
+    hasAny(searchParams.country) ||
+    hasAny(searchParams.organization_types) ||
+    hasAny(searchParams.benefit_units) ||
+    hasAny(searchParams.benefit_types);
+
   if (result.total === 0) {
+    let message =
+      "Sorry, we couldn’t find any case studies matching your search.";
+
+    if (hasSearch && hasFilters) {
+      message = "Try adjusting your search text,match type or filters.";
+    }
     return (
       <>
         <div className="ecl-row ecl-u-mb-s">
@@ -77,9 +98,7 @@ export default async function CaseStudiesResults({
               <h2 className="ecl-u-type-heading-4 ecl-u-mb-s">
                 No results found
               </h2>
-              <p className="ecl-u-type-paragraph">
-                Sorry, we couldn’t find any case studies matching your search.
-              </p>
+              <p className="ecl-u-type-paragraph">{message}</p>
             </div>
           </div>
         </div>

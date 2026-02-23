@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { metadataSchema } from "@/app/case-studies/(with-sidebar)/(protected)/upload/_lib/schemas/caseStudy";
+import axios from "axios";
 
 export const runtime = "nodejs";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 const TARGET = `${API_BASE_URL}/api/v1/case-studies/`;
 
 export async function POST(req: Request) {
@@ -65,22 +67,31 @@ export async function POST(req: Request) {
   forward.append("file_dataset", file_dataset);
   forward.append("file_logo", file_logo);
 
-  const backendRes = await fetch(TARGET, {
-    method: "POST",
-    body: forward,
-  });
+  try {
+    const backendRes = await axios.post(TARGET, forward, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+      validateStatus: () => true,
+      responseType: "text",
+      transformResponse: (r) => r,
+    });
 
-  const text = await backendRes.text();
+    if (backendRes.status >= 200 && backendRes.status < 300) {
+      revalidatePath("/case-studies");
+    }
 
-  if (backendRes.ok) {
-    revalidatePath("/case-studies");
+    return new NextResponse(backendRes.data as string, {
+      status: backendRes.status,
+      headers: {
+        "content-type":
+          backendRes.headers["content-type"] ?? "application/json",
+      },
+    });
+  } catch {
+    return NextResponse.json(
+      { error: "Failed to reach backend" },
+      { status: 500 },
+    );
   }
-
-  return new NextResponse(text, {
-    status: backendRes.status,
-    headers: {
-      "content-type":
-        backendRes.headers.get("content-type") ?? "application/json",
-    },
-  });
 }

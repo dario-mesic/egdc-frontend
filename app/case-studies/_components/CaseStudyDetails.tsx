@@ -2,10 +2,11 @@ import Link from "next/link";
 import Image from "next/image";
 import type { CaseStudyDetail } from "../_types/caseStudyDetail";
 import { compactLocations } from "../_lib/locations";
-import { iso2CountryName } from "../_lib/iso";
 import ClientIcon from "../_components/icons/ClientIcon";
 import MyEditButton from "./MyEditButton";
+import MyDeleteButton from "./MyDeleteButton";
 import BackToCaseStudiesLink from "./BackToCaseStudiesLink";
+import Flag from "react-world-flags";
 
 type Props = Readonly<{
   cs: CaseStudyDetail;
@@ -16,12 +17,25 @@ function formatValue(value: number) {
   return new Intl.NumberFormat("en-GB").format(value);
 }
 
-function benefit(cs: CaseStudyDetail, code: string) {
-  const b = (cs.benefits ?? []).find(
-    (x) => x.type?.code?.toLowerCase() === code.toLowerCase(),
-  );
-  if (!b) return "—";
-  return `${formatValue(b.value)} ${b.unit?.code ?? ""} — ${b.name ?? ""}`.trim();
+function benefitsByType(cs: CaseStudyDetail, code: string) {
+  const items = (cs.benefits ?? [])
+    .filter((x) => x.type?.code?.toLowerCase() === code.toLowerCase())
+    .sort((a, b) => {
+      const aN = a.is_net_carbon_impact ? 1 : 0;
+      const bN = b.is_net_carbon_impact ? 1 : 0;
+      if (aN !== bN) return bN - aN;
+      return 0;
+    });
+
+  return items
+    .map((b) => ({
+      key: b.id ?? `${b.type?.code ?? code}-${b.unit?.code ?? ""}-${b.value}`,
+      value: formatValue(b.value),
+      unit: (b.unit?.label ?? "").toLowerCase(),
+      functionalUnit: (b.functional_unit ?? "").trim(),
+      name: (b.name ?? "").trim(),
+    }))
+    .filter((b) => b.value);
 }
 
 export default function CaseStudyDetails({ cs, preview = false }: Props) {
@@ -44,12 +58,31 @@ export default function CaseStudyDetails({ cs, preview = false }: Props) {
     datasetTitle = cs.dataset.name;
   }
 
+  let additionalTitle = "Additional document (not available)";
+
+  if (cs.additional_document?.url) {
+    additionalTitle = cs.additional_document.name ?? "Additional document";
+  } else if (preview && cs.additional_document?.name) {
+    additionalTitle = cs.additional_document.name;
+  }
+
+  const benefitsList = [
+    { label: "Environmental", code: "environmental" },
+    { label: "Economic", code: "economic" },
+    { label: "Social", code: "social" },
+  ]
+    .map((t) => ({ label: t.label, items: benefitsByType(cs, t.code) }))
+    .filter((t) => t.items.length > 0);
+
   return (
     <div className="ecl-u-pa-xl">
       {!preview && (
         <div className="ecl-u-d-flex ecl-u-flex-wrap ecl-u-align-items-center ecl-u-justify-content-between ecl-u-mb-m">
           <BackToCaseStudiesLink />
-          <MyEditButton caseStudyId={cs.id} />
+          <div className="ecl-u-d-flex ecl-u-align-items-center gap-2">
+            <MyEditButton caseStudyId={cs.id} />
+            <MyDeleteButton caseStudyId={cs.id} />
+          </div>
         </div>
       )}
 
@@ -94,10 +127,12 @@ export default function CaseStudyDetails({ cs, preview = false }: Props) {
                           key={l.key}
                           className="ecl-u-d-inline-flex ecl-u-align-items-center gap-1"
                         >
-                          {l.iso2 && (
-                            <ClientIcon
-                              className={`wt-icon-flags--${l.iso2} wt-icon--s`}
-                              title={iso2CountryName(l.iso2) ?? undefined}
+                          {l.iso3 && (
+                            <Flag
+                              height={14}
+                              width={20}
+                              code={l.iso3.toLowerCase()}
+                              fallback={<span></span>}
                             />
                           )}
                           <span>{l.city}</span>
@@ -114,7 +149,7 @@ export default function CaseStudyDetails({ cs, preview = false }: Props) {
                 </div>
 
                 <div className="ecl-u-bg-grey-75 ecl-u-pa-m ecl-u-mt-m ecl-u-d-flex ecl-u-flex-column gap-3">
-                  <div className="ecl-file ecl-u-max-width-100" data-ecl-file>
+                  <div className="ecl-file" data-ecl-file>
                     <div
                       className={[
                         "ecl-file__container",
@@ -199,6 +234,55 @@ export default function CaseStudyDetails({ cs, preview = false }: Props) {
                       )}
                     </div>
                   )}
+
+                  {(preview
+                    ? !!cs.additional_document?.name
+                    : !!cs.additional_document?.url) && (
+                    <div className="ecl-file" data-ecl-file>
+                      <div
+                        className={[
+                          "ecl-file__container",
+                          preview ? "ecl-u-align-items-center ecl-u-pb-xl" : "",
+                        ].join(" ")}
+                      >
+                        <ClientIcon className="wt-icon-ecl--file ecl-icon ecl-icon--2xl ecl-file__icon ecl-u-flex-shrink-0" />
+                        <div className="ecl-file__info min-w-0">
+                          <div className="ecl-file__title wrap-anywhere leading-snug max-sm:text-base">
+                            {additionalTitle}
+                          </div>
+                        </div>
+                      </div>
+
+                      {cs.additional_document && (
+                        <div className="ecl-file__footer">
+                          {cs.additional_document.language?.label ? (
+                            <div className="ecl-file__language">
+                              {cs.additional_document.language.label}
+                            </div>
+                          ) : null}
+
+                          <div className="ecl-file__meta" />
+
+                          {!preview && cs.additional_document.url && (
+                            <div className="ecl-file__action mt-0!">
+                              <Link
+                                href={cs.additional_document.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                download
+                                className="ecl-link ecl-link--standalone ecl-link--icon ecl-file__download ecl-u-d-inline-flex ecl-u-align-items-center"
+                              >
+                                <span className="ecl-link__label">
+                                  Download
+                                </span>
+                                <ClientIcon className="wt-icon-ecl--download ecl-icon ecl-icon--fluid ecl-link__icon" />
+                              </Link>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -206,34 +290,68 @@ export default function CaseStudyDetails({ cs, preview = false }: Props) {
         </div>
 
         <div className="ecl-col-12 ecl-col-xl-6 ecl-u-mt-l ecl-u-mt-xl-none ecl-u-d-xl-flex ecl-u-flex-column">
-          <section className="ecl-u-mb-l">
-            <div className="ecl-u-bg-black ecl-u-pa-s">
-              <div className="ecl-u-type-heading-5 ecl-u-type-color-white">
-                OBSERVED BENEFITS
+          {benefitsList.length > 0 && (
+            <section className="ecl-u-mb-l">
+              <div className="ecl-u-bg-black ecl-u-pa-s">
+                <div className="ecl-u-type-heading-5 ecl-u-type-color-white">
+                  OBSERVED BENEFITS
+                </div>
               </div>
-            </div>
 
-            <div className="ecl-u-bg-white ecl-u-pa-m ecl-u-border">
-              <dl>
-                <div className="ecl-u-mb-s">
-                  <dt className="font-bold">Environmental:</dt>
-                  <dd className="ecl-u-mt-2xs">
-                    {benefit(cs, "environmental")}
-                  </dd>
-                </div>
-                <div className="ecl-u-mb-s">
-                  <dt className="font-bold">Economic:</dt>
-                  <dd className="ecl-u-mt-2xs">{benefit(cs, "economic")}</dd>
-                </div>
-                <div>
-                  <dt className="font-bold">Social:</dt>
-                  <dd className="ecl-u-mt-2xs">{benefit(cs, "social")}</dd>
-                </div>
-              </dl>
-            </div>
-          </section>
+              <div className="ecl-u-bg-white ecl-u-pa-m ecl-u-border">
+                <dl>
+                  {benefitsList.map((group, groupIndex) => (
+                    <div
+                      key={group.label}
+                      className={
+                        benefitsList.length > 1 &&
+                        groupIndex !== benefitsList.length - 1
+                          ? "ecl-u-mb-s"
+                          : ""
+                      }
+                    >
+                      <dt className="font-semibold! ecl-u-type-heading-6">
+                        {group.label} :
+                      </dt>
 
-          <section className="ecl-u-bg-primary-300 ecl-u-pa-m">
+                      <dd className="ecl-u-mt-2xs">
+                        <ul className="ecl-u-mv-none ecl-u-pl-none">
+                          {group.items.map((it, i) => (
+                            <li
+                              key={it.key}
+                              className={
+                                group.items.length > 1 &&
+                                i !== group.items.length - 1
+                                  ? "ecl-u-mb-xs"
+                                  : ""
+                              }
+                            >
+                              {it.name ? (
+                                <span className="ecl-u-type-italic ecl-u-type-color-secondary-700">
+                                  {it.name} -
+                                </span>
+                              ) : null}
+
+                              <span className="font-bold ecl-u-type-color-primary-950">
+                                {" "}
+                                {it.value} {it.unit}
+                              </span>
+
+                              {it.functionalUnit ? (
+                                <span> {it.functionalUnit}</span>
+                              ) : null}
+                            </li>
+                          ))}
+                        </ul>
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            </section>
+          )}
+
+          <section className="ecl-u-bg-primary-200 ecl-u-pa-m">
             <div className="ecl-row">
               <div className="ecl-col-12 ecl-col-m-6">
                 <div className="ecl-u-bg-primary ecl-u-pa-s">
@@ -260,12 +378,31 @@ export default function CaseStudyDetails({ cs, preview = false }: Props) {
                         {cs.calc_type?.label ?? "—"}
                       </dd>
                     </div>
-                    <div className="ecl-u-mb-s">
-                      <dt className="font-bold">Funding type:</dt>
-                      <dd className="ecl-u-mt-2xs">
-                        {cs.funding_type?.label ?? "—"}
-                      </dd>
-                    </div>
+                    {cs.funding_type?.label ? (
+                      <div className="ecl-u-mb-s">
+                        <dt className="font-bold">Funding type:</dt>
+                        <dd className="ecl-u-mt-2xs">
+                          {cs.funding_type.label}
+                        </dd>
+                      </div>
+                    ) : null}
+
+                    {cs.funding_type?.label?.toLowerCase() === "public" &&
+                      cs.funding_programme_url && (
+                        <div className="ecl-u-mb-s">
+                          <dt className="font-bold">Funding programme:</dt>
+                          <dd className="ecl-u-mt-2xs">
+                            <Link
+                              className="ecl-link"
+                              href={cs.funding_programme_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              {cs.funding_programme_url}
+                            </Link>
+                          </dd>
+                        </div>
+                      )}
                     <div>
                       <dt className="font-bold">Creation date:</dt>
                       <dd className="ecl-u-mt-2xs">{cs.created_date ?? "—"}</dd>
@@ -287,7 +424,23 @@ export default function CaseStudyDetails({ cs, preview = false }: Props) {
                       <dt className="font-bold">Organization name:</dt>
                       <dd className="ecl-u-mt-2xs">{provider?.name ?? "—"}</dd>
                     </div>
-
+                    <div className="ecl-u-mb-s">
+                      <dt className="font-bold">Organization website:</dt>
+                      <dd className="ecl-u-mt-2xs">
+                        {provider.website_url ? (
+                          <Link
+                            className="ecl-link"
+                            href={provider.website_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {provider.website_url}
+                          </Link>
+                        ) : (
+                          "—"
+                        )}
+                      </dd>
+                    </div>
                     <div className="ecl-u-mb-s">
                       <dt className="font-bold">Sector:</dt>
                       <dd className="ecl-u-mt-2xs">

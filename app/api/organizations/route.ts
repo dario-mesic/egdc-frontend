@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createOrganizationSchema } from "@/app/case-studies/(with-sidebar)/(protected)/upload/_lib/schemas/organization";
+import axios from "axios";
 
 export const runtime = "nodejs";
 
@@ -20,22 +21,29 @@ export async function POST(req: Request) {
 
   const payload = {
     ...parsed.data,
-    website_url: parsed.data.website_url ? parsed.data.website_url : null,
-    description: parsed.data.description ? parsed.data.description : null,
+    website_url: parsed.data.website_url || null,
+    description: parsed.data.description || null,
   };
 
-  const backendRes = await fetch(TARGET, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(payload),
-  });
+  try {
+    const backendRes = await axios.post(TARGET, payload, {
+      headers: { "Content-Type": "application/json" },
+      validateStatus: () => true,
+      responseType: "text",
+      transformResponse: (r) => r,
+    });
 
-  const text = await backendRes.text();
-  return new NextResponse(text, {
-    status: backendRes.status,
-    headers: {
-      "content-type":
-        backendRes.headers.get("content-type") ?? "application/json",
-    },
-  });
+    return new NextResponse(backendRes.data as string, {
+      status: backendRes.status,
+      headers: {
+        "content-type":
+          backendRes.headers["content-type"] ?? "application/json",
+      },
+    });
+  } catch {
+    return NextResponse.json(
+      { error: "Failed to reach backend" },
+      { status: 500 },
+    );
+  }
 }

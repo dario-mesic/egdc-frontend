@@ -1,3 +1,5 @@
+import axios, { AxiosError } from "axios";
+
 export class ApiError extends Error {
   status: number;
   url: string;
@@ -16,29 +18,46 @@ export const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL!;
 
 export async function fetchJson<T>(
   url: string,
-  init?: RequestInit & { next?: { revalidate?: number } },
+  init?: {
+    method?: string;
+    headers?: Record<string, string>;
+    body?: any;
+  },
 ): Promise<T> {
-  let res: Response;
   try {
-    res = await fetch(url, {
-      cache: "no-store",
-      ...init,
+    const res = await axios.request<T>({
+      url,
+      method: init?.method ?? "GET",
+      data: init?.body,
       headers: {
         Accept: "application/json",
         ...init?.headers,
       },
+
+      validateStatus: () => true,
     });
+
+    if (res.status < 200 || res.status >= 300) {
+      throw new ApiError(`Request failed (${res.status})`, res.status, url);
+    }
+
+    return res.data;
   } catch (e) {
+    if (axios.isAxiosError(e)) {
+      const err = e as AxiosError;
+
+      if (err.response) {
+        throw new ApiError(
+          `Request failed (${err.response.status})`,
+          err.response.status,
+          url,
+          e,
+        );
+      }
+
+      throw new ApiError("Network error", 0, url, e);
+    }
+
     throw new ApiError("Network error", 0, url, e);
-  }
-
-  if (!res.ok) {
-    throw new ApiError(`Request failed (${res.status})`, res.status, url);
-  }
-
-  try {
-    return (await res.json()) as T;
-  } catch {
-    throw new ApiError("Invalid JSON from server", res.status, url);
   }
 }

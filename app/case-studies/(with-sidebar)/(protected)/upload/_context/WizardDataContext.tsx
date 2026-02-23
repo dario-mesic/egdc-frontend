@@ -17,6 +17,7 @@ type WizardFiles = {
   file_methodology?: File;
   file_dataset?: File;
   file_logo?: File;
+  file_additional?: File;
 };
 
 type WizardData = {

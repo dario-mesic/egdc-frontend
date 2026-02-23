@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-
+import axios from "axios";
 export const runtime = "nodejs";
 
 const API_BASE_URL =
@@ -10,18 +10,26 @@ const TARGET = `${API_BASE_URL}/api/v1/case-studies/preview`;
 export async function POST(req: Request) {
   const form = await req.formData();
 
-  const backendRes = await fetch(TARGET, {
-    method: "POST",
-    body: form,
-  });
+  try {
+    const backendRes = await axios.post(TARGET, form, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+      responseType: "arraybuffer",
+      validateStatus: () => true,
+    });
 
-  const contentType =
-    backendRes.headers.get("content-type") ?? "application/json";
-
-  const body = await backendRes.arrayBuffer();
-
-  return new NextResponse(body, {
-    status: backendRes.status,
-    headers: { "content-type": contentType },
-  });
+    return new NextResponse(backendRes.data, {
+      status: backendRes.status,
+      headers: {
+        "content-type":
+          backendRes.headers["content-type"] ?? "application/json",
+      },
+    });
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Failed to reach backend" },
+      { status: 500 },
+    );
+  }
 }

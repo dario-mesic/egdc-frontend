@@ -12,6 +12,8 @@ export type Benefit = {
   id: number;
   name: string;
   value: number;
+  functional_unit: string;
+  is_net_carbon_impact: boolean;
   unit: Unit;
   type: BenefitType;
 };

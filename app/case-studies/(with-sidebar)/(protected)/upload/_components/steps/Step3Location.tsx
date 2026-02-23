@@ -2,11 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useWizardData } from "../../_context/WizardDataContext";
-import { useReferenceData } from "../../_context/ReferenceDataContext";
 import { useCombobox, autocomplete } from "@szhsin/react-autocomplete";
-
 import ClientIcon from "@/app/case-studies/_components/icons/ClientIcon";
-import { iso3ToIso2 } from "@/app/case-studies/_lib/iso";
 
 type FormState = {
   country: string;
@@ -24,7 +21,8 @@ type CityItem = {
 type Errors = Partial<Record<keyof FormState, string>>;
 
 export default function Step3Location() {
-  const { countries } = useReferenceData();
+  const [countries, setCountries] = useState<CountryItem[]>([]);
+  const [countriesLoading, setCountriesLoading] = useState(false);
   const { data, setMetadata } = useWizardData();
   const [form, setForm] = useState<FormState>({
     country: "",
@@ -32,19 +30,42 @@ export default function Step3Location() {
   });
 
   useEffect(() => {
+    let alive = true;
+
+    (async () => {
+      setCountriesLoading(true);
+      try {
+        const res = await fetch("/api/geo/countries");
+        if (!res.ok) throw new Error(String(res.status));
+        const json = (await res.json()) as { countries: CountryItem[] };
+        if (!alive) return;
+        setCountries(json.countries ?? []);
+      } catch (e) {
+        console.error("[countries] fetch failed:", e);
+        if (alive) setCountries([]);
+      } finally {
+        if (alive) setCountriesLoading(false);
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  useEffect(() => {
     const first = (data.metadata.addresses as any)?.[0];
-    if (first) {
-      const match = countries?.find(
-        (c: CountryItem) => c.code === first.admin_unit_l1,
-      );
+    if (!first) return;
 
-      setForm({
-        country: match?.label ?? "",
-        cityRegion: first.post_name ?? "",
-      });
+    const iso2 = String(first.admin_unit_l1 ?? "").toUpperCase();
+    const match = countries.find((c) => c.code === iso2);
 
-      setCountrySelected(match);
-    }
+    setForm({
+      country: match?.label ?? "",
+      cityRegion: first.post_name ?? "",
+    });
+
+    setCountrySelected(match);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [countries]);
 
@@ -67,11 +88,11 @@ export default function Step3Location() {
   const touch = (k: keyof FormState) =>
     setTouched((p) => ({ ...p, [k]: true }));
 
-  const syncAddresses = (countryIso3: string, cityRegion: string) => {
+  const syncAddresses = (countryIso2: string, cityRegion: string) => {
     setMetadata({
       addresses: [
         {
-          admin_unit_l1: countryIso3.trim(),
+          admin_unit_l1: countryIso2.trim().toUpperCase(),
           post_name: cityRegion.trim(),
         },
       ],
@@ -163,11 +184,6 @@ export default function Step3Location() {
     return cities.filter((c) => c.name.trim().toLowerCase().startsWith(v));
   }, [cities, form.cityRegion]);
 
-  const toIso2CountryCode = (code: string) => {
-    const iso2 = iso3ToIso2(code) ?? code;
-    return iso2.toUpperCase();
-  };
-
   const {
     getInputProps,
     getListProps,
@@ -195,7 +211,7 @@ export default function Step3Location() {
         setCities([]);
         syncAddresses(match.code, "");
 
-        await loadCitiesForCountry(toIso2CountryCode(match.code));
+        await loadCitiesForCountry(match.code);
       } else {
         set("cityRegion", "");
         setCities([]);
@@ -215,7 +231,7 @@ export default function Step3Location() {
       syncAddresses(item?.code ?? "", "");
 
       if (item?.code) {
-        await loadCitiesForCountry(toIso2CountryCode(item.code));
+        await loadCitiesForCountry(item.code);
       }
     },
 
@@ -296,7 +312,10 @@ export default function Step3Location() {
       </li>
     );
   }
+  const inputProps = getInputProps();
+  const cityInputProps = getCityInputProps();
 
+  const countryError = showError("country");
   return (
     <>
       <h2 className="ecl-u-type-heading-3 ecl-u-mb-m">Location</h2>
@@ -306,19 +325,33 @@ export default function Step3Location() {
       <div className="w-full max-w-2xl lg:max-w-4xl">
         <div className="ecl-form-group ecl-u-mb-m">
           <label className="ecl-form-label" htmlFor="cs-country">
-            Country <span className="ecl-u-type-color-error">*</span>
+            Country{" "}
+            <span
+              className="ecl-form-label__required"
+              role="note"
+              aria-label="required"
+            >
+              *
+            </span>
           </label>{" "}
           <div className="relative">
             <input
-              {...getInputProps()}
+              {...inputProps}
               id="cs-country"
               autoComplete="new-password"
               autoCorrect="off"
               autoCapitalize="none"
               spellCheck={false}
               required
-              onBlur={() => touch("country")}
-              className="ecl-text-input ecl-u-width-100 pr-10"
+              disabled={countriesLoading}
+              onBlur={(e) => {
+                inputProps.onBlur?.(e);
+                touch("country");
+              }}
+              className={[
+                "ecl-text-input ecl-u-width-100 pr-10",
+                countryError ? "ecl-u-border-color-error" : "",
+              ].join(" ")}
             />
 
             {hasCountryValue ? (
@@ -384,27 +417,32 @@ export default function Step3Location() {
               )}
             </ul>
           </div>
-          {showError("country") ? (
+          {countryError ? (
             <div className="ecl-feedback-message ecl-feedback-message--error ecl-u-mt-2xs">
-              {showError("country")}
+              <ClientIcon className="wt-icon--error ecl-icon ecl-icon--s ecl-feedback-message__icon " />
+              {countryError}
             </div>
           ) : null}
         </div>
 
         <div className="ecl-form-group ecl-u-mb-m">
           <label className="ecl-form-label" htmlFor="cs-city-region">
-            City / Region
+            City / Region{" "}
+            <span className="ecl-form-label__optional">(optional)</span>
           </label>
           <div className="relative">
             <input
-              {...getCityInputProps()}
+              {...cityInputProps}
               id="cs-city-region"
               autoComplete="new-password"
               autoCorrect="off"
               autoCapitalize="none"
               spellCheck={false}
               disabled={!hasValidCountry || citiesLoading}
-              onBlur={() => touch("cityRegion")}
+              onBlur={(e) => {
+                cityInputProps.onBlur?.(e);
+                touch("cityRegion");
+              }}
               className="ecl-text-input ecl-u-width-100 pr-10"
             />
 

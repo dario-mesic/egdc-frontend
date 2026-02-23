@@ -14,9 +14,8 @@ export const createOrganizationSchema = z.object({
     .optional()
     .nullable(),
   website_url: z
-    .string()
-    .trim()
     .url("Website URL must be a valid URL")
+    .trim()
     .optional()
     .nullable()
     .or(z.literal("")),
