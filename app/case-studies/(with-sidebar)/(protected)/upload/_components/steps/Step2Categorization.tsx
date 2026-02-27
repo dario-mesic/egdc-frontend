@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useReferenceData } from "../../../../../_context/ReferenceDataContext";
 import ClientIcon from "@/app/case-studies/_components/icons/ClientIcon";
 import { useWizardData } from "../../_context/WizardDataContext";
@@ -42,7 +42,8 @@ function validateFundingProgrammeUrl(
 
 export default function Step2Categorization() {
   const { technologies, calculation_types, funding_types } = useReferenceData();
-  const { data, setMetadata } = useWizardData();
+  const { data, setMetadata, editDataLoadedAt } = useWizardData();
+  const lastSyncedEditRef = useRef(0);
 
   const [form, setForm] = useState<FormState>({
     technology: "",
@@ -67,6 +68,19 @@ export default function Step2Categorization() {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (editDataLoadedAt <= 0 || editDataLoadedAt === lastSyncedEditRef.current)
+      return;
+    lastSyncedEditRef.current = editDataLoadedAt;
+    setForm({
+      technology: (data.metadata.tech_code as string) ?? "",
+      calculationType: (data.metadata.calc_type_code as string) ?? "",
+      fundingType: (data.metadata.funding_type_code as string) ?? "",
+      fundingProgrammeUrl:
+        (data.metadata.funding_programme_url as string) ?? "",
+    });
+  }, [editDataLoadedAt, data.metadata.tech_code, data.metadata.calc_type_code, data.metadata.funding_type_code, data.metadata.funding_programme_url]);
 
   useEffect(() => {
     globalThis.ECL?.autoInit?.();

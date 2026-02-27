@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import WizardShell from "../wizard/WizardShell";
 import {
   uploadStepCount,
@@ -24,10 +25,17 @@ import {
   step4Schema,
   step5Schema,
 } from "../../_lib/schemas/steps";
+import { caseStudyDetailToMetadata } from "../../_lib/caseStudyToMetadata";
 import Notification from "@/app/case-studies/_components/Notification";
 import Modal from "../Modal";
 import CaseStudyDetails from "@/app/case-studies/_components/CaseStudyDetails";
 import { CaseStudyDetail } from "@/app/case-studies/_types/caseStudyDetail";
+import {
+  getStoredAccessToken,
+  getStoredRole,
+  clearAuthAndRedirect,
+  isCredentialsError,
+} from "@/app/case-studies/_lib/auth";
 
 type AsyncState<T extends string> =
   | "idle"
@@ -44,30 +52,114 @@ type WizardInnerProps = Readonly<{
   setActiveStep: React.Dispatch<React.SetStateAction<number>>;
   maxUnlockedStep: number;
   setMaxUnlockedStep: React.Dispatch<React.SetStateAction<number>>;
+  editId: number | null;
 }>;
 
 function buildFormData(parsed: {
-  metadata: any;
+  metadata: Record<string, unknown> & { status?: string };
   files: {
     file_logo: File;
-    file_methodology?: File | null;
-    file_dataset?: File | null;
-    file_additional?: File | null;
+    file_methodology: File;
+    file_dataset: File;
+    file_additional_document?: File;
   };
 }) {
   const fd = new FormData();
   fd.append("metadata", JSON.stringify(parsed.metadata));
   fd.append("file_logo", parsed.files.file_logo);
 
-  if (parsed.files.file_methodology) {
-    fd.append("file_methodology", parsed.files.file_methodology);
+  fd.append("file_methodology", parsed.files.file_methodology);
+  fd.append(
+    "methodology_language",
+    String(parsed.metadata.methodology_language_code ?? ""),
+  );
+
+  fd.append("file_dataset", parsed.files.file_dataset);
+  fd.append(
+    "dataset_language",
+    String(parsed.metadata.dataset_language_code ?? ""),
+  );
+
+  if (parsed.files.file_additional_document) {
+    fd.append(
+      "file_additional_document",
+      parsed.files.file_additional_document,
+    );
+    fd.append(
+      "additional_document_language",
+      String(parsed.metadata.additional_language_code ?? ""),
+    );
   }
-  if (parsed.files.file_dataset) {
-    fd.append("file_dataset", parsed.files.file_dataset);
+
+  return fd;
+}
+
+type PartialWizardFiles = {
+  file_logo?: File;
+  file_methodology?: File;
+  file_dataset?: File;
+  file_additional_document?: File;
+};
+
+function sanitizeDraftMetadata(
+  metadata: Record<string, unknown>,
+  _editId: number | null,
+): Record<string, unknown> {
+  const out: Record<string, unknown> = { ...metadata, status: "draft" };
+  if (Array.isArray(out.benefits)) {
+    out.benefits = (out.benefits as Record<string, unknown>[]).map((b) => {
+      const raw = b.value;
+      const value =
+        typeof raw === "number" && Number.isInteger(raw)
+          ? raw
+          : typeof raw === "string"
+            ? parseInt(raw, 10) || 0
+            : 0;
+      return {
+        ...b,
+        value,
+        type_code: b.type_code ?? "",
+        name: b.name ?? "",
+        unit_code: b.unit_code ?? "",
+        functional_unit: b.functional_unit ?? "",
+      };
+    });
   }
-  if (parsed.files.file_additional) {
-    fd.append("file_additional", parsed.files.file_additional);
+  if (Array.isArray(out.addresses)) {
+    out.addresses = (out.addresses as Record<string, unknown>[]).map((a) => ({
+      admin_unit_l1: a.admin_unit_l1 ?? "",
+      post_name: a.post_name ?? "",
+    }));
   }
+  return out;
+}
+
+function buildDraftFormData(
+  metadata: Record<string, unknown>,
+  files: PartialWizardFiles,
+  editId: number | null,
+) {
+  const fd = new FormData();
+  const metaWithDraft = sanitizeDraftMetadata(metadata, editId);
+  fd.append("metadata", JSON.stringify(metaWithDraft));
+
+  if (files.file_logo) fd.append("file_logo", files.file_logo);
+  if (files.file_methodology) {
+    fd.append("file_methodology", files.file_methodology);
+    const lang = (metadata.methodology_language_code as string) ?? "";
+    if (lang) fd.append("methodology_language", lang);
+  }
+  if (files.file_dataset) {
+    fd.append("file_dataset", files.file_dataset);
+    const lang = (metadata.dataset_language_code as string) ?? "";
+    if (lang) fd.append("dataset_language", lang);
+  }
+  if (files.file_additional_document) {
+    fd.append("file_additional_document", files.file_additional_document);
+    const lang = (metadata.additional_language_code as string) ?? "";
+    if (lang) fd.append("additional_document_language", lang);
+  }
+
   return fd;
 }
 
@@ -76,14 +168,47 @@ function WizardInner({
   setActiveStep,
   maxUnlockedStep,
   setMaxUnlockedStep,
+  editId,
 }: WizardInnerProps) {
-  const { data } = useWizardData();
+  const { data, setMetadata, setEditDataLoadedAt } = useWizardData();
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
   const [submitError, setSubmitError] = useState("");
   const [previewState, setPreviewState] = useState<PreviewState>("idle");
   const [previewError, setPreviewError] = useState("");
   const [previewCs, setPreviewCs] = useState<CaseStudyDetail | null>(null);
+  const [editLoadError, setEditLoadError] = useState("");
+  const editPrefilledRef = useRef(false);
   const isLast = activeStep === uploadStepCount;
+
+  useEffect(() => {
+    if (!editId || editPrefilledRef.current) return;
+    const token = getStoredAccessToken();
+    if (!token) return;
+    editPrefilledRef.current = true;
+    setEditLoadError("");
+    fetch(`/api/case-studies/${editId}`, {
+      headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+    })
+      .then(async (res) => {
+        const data = await res.json().catch(() => ({}));
+        if (
+          res.status === 401 ||
+          res.status === 403 ||
+          isCredentialsError((data as { error?: string })?.error)
+        ) {
+          clearAuthAndRedirect();
+          return;
+        }
+        if (!res.ok) throw new Error("Failed to load case study");
+        return data as CaseStudyDetail;
+      })
+      .then((json) => {
+        if (json == null) return;
+        setMetadata(caseStudyDetailToMetadata(json));
+        setEditDataLoadedAt(Date.now());
+      })
+      .catch(() => setEditLoadError("Failed to load case study for editing."));
+  }, [editId, setMetadata, setEditDataLoadedAt]);
 
   const stepSchemaMap = useMemo(() => {
     return {
@@ -121,6 +246,57 @@ function WizardInner({
     };
   }, [previewLogoUrl]);
 
+  async function handleSaveDraft() {
+    const fd = buildDraftFormData(data.metadata, data.files, editId);
+    setSubmitState("submitting");
+    setSubmitError("");
+
+    try {
+      const token = getStoredAccessToken();
+      if (!token) {
+        setSubmitState("error");
+        setSubmitError("You are not logged in.");
+        return;
+      }
+      const url = editId
+        ? `/api/case-studies/${editId}`
+        : "/api/case-studies";
+      const res = await fetch(url, {
+        method: editId ? "PUT" : "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: fd,
+      });
+      const txt = await res.text();
+      const errData = (() => {
+        try {
+          return JSON.parse(txt) as { error?: string };
+        } catch {
+          return {};
+        }
+      })();
+      if (
+        res.status === 401 ||
+        res.status === 403 ||
+        isCredentialsError(errData?.error ?? txt)
+      ) {
+        clearAuthAndRedirect();
+        return;
+      }
+      if (!res.ok) {
+        setSubmitState("error");
+        setSubmitError(errData?.error ?? (txt || "Failed to save draft."));
+        return;
+      }
+      sessionStorage.setItem("case-study-draft-saved", "1");
+      globalThis.location.replace("/case-studies/my");
+    } catch (e) {
+      setSubmitState("error");
+      setSubmitError(
+        e instanceof Error ? e.message : "Network error. Please try again.",
+      );
+    }
+  }
+
   async function handleNext() {
     if (!isCurrentStepValid) return;
 
@@ -131,8 +307,10 @@ function WizardInner({
       return;
     }
 
+    const submitStatus =
+      getStoredRole() === "data_owner" ? "pending_approval" : "published";
     const parsed = wizardPayloadSchema.safeParse({
-      metadata: data.metadata,
+      metadata: { ...data.metadata, status: submitStatus },
       files: data.files,
     });
 
@@ -146,20 +324,48 @@ function WizardInner({
     setSubmitError("");
 
     try {
-      const res = await fetch("/api/case-studies", {
-        method: "POST",
+      const token = getStoredAccessToken();
+      if (!token) {
+        setSubmitState("error");
+        setSubmitError("You are not logged in.");
+        return;
+      }
+      const url = editId ? `/api/case-studies/${editId}` : "/api/case-studies";
+      const res = await fetch(url, {
+        method: editId ? "PUT" : "POST",
+        headers: { Authorization: `Bearer ${token}` },
         body: fd,
       });
 
+      const txt = await res.text();
+      const errData = (() => {
+        try {
+          return JSON.parse(txt) as { error?: string };
+        } catch {
+          return {};
+        }
+      })();
+      if (
+        res.status === 401 ||
+        res.status === 403 ||
+        isCredentialsError(errData?.error ?? txt)
+      ) {
+        clearAuthAndRedirect();
+        return;
+      }
       if (!res.ok) {
-        const txt = await res.text();
         setSubmitState("error");
-        setSubmitError(txt || "Failed to create case study. Please try again.");
+        setSubmitError(
+          errData?.error ??
+            (txt ||
+              (editId
+                ? "Failed to update case study. Please try again."
+                : "Failed to create case study. Please try again.")),
+        );
         return;
       }
       sessionStorage.setItem("case-study-created", "1");
-
-      globalThis.location.replace("/case-studies");
+      globalThis.location.replace("/case-studies/my");
     } catch (e) {
       setSubmitState("error");
       setSubmitError(
@@ -245,6 +451,14 @@ function WizardInner({
   }
   return (
     <>
+      {editLoadError && (
+        <Notification
+          variant="error"
+          title="Cannot load for editing"
+          description={editLoadError}
+          onClose={() => setEditLoadError("")}
+        />
+      )}
       {submitState === "error" && (
         <Notification
           variant="error"
@@ -306,6 +520,15 @@ function WizardInner({
             <div className="ecl-u-d-flex ecl-u-align-items-center gap-3">
               <button
                 type="button"
+                className="ecl-button ecl-button--secondary"
+                onClick={handleSaveDraft}
+                disabled={isSubmitting || previewState === "loading"}
+                aria-disabled={isSubmitting || previewState === "loading"}
+              >
+                Save as draft
+              </button>
+              <button
+                type="button"
                 className="ecl-button ecl-button--primary"
                 onClick={isLast ? handlePreview : handleNext}
                 disabled={
@@ -350,6 +573,12 @@ type UploadWizardClientProps = Readonly<{
 }>;
 
 function UploadWizardWithRefData({ organizations }: UploadWizardClientProps) {
+  const searchParams = useSearchParams();
+  const editParam = searchParams.get("edit");
+  const editId =
+    editParam != null && /^\d+$/.test(editParam)
+      ? parseInt(editParam, 10)
+      : null;
   const baseRefData = useReferenceData();
   const [activeStep, setActiveStep] = useState(1);
   const [maxUnlockedStep, setMaxUnlockedStep] = useState(1);
@@ -365,6 +594,7 @@ function UploadWizardWithRefData({ organizations }: UploadWizardClientProps) {
           setActiveStep={setActiveStep}
           maxUnlockedStep={maxUnlockedStep}
           setMaxUnlockedStep={setMaxUnlockedStep}
+          editId={editId}
         />
       </WizardDataProvider>
     </ReferenceDataProvider>

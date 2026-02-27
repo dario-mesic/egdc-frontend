@@ -12,6 +12,7 @@ export const benefitSchema = z.object({
     .nonnegative("Value must be >= 0"),
   unit_code: z.string().min(1, "Unit is required"),
   functional_unit: z.string().min(1, "Functional unit is required"),
+  is_net_carbon_impact: z.boolean().optional().default(false),
 });
 
 export const addressSchema = z.object({
@@ -19,7 +20,12 @@ export const addressSchema = z.object({
   post_name: z.string().optional().default(""),
 });
 
+export const statusSchema = z
+  .enum(["draft", "published", "pending_approval"])
+  .optional();
+
 export const baseMetadataSchema = z.object({
+  status: statusSchema,
   title: z.string().min(1, "Title is required").max(80, "Max 80 characters"),
   short_description: z
     .string()
@@ -56,9 +62,7 @@ export const baseMetadataSchema = z.object({
     .string()
     .min(1, "Methodology language is required"),
   dataset_language_code: z.string().min(1, "Dataset language is required"),
-  additional_language_code: z
-    .string()
-    .min(1, "Additional document language is required"),
+  additional_language_code: z.string().optional().nullable(),
 });
 
 export const metadataSchema = baseMetadataSchema.superRefine((val, ctx) => {
@@ -71,6 +75,17 @@ export const metadataSchema = baseMetadataSchema.superRefine((val, ctx) => {
       code: "custom",
       path: ["benefits"],
       message: 'At least one benefit must be of type "Environmental".',
+    });
+  }
+
+  const netCarbonCount = (val.benefits ?? []).filter(
+    (b) => b.is_net_carbon_impact === true,
+  ).length;
+  if (netCarbonCount !== 1) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["benefits"],
+      message: "Exactly one benefit must be marked as 'Net Carbon Impact'.",
     });
   }
 
@@ -106,18 +121,31 @@ export const metadataSchema = baseMetadataSchema.superRefine((val, ctx) => {
 
 export type CaseStudyMetadata = z.infer<typeof baseMetadataSchema>;
 
-export const wizardPayloadSchema = z.object({
-  metadata: metadataSchema,
-  files: z.object({
-    file_methodology: z.instanceof(File, {
-      message: "Methodology report is required",
+export const wizardPayloadSchema = z
+  .object({
+    metadata: metadataSchema,
+    files: z.object({
+      file_methodology: z.instanceof(File, {
+        message: "Methodology report is required",
+      }),
+      file_dataset: z.instanceof(File, {
+        message: "Calculator/Dataset is required",
+      }),
+      file_logo: z.instanceof(File, { message: "Logo file is required" }),
+      file_additional_document: z.instanceof(File).optional(),
     }),
-    file_dataset: z.instanceof(File, {
-      message: "Calculator/Dataset is required",
-    }),
-    file_logo: z.instanceof(File, { message: "Logo file is required" }),
-    file_additional: z.instanceof(File).optional(),
-  }),
-});
+  })
+  .superRefine(({ metadata, files }, ctx) => {
+    if (files.file_additional_document) {
+      const lang = (metadata.additional_language_code ?? "").trim();
+      if (!lang) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["metadata", "additional_language_code"],
+          message: "Additional document language is required.",
+        });
+      }
+    }
+  });
 
 export type WizardPayload = z.infer<typeof wizardPayloadSchema>;

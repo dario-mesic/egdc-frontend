@@ -24,7 +24,12 @@ export default function CaseStudyCardLink({
       href={href}
       prefetch={prefetch}
       className={className}
-      onClick={() => {
+      onClick={(e) => {
+        if ((e.target as HTMLElement).closest("[data-no-link]")) {
+          e.preventDefault();
+          e.stopPropagation();
+          return;
+        }
         if (pathname === "/case-studies" || pathname === "/case-studies/my") {
           sessionStorage.setItem("cs-back", pathname);
         }

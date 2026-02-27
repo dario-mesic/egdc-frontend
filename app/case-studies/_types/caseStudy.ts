@@ -53,6 +53,8 @@ export type Address = {
   post_name: string;
 };
 
+export type CaseStudyStatus = "published" | "draft" | "pending_approval";
+
 export type CaseStudy = {
   id: number;
   title: string;
@@ -63,4 +65,5 @@ export type CaseStudy = {
   funding_type: FundingType | null;
   logo: Logo | null;
   addresses?: Address[];
+  status?: CaseStudyStatus | string;
 };

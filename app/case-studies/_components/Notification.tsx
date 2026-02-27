@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
-import ClientIcon from "@/app/case-studies/_components/icons/ClientIcon";
 
 type NotificationProps = Readonly<{
-  variant: "success" | "error";
+  variant: "success" | "error" | "warning";
   title: string;
   description?: string;
   children?: React.ReactNode;
@@ -37,8 +36,6 @@ export default function Notification({
       role="alert"
       data-ecl-auto-init="Notification"
     >
-      <ClientIcon className="ecl-icon ecl-icon--l ecl-notification__icon" />
-
       <div className="ecl-notification__content">
         <div className="ecl-notification__title">{title}</div>
 

@@ -65,11 +65,7 @@ export default function RootLayout({
           src="https://cdn.jsdelivr.net/npm/@duetds/date-picker@1.4.0/dist/duet/duet.js"
           strategy="afterInteractive"
         />
-        <Script
-          type="text/javascript"
-          defer
-          src="https://webtools.europa.eu/load.js"
-        />
+        <Script type="text/javascript" src="/ecl/icons/load.js" />
         <EclAutoInit rootId="app-root" />
       </body>
     </html>

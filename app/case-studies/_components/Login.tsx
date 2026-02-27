@@ -1,6 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import {
+  setStoredAccessToken,
+  setStoredRole,
+  type UserRole,
+} from "../_lib/auth";
 
 type LoginProps = Readonly<{
   onSuccess: () => void;
@@ -13,27 +18,57 @@ export default function Login({ onSuccess }: LoginProps) {
     password?: boolean;
   }>({});
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const errors = {
     username: form.username.trim() === "" ? "Username is required." : "",
     password: form.password === "" ? "Password is required." : "",
   };
 
-  const canSubmit = !errors.username && !errors.password;
+  const canSubmit = !errors.username && !errors.password && !loading;
 
-  function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
     setTouched({ username: true, password: true });
     setError("");
     if (!canSubmit) return;
 
-    if (form.username === "custodian1" && form.password === "custodian1") {
-      sessionStorage.setItem("cs-authed", "1");
-      onSuccess();
-      return;
-    }
+    setLoading(true);
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: form.username.trim(),
+          password: form.password,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
 
-    setError("Please enter a correct username and password.");
+      if (!res.ok) {
+        setError(data?.error ?? "Login failed. Please try again.");
+        return;
+      }
+
+      if (data?.access_token) {
+        setStoredAccessToken(data.access_token);
+        if (
+          data.role &&
+          ["custodian", "data_owner", "admin"].includes(
+            String(data.role).toLowerCase(),
+          )
+        ) {
+          setStoredRole(String(data.role).toLowerCase() as UserRole);
+        }
+        onSuccess();
+      } else {
+        setError("Invalid response from server.");
+      }
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   }
   return (
     <div className="ecl-u-bg-grey-25 min-h-screen ecl-u-d-flex ecl-u-align-items-center ecl-u-justify-content-center ">
@@ -107,8 +142,9 @@ export default function Login({ onSuccess }: LoginProps) {
                 <button
                   type="submit"
                   className="ecl-button ecl-button--primary ecl-u-width-100"
+                  disabled={loading}
                 >
-                  Login
+                  {loading ? "Logging in…" : "Login"}
                 </button>
               </div>
             </form>

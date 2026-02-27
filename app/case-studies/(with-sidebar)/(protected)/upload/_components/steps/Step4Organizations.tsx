@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import ClientIcon from "@/app/case-studies/_components/icons/ClientIcon";
 import { useReferenceData } from "../../../../../_context/ReferenceDataContext";
 import { useWizardData } from "../../_context/WizardDataContext";
@@ -382,7 +382,8 @@ function AddOrganizationModal({ onCreated }: AddOrganizationModalProps) {
 
 export default function Step4Organizations() {
   const { organizations } = useReferenceData();
-  const { data, setMetadata } = useWizardData();
+  const { data, setMetadata, editDataLoadedAt } = useWizardData();
+  const lastSyncedEditRef = useRef(0);
 
   const [orgs, setOrgs] = useState<Organization[]>(organizations);
 
@@ -408,6 +409,23 @@ export default function Step4Organizations() {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (editDataLoadedAt <= 0 || editDataLoadedAt === lastSyncedEditRef.current)
+      return;
+    lastSyncedEditRef.current = editDataLoadedAt;
+    setForm({
+      providedBy: data.metadata.provider_org_id
+        ? String(data.metadata.provider_org_id)
+        : "",
+      fundedBy: data.metadata.funder_org_id
+        ? String(data.metadata.funder_org_id)
+        : "",
+      usedBy: data.metadata.used_by_org_id
+        ? String(data.metadata.used_by_org_id)
+        : "",
+    });
+  }, [editDataLoadedAt, data.metadata.provider_org_id, data.metadata.funder_org_id, data.metadata.used_by_org_id]);
 
   useEffect(() => {
     setOrgs(organizations);

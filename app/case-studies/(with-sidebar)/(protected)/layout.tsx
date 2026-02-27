@@ -2,6 +2,7 @@
 
 import { useLayoutEffect, useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { isAuthenticated, clearAuth, getStoredRole } from "../../_lib/auth";
 
 type ProtectedLayoutProps = Readonly<{
   children: React.ReactNode;
@@ -16,13 +17,22 @@ export default function ProtectedLayout({ children }: ProtectedLayoutProps) {
   );
 
   useLayoutEffect(() => {
-    const ok = sessionStorage.getItem("cs-authed") === "1";
-    setStatus(ok ? "authed" : "guest");
+    setStatus(isAuthenticated() ? "authed" : "guest");
   }, []);
 
   useEffect(() => {
     if (status === "guest") router.replace("/case-studies/login");
   }, [status, router]);
+
+  useEffect(() => {
+    if (
+      status === "authed" &&
+      getStoredRole() === "custodian" &&
+      pathname?.includes("/upload")
+    ) {
+      router.replace("/case-studies/my");
+    }
+  }, [status, pathname, router]);
 
   useEffect(() => {
     if (status !== "authed") return;
@@ -37,7 +47,7 @@ export default function ProtectedLayout({ children }: ProtectedLayoutProps) {
   }, [status, pathname]);
 
   function logout() {
-    sessionStorage.removeItem("cs-authed");
+    clearAuth();
     setStatus("guest");
     router.replace("/case-studies/login");
   }
@@ -50,12 +60,19 @@ export default function ProtectedLayout({ children }: ProtectedLayoutProps) {
     return null;
   }
 
+  if (
+    getStoredRole() === "custodian" &&
+    pathname?.startsWith("/case-studies/upload")
+  ) {
+    return null;
+  }
+
   return (
     <>
       <div className="ecl-u-border-bottom ecl-u-mb-m ecl-u-border-color-grey-100">
         <div className="ecl-u-d-flex ecl-u-justify-content-end ecl-u-align-items-center gap-3 ecl-u-pv-xs">
           <span className="ecl-u-type-s ecl-u-type-size-xs ecl-u-type-color-grey-700">
-            Hello, <strong>custodian1</strong>
+            Hello, <strong>{getStoredRole() ?? "User"}</strong>
           </span>
 
           <button

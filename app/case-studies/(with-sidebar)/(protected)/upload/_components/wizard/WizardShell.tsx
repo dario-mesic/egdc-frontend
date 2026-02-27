@@ -60,7 +60,7 @@ export default function WizardShell({
       </div>
 
       <div className="ecl-col-12">
-        <div className="ecl-u-bg-grey-25 ecl-u-pa-l ecl-u-border-all ecl-u-border-color-grey-50 ecl-u-d-flex ecl-u-flex-column h-[calc(100vh-200px)] min-h-0">
+        <div className="ecl-u-bg-grey-25 ecl-u-pa-l ecl-u-border-all ecl-u-border-color-grey-50 ecl-u-d-flex ecl-u-flex-column h-[calc(100vh)] min-h-0">
           <div className="flex-1 min-h-0 overflow-y-auto pr-2">{children}</div>
           {footer ? (
             <div className="ecl-u-mt-l ecl-u-pt-m border-t border-black/10">

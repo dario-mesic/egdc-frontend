@@ -3,13 +3,14 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import ClientIcon from "../_components/icons/ClientIcon";
+import { isAuthenticated } from "../_lib/auth";
 
 export default function BackToCaseStudiesLink() {
   const [href, setHref] = useState("/case-studies");
 
   useEffect(() => {
     const stored = sessionStorage.getItem("cs-back");
-    const authed = sessionStorage.getItem("cs-authed") === "1";
+    const authed = isAuthenticated();
 
     if (stored === "/case-studies/my" && authed) {
       setHref("/case-studies/my");

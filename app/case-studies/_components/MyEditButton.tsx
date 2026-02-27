@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import ClientIcon from "../_components/icons/ClientIcon";
+import { isAuthenticated } from "../_lib/auth";
 
 type MyEditButtonProps = Readonly<{
   caseStudyId: number;
@@ -14,7 +15,7 @@ export default function MyEditButton({ caseStudyId }: MyEditButtonProps) {
   const [authed, setAuthed] = useState(false);
 
   useEffect(() => {
-    setAuthed(sessionStorage.getItem("cs-authed") === "1");
+    setAuthed(isAuthenticated());
   }, []);
 
   if (!authed) return null;

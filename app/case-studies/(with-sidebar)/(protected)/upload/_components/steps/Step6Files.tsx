@@ -47,6 +47,11 @@ const IDS = {
     label: "cs-logo-label",
     helper: "cs-logo-helper",
   },
+  additional: {
+    input: "cs-additional",
+    label: "cs-additional-label",
+    helper: "cs-additional-helper",
+  },
   methodologyLanguage: {
     input: "cs-methodology-language",
     label: "cs-methodology-language-label",
@@ -55,10 +60,9 @@ const IDS = {
     input: "cs-dataset-language",
     label: "cs-dataset-language-label",
   },
-  additional: {
-    input: "cs-additional",
-    label: "cs-additional-label",
-    helper: "cs-additional-helper",
+  additionalLanguage: {
+    input: "cs-additional-language",
+    label: "cs-additional-language-label",
   },
 } as const;
 
@@ -205,7 +209,7 @@ export default function Step6Files() {
   const hasMethodology = !!data.files.file_methodology;
   const hasDatasetFile = !!data.files.file_dataset;
   const hasLogo = !!data.files.file_logo;
-  const hasAdditional = !!data.files.file_additional;
+  const hasAdditional = !!data.files.file_additional_document;
 
   const [resetKeys, setResetKeys] = useState({
     methodology: 0,
@@ -228,7 +232,7 @@ export default function Step6Files() {
     if (key === "methodology") setFiles({ file_methodology: undefined });
     if (key === "dataset") setFiles({ file_dataset: undefined });
     if (key === "logo") setFiles({ file_logo: undefined });
-    if (key === "additional") setFiles({ file_additional: undefined });
+    if (key === "additional") setFiles({ file_additional_document: undefined });
 
     clearNative(ref);
     bumpResetKey(key);
@@ -242,7 +246,7 @@ export default function Step6Files() {
     if (key === "methodology") setFiles({ file_methodology: undefined });
     if (key === "dataset") setFiles({ file_dataset: undefined });
     if (key === "logo") setFiles({ file_logo: undefined });
-    if (key === "additional") setFiles({ file_additional: undefined });
+    if (key === "additional") setFiles({ file_additional_document: undefined });
   };
 
   const handleDropFile = <K extends keyof LocalTouched>(args: {
@@ -354,12 +358,12 @@ export default function Step6Files() {
 
     if (!isPdf(file)) {
       clearNative(additionalRef);
-      setFiles({ file_additional: undefined });
+      setFiles({ file_additional_document: undefined });
       setFileError("additional", "Only PDF files are allowed.");
       return;
     }
 
-    setFiles({ file_additional: file });
+    setFiles({ file_additional_document: file });
     if (!data.metadata.additional_language_code) {
       setMetadata({ additional_language_code: "en" });
     }
@@ -563,7 +567,7 @@ export default function Step6Files() {
             className="w-full sm:w-125"
             label="Drag and drop PDF file here, or click to select"
             accept={{ "application/pdf": [".pdf"] }}
-            file={data.files.file_additional}
+            file={data.files.file_additional_document}
             error={touched.additional ? errors.additional : undefined}
             onDropFile={(file, errorCode) =>
               handleDropFile({
@@ -658,7 +662,10 @@ export default function Step6Files() {
         </div>
         {hasAdditional && (
           <div className="ecl-form-group ecl-u-mb-l">
-            <label htmlFor={IDS.additional.input} className="ecl-form-label">
+            <label
+              htmlFor={IDS.additionalLanguage.input}
+              className="ecl-form-label"
+            >
               Additional document language{" "}
               <span
                 className="ecl-form-label__required"
@@ -671,7 +678,7 @@ export default function Step6Files() {
 
             <div className="ecl-select__container ecl-select__container--m ecl-u-width-100 sm:w-125!">
               <select
-                id={IDS.additional.input}
+                id={IDS.additionalLanguage.input}
                 className="ecl-select"
                 value={data.metadata.additional_language_code ?? ""}
                 onChange={(e) =>

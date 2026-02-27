@@ -3,9 +3,7 @@ import Image from "next/image";
 import type { CaseStudyDetail } from "../_types/caseStudyDetail";
 import { compactLocations } from "../_lib/locations";
 import ClientIcon from "../_components/icons/ClientIcon";
-import MyEditButton from "./MyEditButton";
-import MyDeleteButton from "./MyDeleteButton";
-import BackToCaseStudiesLink from "./BackToCaseStudiesLink";
+import CaseStudyDetailsActions from "./CaseStudyDetailsActions";
 import Flag from "react-world-flags";
 
 type Props = Readonly<{
@@ -77,13 +75,11 @@ export default function CaseStudyDetails({ cs, preview = false }: Props) {
   return (
     <div className="ecl-u-pa-xl">
       {!preview && (
-        <div className="ecl-u-d-flex ecl-u-flex-wrap ecl-u-align-items-center ecl-u-justify-content-between ecl-u-mb-m">
-          <BackToCaseStudiesLink />
-          <div className="ecl-u-d-flex ecl-u-align-items-center gap-2">
-            <MyEditButton caseStudyId={cs.id} />
-            <MyDeleteButton caseStudyId={cs.id} />
-          </div>
-        </div>
+        <CaseStudyDetailsActions
+          id={cs.id}
+          title={cs.title ?? "this case study"}
+          status={cs.status}
+        />
       )}
 
       <div className="ecl-row">
@@ -166,9 +162,11 @@ export default function CaseStudyDetails({ cs, preview = false }: Props) {
 
                     {cs.methodology && (
                       <div className="ecl-file__footer">
-                        <div className="ecl-file__language">
-                          {cs.methodology.language.label}
-                        </div>
+                        {cs.methodology.language?.label ? (
+                          <div className="ecl-file__language">
+                            {cs.methodology.language.label}
+                          </div>
+                        ) : null}
 
                         <div className="ecl-file__meta" />
 
@@ -208,9 +206,11 @@ export default function CaseStudyDetails({ cs, preview = false }: Props) {
 
                       {cs.dataset && (
                         <div className="ecl-file__footer">
-                          <div className="ecl-file__language">
-                            {cs.dataset.language.label}
-                          </div>
+                          {cs.dataset.language?.label ? (
+                            <div className="ecl-file__language">
+                              {cs.dataset.language.label}
+                            </div>
+                          ) : null}
 
                           <div className="ecl-file__meta" />
 

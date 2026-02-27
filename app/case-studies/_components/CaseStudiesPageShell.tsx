@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 
 type CaseStudiesPageShellProps = Readonly<{
   searchParams: Promise<CaseStudySearchParams>;
-  Results: (p: { searchParams: CaseStudySearchParams }) => Promise<ReactNode>;
+  Results: (p: { searchParams: CaseStudySearchParams }) => ReactNode;
 }>;
 
 async function getFacets(): Promise<SearchFacets> {
@@ -63,19 +63,16 @@ export default async function CaseStudiesPageShell({
       <CreatedNotification />
 
       <div className="ecl-row ecl-u-align-items-end ecl-u-mb-s">
-        {/* Search */}
         <div className="ecl-col-12 ecl-col-l-8 ecl-col-xl-9 order-0">
           <Search />
         </div>
 
-        {/* Toggle */}
         <div className="ecl-col-12 order-1 ecl-u-mt-s min-[1140px]:order-2 min-[1140px]:ecl-u-mt-none">
           <div className="ecl-u-d-flex ecl-u-align-items-center ecl-u-justify-content-between gap-3">
             <MatchTypeToggle />
           </div>
         </div>
 
-        {/* Filters */}
         <div className="ecl-col-12 ecl-col-l-4 ecl-col-xl-3 order-2 min-[1140px]:order-1">
           <Filters facets={facets} />
         </div>

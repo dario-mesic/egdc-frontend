@@ -24,7 +24,7 @@ type Errors = Partial<Record<keyof FormState, string>>;
 type Touched = Partial<Record<keyof FormState, boolean>>;
 
 export default function Step1Basic() {
-  const { data, setMetadata } = useWizardData();
+  const { data, setMetadata, editDataLoadedAt } = useWizardData();
 
   const [form, setForm] = useState<FormState>({
     title: "",
@@ -35,7 +35,7 @@ export default function Step1Basic() {
   });
 
   const [touched, setTouched] = useState<Touched>({});
-
+  const lastSyncedEditRef = useRef(0);
   const duetRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
@@ -48,6 +48,24 @@ export default function Step1Basic() {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (editDataLoadedAt <= 0 || editDataLoadedAt === lastSyncedEditRef.current)
+      return;
+    lastSyncedEditRef.current = editDataLoadedAt;
+    const t = (data.metadata.title as string) ?? "";
+    const s = (data.metadata.short_description as string) ?? "";
+    const l = (data.metadata.long_description as string) ?? "";
+    const p = (data.metadata.problem_solved as string) ?? "";
+    const d = (data.metadata.created_date as string) ?? todayISODate();
+    setForm({
+      title: t,
+      shortDescription: s,
+      longDescription: l,
+      problemSolved: p,
+      creationDate: d,
+    });
+  }, [editDataLoadedAt, data.metadata.title, data.metadata.short_description, data.metadata.long_description, data.metadata.problem_solved, data.metadata.created_date]);
 
   useEffect(() => {
     const el = duetRef.current as any;

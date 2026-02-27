@@ -17,7 +17,7 @@ type WizardFiles = {
   file_methodology?: File;
   file_dataset?: File;
   file_logo?: File;
-  file_additional?: File;
+  file_additional_document?: File;
 };
 
 type WizardData = {
@@ -33,6 +33,8 @@ type Ctx = {
   setFiles: (patch: WizardFiles) => void;
   stepValidity: StepValidity;
   setStepValidity: (stepId: number, valid: boolean) => void;
+  editDataLoadedAt: number;
+  setEditDataLoadedAt: (t: number) => void;
 };
 
 const WizardDataContext = createContext<Ctx | null>(null);
@@ -49,6 +51,7 @@ function shallowEqualObj(a: Record<string, any>, b: Record<string, any>) {
 export function WizardDataProvider({ children }: WizardDataProviderProps) {
   const [data, setData] = useState<WizardData>({ metadata: {}, files: {} });
   const [stepValidity, setStepValidity] = useState<StepValidity>({});
+  const [editDataLoadedAt, setEditDataLoadedAt] = useState(0);
 
   const setMetadata = useCallback((patch: Partial<CaseStudyMetadata>) => {
     setData((p) => {
@@ -80,11 +83,14 @@ export function WizardDataProvider({ children }: WizardDataProviderProps) {
       setFiles,
       stepValidity,
       setStepValidity: updateStepValidity,
+      editDataLoadedAt,
+      setEditDataLoadedAt,
     }),
     [
       data,
       stepMetadataKey(data),
       stepValidity,
+      editDataLoadedAt,
       setMetadata,
       setFiles,
       updateStepValidity,

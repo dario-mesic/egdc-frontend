@@ -221,7 +221,8 @@ function FunctionalUnitCombobox({
 
 export default function Step5Benefits() {
   const { benefit_types, benefit_units } = useReferenceData();
-  const { data, setMetadata, setStepValidity } = useWizardData();
+  const { data, setMetadata, setStepValidity, editDataLoadedAt } = useWizardData();
+  const lastSyncedEditRef = useRef(0);
 
   const idCounter = useRef(2);
   const [rows, setRows] = useState<BenefitRow[]>([
@@ -266,6 +267,33 @@ export default function Step5Benefits() {
       idCounter.current = seeded.length + 1;
     }
   }, []);
+
+  useEffect(() => {
+    if (editDataLoadedAt <= 0 || editDataLoadedAt === lastSyncedEditRef.current)
+      return;
+    const existing = data.metadata.benefits as
+      | Array<{
+          type_code: string;
+          name: string;
+          value: number;
+          unit_code: string;
+          functional_unit?: string | null;
+        }>
+      | undefined;
+    lastSyncedEditRef.current = editDataLoadedAt;
+    if (existing?.length) {
+      const seeded: BenefitRow[] = existing.map((b, idx) => ({
+        id: `benefit-${idx + 1}`,
+        benefitType: b.type_code ?? "",
+        name: b.name ?? "",
+        value: String(b.value),
+        unit: b.unit_code ?? "",
+        functionalUnit: (b.functional_unit ?? "").trim(),
+      }));
+      setRows(seeded);
+      idCounter.current = seeded.length + 1;
+    }
+  }, [editDataLoadedAt, data.metadata.benefits]);
 
   const tco2UnitCode = useMemo(() => {
     const u = benefit_units.find(
@@ -347,6 +375,7 @@ export default function Step5Benefits() {
           value: r.value.trim() === "" ? Number.NaN : Number(r.value),
           unit_code: r.unit,
           functional_unit: fu,
+          is_net_carbon_impact: false,
         };
       }),
     });

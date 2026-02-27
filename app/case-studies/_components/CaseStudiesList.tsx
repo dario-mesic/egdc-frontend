@@ -1,7 +1,6 @@
 import Image from "next/image";
 import type { CaseStudy } from "../_types/caseStudy";
 import { compactLocations } from "../_lib/locations";
-import { iso2CountryName } from "../_lib/iso";
 import ClientIcon from "../_components/icons/ClientIcon";
 import CaseStudyCardLink from "./CaseStudyCardLink";
 import ViewTransition from "./ViewTransition";
@@ -9,6 +8,9 @@ import Flag from "react-world-flags";
 
 type CaseStudyiesListProps = Readonly<{
   caseStudies: CaseStudy[];
+  showStatusLabels?: boolean;
+  onEdit?: (id: number) => void;
+  onDelete?: (cs: { id: number; title: string }) => void;
 }>;
 
 function formatValue(value: number) {
@@ -44,14 +46,61 @@ function normalizeUrl(url?: string | null) {
   return url;
 }
 
+function statusLabel(
+  status: string | undefined,
+): { modifier: "low" | "medium" | "high" | "highlight"; text: string } | null {
+  if (!status) return null;
+  const s = status.toLowerCase().replace(/-/g, "_");
+  switch (s) {
+    case "published":
+      return { modifier: "highlight", text: "Published" };
+    case "draft":
+      return { modifier: "medium", text: "Draft" };
+    case "pending_approval":
+      return { modifier: "high", text: "Pending approval" };
+    default:
+      return { modifier: "low", text: status };
+  }
+}
+
+function canEdit(status: string | undefined): boolean {
+  return status?.toLowerCase().replace(/-/g, "_") === "draft";
+}
+
+function canDelete(status: string | undefined): boolean {
+  const s = status?.toLowerCase().replace(/-/g, "_");
+  return s === "draft";
+}
+
 export default function CaseStudiesList({
   caseStudies,
+  showStatusLabels = false,
+  onEdit,
+  onDelete,
 }: CaseStudyiesListProps) {
   return (
     <div className="ecl-u-mt-l">
       {caseStudies.map((cs, index) => {
         const provider = cs.is_provided_by?.[0] ?? null;
         const logoUrl = normalizeUrl(cs.logo?.url);
+        const statusInfo = showStatusLabels ? statusLabel(cs.status) : null;
+        const showEdit = showStatusLabels && canEdit(cs.status) && onEdit;
+        const showDelete = showStatusLabels && canDelete(cs.status) && onDelete;
+
+        const isHigh = statusInfo?.modifier === "high";
+        const isHighlight = statusInfo?.modifier === "highlight";
+
+        const labelClassName = [
+          "ecl-label",
+          `ecl-label--${statusInfo?.modifier}`,
+          "absolute -top-3.75 left-2.5 m-0 z-10",
+          isHigh &&
+            "bg-(--ecl-color-warning-400)! border-(--ecl-color-warning-400)!",
+          isHighlight &&
+            "bg-(--ecl-color-success-400)! border-(--ecl-color-success-400)!",
+        ]
+          .filter(Boolean)
+          .join(" ");
 
         const benefitsList = [
           { label: "Environmental", r: benefit(cs, "ENVIRONMENTAL") },
@@ -71,32 +120,84 @@ export default function CaseStudiesList({
             index={index}
             rootId="case-studies-scroll"
           >
-            <CaseStudyCardLink
-              key={cs.id}
-              href={`/case-studies/${cs.id}`}
-              prefetch={false}
-              className="ecl-u-display-block ecl-u-text-decoration-none"
-            >
-              <article
-                className="ecl-content-item ecl-u-mb-l ecl-u-pa-m ecl-u-bg-primary-300 ecl-u-border-all ecl-u-border-width-2 ecl-u-border-color-primary   transition-[transform,box-shadow,background-color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]
-                will-change-transform
-                hover:bg-(--ecl-color-primary-400)!
-                hover:-translate-y-1 hover:shadow-xl
-                focus-within:-translate-y-1  focus-within:shadow-xl
-                focus-within:bg-(--ecl-color-primary-400)!
-                cursor-pointer"
+            <div className="relative group">
+              {(showEdit || showDelete) && (
+                <div
+                  className="absolute top-2 right-2 z-20 flex gap-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100 focus-within:opacity-100 pointer-events-auto"
+                  role="group"
+                  aria-label="Case study actions"
+                >
+                  {showEdit && (
+                    <button
+                      type="button"
+                      title="Edit"
+                      className="ecl-button ecl-button--primary ecl-button--icon min-w-10 min-h-10 p-0! ecl-u-d-flex ecl-u-align-items-center ecl-u-justify-content-center"
+                      onClick={() => onEdit?.(cs.id)}
+                    >
+                      <span className="ecl-button__container">
+                        <ClientIcon
+                          className="wt-icon--edit ecl-icon wt-icon--m ecl-button__icon"
+                          aria-hidden
+                        />
+                      </span>
+                    </button>
+                  )}
+                  {showDelete && (
+                    <button
+                      type="button"
+                      title="Delete"
+                      className="ecl-button ecl-button--primary bg-(--ecl-color-error-600)! hover:bg-(--ecl-color-error-700)! ecl-button--icon min-w-10 min-h-10 p-0! ecl-u-d-flex ecl-u-align-items-center ecl-u-justify-content-center"
+                      onClick={() =>
+                        onDelete?.({
+                          id: cs.id,
+                          title: cs.title ?? "this case study",
+                        })
+                      }
+                    >
+                      <span className="ecl-button__container">
+                        <ClientIcon
+                          className="wt-icon--trash ecl-icon wt-icon--m ecl-button__icon"
+                          aria-hidden
+                        />
+                      </span>
+                    </button>
+                  )}
+                </div>
+              )}
+              <CaseStudyCardLink
+                href={
+                  showStatusLabels && canEdit(cs.status)
+                    ? `/case-studies/upload?edit=${cs.id}`
+                    : `/case-studies/${cs.id}`
+                }
+                prefetch={false}
+                className="ecl-u-display-block ecl-u-text-decoration-none"
               >
-                <div className="ecl-u-width-100 grid gap-6 grid-cols-1 min-[1140px]:grid-cols-[152px_minmax(0,1fr)_minmax(320px,1fr)] min-[1140px]:items-stretch">
+                <article
+                  className="ecl-content-item ecl-u-mb-l ecl-u-pa-m ecl-u-bg-primary-300 ecl-u-border-all ecl-u-border-width-2 ecl-u-border-color-primary relative transition-[transform,box-shadow,background-color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]
+                  will-change-transform
+                  group-hover:bg-(--ecl-color-primary-400)!
+                  group-hover:-translate-y-1 group-hover:shadow-xl
+                  group-focus-within:-translate-y-1 group-focus-within:shadow-xl
+                  group-focus-within:bg-(--ecl-color-primary-400)!
+                  cursor-pointer"
+                >
+                  {statusInfo && (
+                    <span className={labelClassName}>{statusInfo.text}</span>
+                  )}
+                  <div className="ecl-u-width-100 grid gap-6 grid-cols-1 min-[1140px]:grid-cols-[152px_minmax(0,1fr)_minmax(320px,1fr)] min-[1140px]:items-stretch">
                   <div className="ecl-u-d-flex ecl-u-align-items-center ecl-u-justify-content-center">
                     <div className="relative w-24 h-24 min-[1140px]:w-38 min-[1140px]:h-38 rounded-full overflow-hidden ecl-u-bg-grey-25">
-                      <Image
-                        src={logoUrl ?? ""}
-                        alt={cs.logo?.alt_text ?? cs.title}
-                        fill
-                        sizes="152px"
-                        className="object-contain scale-[0.8] origin-center ecl-u-pa-s"
-                        style={{ color: "unset" }}
-                      />
+                      {(logoUrl ?? cs.logo?.url) ? (
+                        <Image
+                          src={logoUrl ?? cs.logo?.url!}
+                          alt={cs.logo?.alt_text ?? cs.title}
+                          fill
+                          sizes="152px"
+                          className="object-contain scale-[0.8] origin-center ecl-u-pa-s"
+                          style={{ color: "unset" }}
+                        />
+                      ) : null}
                     </div>
                   </div>
 
@@ -207,6 +308,7 @@ export default function CaseStudiesList({
                 </div>
               </article>
             </CaseStudyCardLink>
+            </div>
           </ViewTransition>
         );
       })}

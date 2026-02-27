@@ -21,7 +21,7 @@ export default function LoadingIndicator() {
           vectorEffect="non-scaling-stroke"
         />
       </svg>
-      <div className="ecl-spinner__text">Loading</div>
+      <div className="ecl-spinner__text">Loading...</div>
     </div>
   );
 }
