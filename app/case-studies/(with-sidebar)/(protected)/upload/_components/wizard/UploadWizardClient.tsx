@@ -36,6 +36,7 @@ import {
   clearAuthAndRedirect,
   isCredentialsError,
 } from "@/app/case-studies/_lib/auth";
+import ConfirmDialog from "@/app/case-studies/_components/ConfirmDialog";
 
 type AsyncState<T extends string> =
   | "idle"
@@ -163,6 +164,19 @@ function buildDraftFormData(
   return fd;
 }
 
+type WizardData = {
+  metadata: Record<string, unknown>;
+  files: Record<string, File | undefined>;
+};
+
+function serializeForDirtyCheck(d: WizardData) {
+  const fileInfo: Record<string, string> = {};
+  for (const [k, v] of Object.entries(d.files)) {
+    if (v) fileInfo[k] = v.name + ":" + v.size;
+  }
+  return JSON.stringify({ m: d.metadata, f: fileInfo });
+}
+
 function WizardInner({
   activeStep,
   setActiveStep,
@@ -170,7 +184,8 @@ function WizardInner({
   setMaxUnlockedStep,
   editId,
 }: WizardInnerProps) {
-  const { data, setMetadata, setEditDataLoadedAt } = useWizardData();
+  const { data, setMetadata, setEditDataLoadedAt, editDataLoadedAt } =
+    useWizardData();
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
   const [submitError, setSubmitError] = useState("");
   const [previewState, setPreviewState] = useState<PreviewState>("idle");
@@ -179,6 +194,14 @@ function WizardInner({
   const [editLoadError, setEditLoadError] = useState("");
   const editPrefilledRef = useRef(false);
   const isLast = activeStep === uploadStepCount;
+
+  const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
+  const [pendingLeaveUrl, setPendingLeaveUrl] = useState<string | null>(null);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const initialSnapshotRef = useRef("");
+  const dataRef = useRef(data);
+  dataRef.current = data;
+  const intentionalNavRef = useRef(false);
 
   useEffect(() => {
     if (!editId || editPrefilledRef.current) return;
@@ -246,6 +269,142 @@ function WizardInner({
     };
   }, [previewLogoUrl]);
 
+  // --- Unsaved-changes navigation guard ---
+
+  const checkDirty = () => {
+    if (!initialSnapshotRef.current) return false;
+    return (
+      serializeForDirtyCheck(dataRef.current) !== initialSnapshotRef.current
+    );
+  };
+
+  useEffect(() => {
+    if (editId && editDataLoadedAt === 0) return;
+    initialSnapshotRef.current = serializeForDirtyCheck(dataRef.current);
+  }, [editId, editDataLoadedAt]);
+
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (intentionalNavRef.current) return;
+      if (checkDirty()) e.preventDefault();
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, []);
+
+  useEffect(() => {
+    history.pushState(null, "", location.href);
+
+    const handler = () => {
+      if (intentionalNavRef.current) return;
+      if (checkDirty()) {
+        history.pushState(null, "", location.href);
+        setPendingLeaveUrl(null);
+        setLeaveDialogOpen(true);
+      } else {
+        intentionalNavRef.current = true;
+        history.back();
+      }
+    };
+
+    window.addEventListener("popstate", handler);
+    return () => window.removeEventListener("popstate", handler);
+  }, []);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (intentionalNavRef.current) return;
+      const anchor = (e.target as HTMLElement).closest?.(
+        "a[href]",
+      ) as HTMLAnchorElement | null;
+      if (!anchor) return;
+      const href = anchor.getAttribute("href");
+      if (
+        !href ||
+        !href.startsWith("/") ||
+        href.startsWith("/case-studies/upload")
+      )
+        return;
+      if (checkDirty()) {
+        e.preventDefault();
+        e.stopPropagation();
+        setPendingLeaveUrl(href);
+        setLeaveDialogOpen(true);
+      }
+    };
+    document.addEventListener("click", handler, true);
+    return () => document.removeEventListener("click", handler, true);
+  }, []);
+
+  function handleLeave() {
+    intentionalNavRef.current = true;
+    setLeaveDialogOpen(false);
+    globalThis.location.replace(pendingLeaveUrl || "/case-studies/my");
+  }
+
+  async function handleSaveDraftAndLeave() {
+    setIsSavingDraft(true);
+    try {
+      const token = getStoredAccessToken();
+      if (!token) {
+        setIsSavingDraft(false);
+        setLeaveDialogOpen(false);
+        setSubmitState("error");
+        setSubmitError("You are not logged in.");
+        return;
+      }
+      const fd = buildDraftFormData(
+        dataRef.current.metadata,
+        dataRef.current.files,
+        editId,
+      );
+      const url = editId
+        ? `/api/case-studies/${editId}`
+        : "/api/case-studies";
+      const res = await fetch(url, {
+        method: editId ? "PUT" : "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: fd,
+      });
+      const txt = await res.text();
+      const errData = (() => {
+        try {
+          return JSON.parse(txt) as { error?: string };
+        } catch {
+          return {};
+        }
+      })();
+      if (
+        res.status === 401 ||
+        res.status === 403 ||
+        isCredentialsError(errData?.error ?? txt)
+      ) {
+        clearAuthAndRedirect();
+        return;
+      }
+      if (!res.ok) {
+        setIsSavingDraft(false);
+        setLeaveDialogOpen(false);
+        setSubmitState("error");
+        setSubmitError(
+          errData?.error ?? (txt || "Failed to save draft."),
+        );
+        return;
+      }
+      sessionStorage.setItem("case-study-draft-saved", "1");
+      intentionalNavRef.current = true;
+      setLeaveDialogOpen(false);
+      globalThis.location.replace(pendingLeaveUrl || "/case-studies/my");
+    } catch (e) {
+      setIsSavingDraft(false);
+      setLeaveDialogOpen(false);
+      setSubmitState("error");
+      setSubmitError(
+        e instanceof Error ? e.message : "Network error. Please try again.",
+      );
+    }
+  }
+
   async function handleSaveDraft() {
     const fd = buildDraftFormData(data.metadata, data.files, editId);
     setSubmitState("submitting");
@@ -258,9 +417,7 @@ function WizardInner({
         setSubmitError("You are not logged in.");
         return;
       }
-      const url = editId
-        ? `/api/case-studies/${editId}`
-        : "/api/case-studies";
+      const url = editId ? `/api/case-studies/${editId}` : "/api/case-studies";
       const res = await fetch(url, {
         method: editId ? "PUT" : "POST",
         headers: { Authorization: `Bearer ${token}` },
@@ -288,6 +445,7 @@ function WizardInner({
         return;
       }
       sessionStorage.setItem("case-study-draft-saved", "1");
+      intentionalNavRef.current = true;
       globalThis.location.replace("/case-studies/my");
     } catch (e) {
       setSubmitState("error");
@@ -365,6 +523,7 @@ function WizardInner({
         return;
       }
       sessionStorage.setItem("case-study-created", "1");
+      intentionalNavRef.current = true;
       globalThis.location.replace("/case-studies/my");
     } catch (e) {
       setSubmitState("error");
@@ -564,6 +723,21 @@ function WizardInner({
           );
         })}
       </WizardShell>
+
+      <ConfirmDialog
+        open={leaveDialogOpen}
+        title="Unsaved changes"
+        cancelLabel="Leave"
+        confirmLabel={isSavingDraft ? "Saving…" : "Save as Draft & Leave"}
+        onClose={() => setLeaveDialogOpen(false)}
+        onCancel={handleLeave}
+        onConfirm={handleSaveDraftAndLeave}
+        isBlocking={isSavingDraft}
+      >
+        <p>
+          You have unsaved changes. Are you sure you want to leave this page?
+        </p>
+      </ConfirmDialog>
     </>
   );
 }

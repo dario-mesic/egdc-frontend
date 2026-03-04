@@ -14,7 +14,7 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: "Content-Security-Policy",
-            value: "frame-ancestors https://wp-domain.com;",
+            value: "frame-ancestors 'self' http://localhost:4000;",
           },
         ],
       },

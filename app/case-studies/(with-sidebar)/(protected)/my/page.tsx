@@ -11,6 +11,7 @@ export default function MyCaseStudies(props: MyCaseStudiesProps) {
     <CaseStudiesPageShell
       searchParams={props.searchParams}
       Results={MyCaseStudiesResults}
+      showSearchAndFilters={false}
     />
   );
 }

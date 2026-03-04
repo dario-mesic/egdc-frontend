@@ -6,7 +6,6 @@ import Link from "next/link";
 import CaseStudiesList from "../../../../_components/CaseStudiesList";
 import Pagination from "../../../../_components/Pagination";
 import PageSizeSelect from "../../../../_components/PageSizeSelect";
-import SortPopover from "../../../../_components/SortPopover";
 import ConfirmDialog from "../../../../_components/ConfirmDialog";
 import Notification from "../../../../_components/Notification";
 import ClientIcon from "@/app/case-studies/_components/icons/ClientIcon";
@@ -22,13 +21,11 @@ import LoadingIndicator from "@/app/case-studies/_components/LoadingIndicator";
 
 function normalizeItems(data: unknown): CaseStudy[] {
   if (Array.isArray(data)) return data;
-  if (
-    data &&
-    typeof data === "object" &&
-    "items" in data &&
-    Array.isArray((data as { items: unknown }).items)
-  ) {
-    return (data as { items: CaseStudy[] }).items;
+  if (!data || typeof data !== "object") return [];
+  const o = data as Record<string, unknown>;
+  for (const key of ["items", "case_studies", "results"]) {
+    const arr = o[key];
+    if (Array.isArray(arr)) return arr as CaseStudy[];
   }
   return [];
 }
@@ -54,7 +51,9 @@ function sortItems(
 export default function MyCaseStudiesResultsClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const isCustodian = getStoredRole() === "custodian";
+  const role = getStoredRole();
+  const isCustodian = role === "custodian";
+  const isCustodianOrAdmin = role === "custodian" || role === "admin";
   const [items, setItems] = useState<CaseStudy[]>([]);
   const [serverTotal, setServerTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -89,7 +88,7 @@ export default function MyCaseStudiesResultsClient() {
     setLoading(true);
     setError(null);
 
-    if (isCustodian) {
+    if (isCustodianOrAdmin) {
       const url = `/api/case-studies/pending?page=${page}&limit=${limit}`;
       fetch(url, {
         method: "GET",
@@ -129,7 +128,7 @@ export default function MyCaseStudiesResultsClient() {
       return;
     }
 
-    fetch("/api/users/me/case-studies", {
+    fetch(`/api/users/me/case-studies?page=${page}&limit=${limit}`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -150,26 +149,34 @@ export default function MyCaseStudiesResultsClient() {
           throw new Error(data?.error ?? "Failed to load case studies");
         }
         setItems(normalizeItems(data));
+        setServerTotal(typeof data?.total === "number" ? data.total : 0);
       })
       .catch((e) => {
         setError(
           e instanceof Error ? e.message : "Failed to load case studies",
         );
         setItems([]);
+        setServerTotal(0);
       })
       .finally(() => setLoading(false));
-  }, [isCustodian, page, limit]);
+  }, [isCustodianOrAdmin, page, limit]);
 
   const sorted = useMemo(
-    () => (isCustodian ? items : sortItems(items, sortBy, sortOrder)),
-    [items, isCustodian, sortBy, sortOrder],
+    () => (isCustodianOrAdmin ? items : sortItems(items, sortBy, sortOrder)),
+    [items, isCustodianOrAdmin, sortBy, sortOrder],
   );
 
-  const total = isCustodian ? serverTotal : sorted.length;
+  const total =
+    isCustodianOrAdmin || serverTotal > 0
+      ? serverTotal
+      : sorted.length;
   const totalPages = Math.max(1, Math.ceil(total / limit));
   const safePage = Math.min(page, totalPages);
   const start = (safePage - 1) * limit;
-  const pageItems = isCustodian ? items : sorted.slice(start, start + limit);
+  const pageItems =
+    isCustodianOrAdmin || serverTotal > 0
+      ? items
+      : sorted.slice(start, start + limit);
 
   const searchParamsObj = useMemo((): CaseStudySearchParams => {
     const o: Record<string, string | string[] | undefined> = {};
@@ -251,23 +258,20 @@ export default function MyCaseStudiesResultsClient() {
           <div className="ecl-col-12">
             <div className="ecl-u-d-flex ecl-u-flex-wrap ecl-u-align-items-center ecl-u-justify-content-between gap-4">
               <span className="ecl-u-type-s ecl-u-type-italic">
-                {isCustodian
+                {isCustodianOrAdmin
                   ? "Pending case studies (0)"
                   : "My case studies (0)"}
               </span>{" "}
-              {!isCustodian && (
-                <div className="ecl-u-d-flex ecl-u-align-items-center gap-2">
-                  <Link
-                    className="ecl-button ecl-button--primary"
-                    href="/case-studies/upload"
-                  >
-                    <span className="ecl-button__container">
-                      <ClientIcon className="wt-icon--plus ecl-icon wt-icon--m ecl-button__icon ecl-u-mr-s" />
-                      Upload new
-                    </span>
-                  </Link>
-                  <SortPopover />
-                </div>
+              {!isCustodianOrAdmin && (
+                <Link
+                  className="ecl-button ecl-button--primary"
+                  href="/case-studies/upload"
+                >
+                  <span className="ecl-button__container">
+                    <ClientIcon className="wt-icon--plus ecl-icon wt-icon--m ecl-button__icon ecl-u-mr-s" />
+                    Upload new
+                  </span>
+                </Link>
               )}
             </div>
           </div>
@@ -280,7 +284,7 @@ export default function MyCaseStudiesResultsClient() {
                 No results found
               </h2>
               <p className="ecl-u-type-paragraph">
-                {isCustodian
+                {isCustodianOrAdmin
                   ? "No case studies pending approval."
                   : "You don't have any case studies yet. Upload your first case study to get started."}
               </p>
@@ -336,22 +340,19 @@ export default function MyCaseStudiesResultsClient() {
         <div className="ecl-col-12">
           <div className="ecl-u-d-flex ecl-u-flex-wrap ecl-u-align-items-center ecl-u-justify-content-between gap-4">
             <span className="ecl-u-type-s ecl-u-type-italic">
-              {isCustodian ? "Pending case studies" : "My case studies"} (
+              {isCustodianOrAdmin ? "Pending case studies" : "My case studies"} (
               {total})
             </span>{" "}
-            {!isCustodian && (
-              <div className="ecl-u-d-flex ecl-u-align-items-center gap-2">
-                <Link
-                  className="ecl-button ecl-button--primary"
-                  href="/case-studies/upload"
-                >
-                  <span className="ecl-button__container">
-                    <ClientIcon className="wt-icon--plus ecl-icon wt-icon--m ecl-button__icon ecl-u-mr-s" />
-                    Upload new
-                  </span>
-                </Link>
-                <SortPopover />
-              </div>
+            {!isCustodianOrAdmin && (
+              <Link
+                className="ecl-button ecl-button--primary"
+                href="/case-studies/upload"
+              >
+                <span className="ecl-button__container">
+                  <ClientIcon className="wt-icon--plus ecl-icon wt-icon--m ecl-button__icon ecl-u-mr-s" />
+                  Upload new
+                </span>
+              </Link>
             )}
           </div>
         </div>
@@ -367,8 +368,8 @@ export default function MyCaseStudiesResultsClient() {
               <CaseStudiesList
                 caseStudies={pageItems}
                 showStatusLabels
-                onEdit={isCustodian ? undefined : handleEdit}
-                onDelete={isCustodian ? undefined : (cs) => setDeleteTarget(cs)}
+                onEdit={isCustodianOrAdmin ? undefined : handleEdit}
+                onDelete={isCustodianOrAdmin ? undefined : (cs) => setDeleteTarget(cs)}
               />
             </div>
 

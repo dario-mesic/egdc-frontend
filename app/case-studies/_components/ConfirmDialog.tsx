@@ -11,6 +11,7 @@ type ConfirmDialogProps = Readonly<{
   cancelLabel?: string;
   onConfirm: () => void;
   onClose: () => void;
+  onCancel?: () => void;
   isBlocking?: boolean;
   confirmVariant?: "primary" | "danger";
 }>;
@@ -23,6 +24,7 @@ export default function ConfirmDialog({
   cancelLabel = "Cancel",
   onConfirm,
   onClose,
+  onCancel,
   isBlocking = false,
   confirmVariant = "primary",
 }: ConfirmDialogProps) {
@@ -51,7 +53,7 @@ export default function ConfirmDialog({
 
   const confirmClass =
     confirmVariant === "danger"
-      ? "ecl-button ecl-button--primary bg-(--ecl-color-error-600)! hover:bg-(--ecl-color-error-700)!"
+      ? "ecl-button ecl-button--primary bg-(--ecl-color-error-500)! hover:bg-(--ecl-color-error-600)!"
       : "ecl-button ecl-button--primary";
 
   return (
@@ -90,7 +92,7 @@ export default function ConfirmDialog({
               <button
                 type="button"
                 className="ecl-button ecl-button--secondary"
-                onClick={onClose}
+                onClick={onCancel ?? onClose}
                 disabled={isBlocking}
               >
                 {cancelLabel}

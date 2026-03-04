@@ -49,8 +49,10 @@ export default function CaseStudyDetailsActions({
   const [reviewError, setReviewError] = useState<string | null>(null);
   const rejectDialogRef = useRef<HTMLDialogElement>(null);
 
-  const isCustodian = getStoredRole() === "custodian";
-  const showCustodianActions = isCustodian && canReview(status);
+  const role = getStoredRole();
+  const isCustodian = role === "custodian";
+  const isAdmin = role === "admin";
+  const showReviewActions = (isCustodian || isAdmin) && canReview(status);
 
   useEffect(() => {
     const dialog = rejectDialogRef.current;
@@ -178,7 +180,7 @@ export default function CaseStudyDetailsActions({
   }
 
   const authed = isAuthenticated();
-  const showDelete = authed && !isCustodian && canDelete(status);
+  const showDelete = authed && !isCustodian && !isAdmin && canDelete(status);
   const isReviewing = rejectSubmitting;
 
   return (
@@ -199,7 +201,7 @@ export default function CaseStudyDetailsActions({
       <div className="ecl-u-d-flex ecl-u-flex-wrap ecl-u-align-items-center ecl-u-justify-content-between ecl-u-mb-m">
         <BackToCaseStudiesLink />
         <div className="ecl-u-d-flex ecl-u-align-items-center gap-2">
-          {showCustodianActions && (
+          {showReviewActions && (
             <>
               <button
                 type="button"
@@ -213,7 +215,7 @@ export default function CaseStudyDetailsActions({
               <button
                 type="button"
                 title="Reject"
-                className="ecl-button ecl-button--primary bg-(--ecl-color-error-600)! hover:bg-(--ecl-color-error-700)!"
+                className="ecl-button ecl-button--primary bg-(--ecl-color-error-500)! hover:bg-(--ecl-color-error-600)!"
                 onClick={() => setShowRejectDialog(true)}
                 disabled={isReviewing}
               >
@@ -225,7 +227,7 @@ export default function CaseStudyDetailsActions({
             <button
               type="button"
               title="Delete"
-              className="ecl-button ecl-button--primary bg-(--ecl-color-error-600)! hover:bg-(--ecl-color-error-700)!"
+              className="ecl-button ecl-button--primary bg-(--ecl-color-error-500)! hover:bg-(--ecl-color-error-600)!"
               onClick={() => setShowDeleteDialog(true)}
               disabled={deleting}
             >
@@ -324,7 +326,7 @@ export default function CaseStudyDetailsActions({
                 </button>
                 <button
                   type="button"
-                  className="ecl-button ecl-button--primary bg-(--ecl-color-error-600)! hover:bg-(--ecl-color-error-700)!"
+                  className="ecl-button ecl-button--primary bg-(--ecl-color-error-500)! hover:bg-(--ecl-color-error-600)!"
                   onClick={handleRejectSubmit}
                   disabled={rejectSubmitting}
                 >

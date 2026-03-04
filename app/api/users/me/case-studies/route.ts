@@ -16,9 +16,17 @@ export async function GET(req: Request) {
   }
 
   const token = auth.slice(7);
+  const { searchParams } = new URL(req.url);
+  const page = searchParams.get("page");
+  const limit = searchParams.get("limit");
+  const query = new URLSearchParams();
+  if (page != null) query.set("page", page);
+  if (limit != null) query.set("limit", limit);
+  const qs = query.toString();
+  const url = qs ? `${TARGET}?${qs}` : TARGET;
 
   try {
-    const res = await fetch(TARGET, {
+    const res = await fetch(url, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,

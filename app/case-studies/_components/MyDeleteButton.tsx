@@ -25,7 +25,7 @@ export default function MyDeleteButton({ caseStudyId }: MyDeleteButtonProps) {
     <Link
       href="#"
       onClick={(e) => e.preventDefault()}
-      className="ecl-button ecl-button--primary bg-(--ecl-color-error-600)! hover:bg-(--ecl-color-error-700)!"
+      className="ecl-button ecl-button--primary bg-(--ecl-color-error-500)! hover:bg-(--ecl-color-error-600)!"
     >
       <span className="ecl-button__container">
         <ClientIcon className="wt-icon--trash ecl-icon wt-icon--m ecl-button__icon ecl-u-mr-s" />

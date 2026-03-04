@@ -77,3 +77,7 @@ fieldset.ecl-select__multiple-group.is-collapsed
 .ecl-file {
   max-width: unset !important;
 }
+
+.ecl-table:not(.ecl-table--simple) .ecl-table__cell:before {
+  background-color: var(--ecl-color-neutral-50) !important;
+}

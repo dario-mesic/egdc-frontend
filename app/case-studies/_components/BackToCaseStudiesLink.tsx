@@ -24,7 +24,7 @@ export default function BackToCaseStudiesLink() {
       href={href}
       className="ecl-link ecl-link--default ecl-link--icon ecl-u-d-inline-flex ecl-u-align-items-center ecl-u-mb-m"
     >
-      <ClientIcon className="wt-icon-ecl--arrow-left ecl-icon ecl-icon--l ecl-link__icon" />
+      <ClientIcon className="wt-icon-ecl--arrow-left ecl-icon ecl-icon--m ecl-link__icon" />
       <span className="ecl-link__label">Back to case studies</span>
     </Link>
   );

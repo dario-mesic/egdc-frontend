@@ -238,10 +238,10 @@ export default function Filters({ facets }: FiltersProps) {
         Filters
       </label>
 
-      <div className="ecl-select__container ecl-select__container--m ecl-js-gated">
+      <div className="ecl-select__container ecl-select__container--m ecl-js-gated ecl-u-width-100">
         <select
           ref={selectRef}
-          className="ecl-select"
+          className="ecl-select "
           id="select-multiple"
           multiple
           defaultValue={defaultValue}

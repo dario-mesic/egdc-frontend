@@ -25,10 +25,16 @@ export default function ProtectedLayout({ children }: ProtectedLayoutProps) {
   }, [status, router]);
 
   useEffect(() => {
+    if (status !== "authed") return;
+    const role = getStoredRole();
     if (
-      status === "authed" &&
-      getStoredRole() === "custodian" &&
+      (role === "custodian" || role === "admin") &&
       pathname?.includes("/upload")
+    ) {
+      router.replace("/case-studies/my");
+    } else if (
+      role !== "admin" &&
+      pathname?.startsWith("/case-studies/users")
     ) {
       router.replace("/case-studies/my");
     }
@@ -61,8 +67,15 @@ export default function ProtectedLayout({ children }: ProtectedLayoutProps) {
   }
 
   if (
-    getStoredRole() === "custodian" &&
+    (getStoredRole() === "custodian" || getStoredRole() === "admin") &&
     pathname?.startsWith("/case-studies/upload")
+  ) {
+    return null;
+  }
+
+  if (
+    getStoredRole() !== "admin" &&
+    pathname?.startsWith("/case-studies/users")
   ) {
     return null;
   }

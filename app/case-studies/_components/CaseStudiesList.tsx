@@ -146,7 +146,7 @@ export default function CaseStudiesList({
                     <button
                       type="button"
                       title="Delete"
-                      className="ecl-button ecl-button--primary bg-(--ecl-color-error-600)! hover:bg-(--ecl-color-error-700)! ecl-button--icon min-w-10 min-h-10 p-0! ecl-u-d-flex ecl-u-align-items-center ecl-u-justify-content-center"
+                      className="ecl-button ecl-button--primary bg-(--ecl-color-error-500)! hover:bg-(--ecl-color-error-600)! ecl-button--icon min-w-10 min-h-10 p-0! ecl-u-d-flex ecl-u-align-items-center ecl-u-justify-content-center"
                       onClick={() =>
                         onDelete?.({
                           id: cs.id,
