@@ -51,7 +51,7 @@ export async function DELETE(req: Request, context: RouteContext) {
                 .map((d: { msg?: string }) => d?.msg)
                 .filter(Boolean)
                 .join(", ") || "Request failed"
-            : data?.error ?? "Request failed";
+            : (data?.error ?? "Request failed");
       return NextResponse.json({ error: message }, { status: res.status });
     }
 

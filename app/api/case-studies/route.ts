@@ -44,14 +44,20 @@ export async function POST(req: Request) {
     (metadataJson as Record<string, unknown>).status === "draft";
 
   const metaParsed = isDraft
-    ? (typeof metadataJson === "object" && metadataJson !== null
-        ? { success: true as const, data: metadataJson as Record<string, unknown> }
-        : { success: false as const, error: null })
+    ? typeof metadataJson === "object" && metadataJson !== null
+      ? {
+          success: true as const,
+          data: metadataJson as Record<string, unknown>,
+        }
+      : { success: false as const, error: null }
     : metadataSchema.safeParse(metadataJson);
 
   if (!metaParsed.success) {
     return NextResponse.json(
-      { error: "Invalid metadata", details: (metaParsed as any).error?.format?.() },
+      {
+        error: "Invalid metadata",
+        details: (metaParsed as any).error?.format?.(),
+      },
       { status: 422 },
     );
   }

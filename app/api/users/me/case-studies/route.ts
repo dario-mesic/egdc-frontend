@@ -41,12 +41,12 @@ export async function GET(req: Request) {
         typeof data?.detail === "string"
           ? data.detail
           : Array.isArray(data?.detail)
-            ? data.detail.map((d: { msg?: string }) => d?.msg).filter(Boolean).join(", ") || "Request failed"
+            ? data.detail
+                .map((d: { msg?: string }) => d?.msg)
+                .filter(Boolean)
+                .join(", ") || "Request failed"
             : "Request failed";
-      return NextResponse.json(
-        { error: message },
-        { status: res.status },
-      );
+      return NextResponse.json({ error: message }, { status: res.status });
     }
 
     return NextResponse.json(data);

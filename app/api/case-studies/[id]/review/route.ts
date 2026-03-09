@@ -26,10 +26,7 @@ export async function PATCH(req: Request, context: RouteContext) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json(
-      { error: "Invalid JSON body" },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
   try {
@@ -54,7 +51,7 @@ export async function PATCH(req: Request, context: RouteContext) {
                 .map((d: { msg?: string }) => d?.msg)
                 .filter(Boolean)
                 .join(", ") || "Request failed"
-            : data?.error ?? "Request failed";
+            : (data?.error ?? "Request failed");
       return NextResponse.json({ error: message }, { status: res.status });
     }
 

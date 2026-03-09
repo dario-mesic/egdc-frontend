@@ -3,6 +3,8 @@ import ReferenceDataLayoutClient from "./_components/ReferenceDataLayoutClient";
 import type { ReferenceData } from "../_types/referenceData";
 import { API_BASE, fetchJson } from "../_lib/api";
 
+export const dynamic = "force-dynamic";
+
 async function getReferenceData(): Promise<ReferenceData> {
   return fetchJson(`${API_BASE}/api/v1/reference-data/`);
 }

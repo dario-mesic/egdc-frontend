@@ -43,7 +43,7 @@ export async function GET(req: Request) {
                 .map((d: { msg?: string }) => d?.msg)
                 .filter(Boolean)
                 .join(", ") || "Request failed"
-            : data?.error ?? "Request failed";
+            : (data?.error ?? "Request failed");
       return NextResponse.json({ error: message }, { status: res.status });
     }
 

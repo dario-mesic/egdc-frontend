@@ -50,7 +50,7 @@ function statusLabel(
   status: string | undefined,
 ): { modifier: "low" | "medium" | "high" | "highlight"; text: string } | null {
   if (!status) return null;
-  const s = status.toLowerCase().replace(/-/g, "_");
+  const s = status.toLowerCase().replaceAll(/-/g, "_");
   switch (s) {
     case "published":
       return { modifier: "highlight", text: "Published" };
@@ -64,11 +64,11 @@ function statusLabel(
 }
 
 function canEdit(status: string | undefined): boolean {
-  return status?.toLowerCase().replace(/-/g, "_") === "draft";
+  return status?.toLowerCase().replaceAll(/-/g, "_") === "draft";
 }
 
 function canDelete(status: string | undefined): boolean {
-  const s = status?.toLowerCase().replace(/-/g, "_");
+  const s = status?.toLowerCase().replaceAll(/-/g, "_");
   return s === "draft";
 }
 
@@ -186,128 +186,128 @@ export default function CaseStudiesList({
                     <span className={labelClassName}>{statusInfo.text}</span>
                   )}
                   <div className="ecl-u-width-100 grid gap-6 grid-cols-1 min-[1140px]:grid-cols-[152px_minmax(0,1fr)_minmax(320px,1fr)] min-[1140px]:items-stretch">
-                  <div className="ecl-u-d-flex ecl-u-align-items-center ecl-u-justify-content-center">
-                    <div className="relative w-24 h-24 min-[1140px]:w-38 min-[1140px]:h-38 rounded-full overflow-hidden ecl-u-bg-grey-25">
-                      {(logoUrl ?? cs.logo?.url) ? (
-                        <Image
-                          src={logoUrl ?? cs.logo?.url!}
-                          alt={cs.logo?.alt_text ?? cs.title}
-                          fill
-                          sizes="152px"
-                          className="object-contain scale-[0.8] origin-center ecl-u-pa-s"
-                          style={{ color: "unset" }}
-                        />
-                      ) : null}
+                    <div className="ecl-u-d-flex ecl-u-align-items-center ecl-u-justify-content-center">
+                      <div className="relative w-24 h-24 min-[1140px]:w-38 min-[1140px]:h-38 rounded-full overflow-hidden ecl-u-bg-grey-25">
+                        {(logoUrl ?? cs.logo?.url) ? (
+                          <Image
+                            src={logoUrl ?? cs.logo?.url!}
+                            alt={cs.logo?.alt_text ?? cs.title}
+                            fill
+                            sizes="152px"
+                            className="object-contain scale-[0.8] origin-center ecl-u-pa-s"
+                            style={{ color: "unset" }}
+                          />
+                        ) : null}
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="min-[1140px]:pr-6 min-[1140px]:border-r border-right-none ecl-u-d-flex ecl-u-flex-column">
-                    <ul className="ecl-content-block__primary-meta-container font-semibold">
-                      <li className="ecl-content-block__primary-meta-item ecl-u-type-color-secondary-700">
-                        Organization name: {provider?.name ?? "—"}
-                      </li>
-                      <li className="ecl-content-block__primary-meta-item ecl-u-type-color-secondary-700">
-                        Sector: {provider?.sector?.label ?? "—"}
-                      </li>
-                      {cs.funding_type?.label && (
+                    <div className="min-[1140px]:pr-6 min-[1140px]:border-r border-right-none ecl-u-d-flex ecl-u-flex-column">
+                      <ul className="ecl-content-block__primary-meta-container font-semibold">
                         <li className="ecl-content-block__primary-meta-item ecl-u-type-color-secondary-700">
-                          Funding type: {cs.funding_type.label}
+                          Organization name: {provider?.name ?? "—"}
                         </li>
-                      )}
-                    </ul>
+                        <li className="ecl-content-block__primary-meta-item ecl-u-type-color-secondary-700">
+                          Sector: {provider?.sector?.label ?? "—"}
+                        </li>
+                        {cs.funding_type?.label && (
+                          <li className="ecl-content-block__primary-meta-item ecl-u-type-color-secondary-700">
+                            Funding type: {cs.funding_type.label}
+                          </li>
+                        )}
+                      </ul>
 
-                    {(() => {
-                      const locations = compactLocations(cs.addresses);
+                      {(() => {
+                        const locations = compactLocations(cs.addresses);
 
-                      return (
-                        <>
-                          <div className="ecl-u-type-heading-3 ecl-u-type-color-primary-950 font-bold! ecl-u-mt-xs line-clamp-2">
-                            {cs.title}
-                          </div>
-
-                          {locations.length > 0 && (
-                            <div className="ecl-u-mt-2xs ecl-u-type-paragraph ecl-u-d-flex ecl-u-align-items-center gap-2">
-                              <ClientIcon className="wt-icon-location wt-icon--s shrink-0" />
-                              <span className="ecl-u-d-flex ecl-u-flex-wrap gap-x-2">
-                                {locations.map((l, i) => (
-                                  <span
-                                    key={l.key}
-                                    className="ecl-u-d-inline-flex ecl-u-align-items-center gap-1"
-                                  >
-                                    {l.iso3 && (
-                                      <Flag
-                                        height={14}
-                                        width={20}
-                                        code={l.iso3.toLowerCase()}
-                                        fallback={<span></span>}
-                                      />
-                                    )}
-                                    <span>{l.city}</span>
-                                    {i < locations.length - 1 ? " • " : ""}
-                                  </span>
-                                ))}
-                              </span>
+                        return (
+                          <>
+                            <div className="ecl-u-type-heading-3 ecl-u-type-color-primary-950 font-bold! ecl-u-mt-xs line-clamp-2">
+                              {cs.title}
                             </div>
-                          )}
-                        </>
-                      );
-                    })()}
 
-                    <div className="ecl-content-block__description line-clamp-3">
-                      <strong>Description:</strong> {cs.short_description}
+                            {locations.length > 0 && (
+                              <div className="ecl-u-mt-2xs ecl-u-type-paragraph ecl-u-d-flex ecl-u-align-items-center gap-2">
+                                <ClientIcon className="wt-icon-location wt-icon--s shrink-0" />
+                                <span className="ecl-u-d-flex ecl-u-flex-wrap gap-x-2">
+                                  {locations.map((l, i) => (
+                                    <span
+                                      key={l.key}
+                                      className="ecl-u-d-inline-flex ecl-u-align-items-center gap-1"
+                                    >
+                                      {l.iso3 && (
+                                        <Flag
+                                          height={14}
+                                          width={20}
+                                          code={l.iso3.toLowerCase()}
+                                          fallback={<span></span>}
+                                        />
+                                      )}
+                                      <span>{l.city}</span>
+                                      {i < locations.length - 1 ? " • " : ""}
+                                    </span>
+                                  ))}
+                                </span>
+                              </div>
+                            )}
+                          </>
+                        );
+                      })()}
+
+                      <div className="ecl-content-block__description line-clamp-3">
+                        <strong>Description:</strong> {cs.short_description}
+                      </div>
+                    </div>
+
+                    <div className="min-[1140px]:pl-6 ecl-u-d-flex ecl-u-flex-column">
+                      <span className="ecl-u-type-heading-4 ecl-u-type-color-primary-950 underline ecl-u-mb-xs ecl-u-d-block">
+                        Benefits
+                      </span>
+
+                      <dl className="ecl-description-list ecl-u-bg-grey-25 ecl-u-pa-s">
+                        {benefitsList.length > 0 && (
+                          <dd className="ecl-description-list__definition">
+                            <ul className="ecl-u-mv-none ecl-u-pl-none">
+                              {benefitsList.map((b, index) => (
+                                <li
+                                  key={b.label}
+                                  className={
+                                    benefitsList.length > 1 &&
+                                    index !== benefitsList.length - 1
+                                      ? "ecl-u-mb-xs"
+                                      : ""
+                                  }
+                                >
+                                  <span className="font-semibold">
+                                    {b.label}:
+                                  </span>{" "}
+                                  {b.r.data.name ? (
+                                    <span className="ecl-u-type-italic ecl-u-type-color-secondary-700">
+                                      {b.r.data.name} -
+                                    </span>
+                                  ) : null}
+                                  <span className="font-bold ecl-u-type-color-primary-950">
+                                    {" "}
+                                    {b.r.data.value} {b.r.data.unit}
+                                  </span>
+                                  {b.r.data.functionalUnit ? (
+                                    <span> {b.r.data.functionalUnit}</span>
+                                  ) : null}
+                                  {b.r.extraCount > 0 ? (
+                                    <span className="font-bold">
+                                      {" "}
+                                      ( + {b.r.extraCount} )
+                                    </span>
+                                  ) : null}
+                                </li>
+                              ))}
+                            </ul>
+                          </dd>
+                        )}
+                      </dl>
                     </div>
                   </div>
-
-                  <div className="min-[1140px]:pl-6 ecl-u-d-flex ecl-u-flex-column">
-                    <span className="ecl-u-type-heading-4 ecl-u-type-color-primary-950 underline ecl-u-mb-xs ecl-u-d-block">
-                      Benefits
-                    </span>
-
-                    <dl className="ecl-description-list ecl-u-bg-grey-25 ecl-u-pa-s">
-                      {benefitsList.length > 0 && (
-                        <dd className="ecl-description-list__definition">
-                          <ul className="ecl-u-mv-none ecl-u-pl-none">
-                            {benefitsList.map((b, index) => (
-                              <li
-                                key={b.label}
-                                className={
-                                  benefitsList.length > 1 &&
-                                  index !== benefitsList.length - 1
-                                    ? "ecl-u-mb-xs"
-                                    : ""
-                                }
-                              >
-                                <span className="font-semibold">
-                                  {b.label}:
-                                </span>{" "}
-                                {b.r.data.name ? (
-                                  <span className="ecl-u-type-italic ecl-u-type-color-secondary-700">
-                                    {b.r.data.name} -
-                                  </span>
-                                ) : null}
-                                <span className="font-bold ecl-u-type-color-primary-950">
-                                  {" "}
-                                  {b.r.data.value} {b.r.data.unit}
-                                </span>
-                                {b.r.data.functionalUnit ? (
-                                  <span> {b.r.data.functionalUnit}</span>
-                                ) : null}
-                                {b.r.extraCount > 0 ? (
-                                  <span className="font-bold">
-                                    {" "}
-                                    ( + {b.r.extraCount} )
-                                  </span>
-                                ) : null}
-                              </li>
-                            ))}
-                          </ul>
-                        </dd>
-                      )}
-                    </dl>
-                  </div>
-                </div>
-              </article>
-            </CaseStudyCardLink>
+                </article>
+              </CaseStudyCardLink>
             </div>
           </ViewTransition>
         );

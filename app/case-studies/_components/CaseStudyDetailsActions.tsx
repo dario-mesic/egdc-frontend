@@ -14,12 +14,12 @@ import {
 } from "../_lib/auth";
 
 function canDelete(status: string | undefined): boolean {
-  const s = status?.toLowerCase().replace(/-/g, "_");
+  const s = status?.toLowerCase().replaceAll(/-/g, "_");
   return s === "draft";
 }
 
 function canReview(status: string | undefined): boolean {
-  const s = status?.toLowerCase().replace(/-/g, "_");
+  const s = status?.toLowerCase().replaceAll(/-/g, "_");
   return s === "pending_approval";
 }
 
