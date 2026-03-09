@@ -184,8 +184,14 @@ function WizardInner({
   setMaxUnlockedStep,
   editId,
 }: WizardInnerProps) {
-  const { data, setMetadata, setEditDataLoadedAt, editDataLoadedAt } =
-    useWizardData();
+  const {
+    data,
+    setMetadata,
+    setEditDataLoadedAt,
+    editDataLoadedAt,
+    rejectionComment,
+    setRejectionComment,
+  } = useWizardData();
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
   const [submitError, setSubmitError] = useState("");
   const [previewState, setPreviewState] = useState<PreviewState>("idle");
@@ -228,10 +234,17 @@ function WizardInner({
       .then((json) => {
         if (json == null) return;
         setMetadata(caseStudyDetailToMetadata(json));
+        const comment = (json as { rejection_comment?: string | null })
+          .rejection_comment;
+        setRejectionComment(
+          typeof comment === "string" && comment.trim()
+            ? comment.trim()
+            : null,
+        );
         setEditDataLoadedAt(Date.now());
       })
       .catch(() => setEditLoadError("Failed to load case study for editing."));
-  }, [editId, setMetadata, setEditDataLoadedAt]);
+  }, [editId, setMetadata, setEditDataLoadedAt, setRejectionComment]);
 
   const stepSchemaMap = useMemo(() => {
     return {
@@ -665,6 +678,7 @@ function WizardInner({
         activeStep={activeStep}
         onStepChange={setActiveStep}
         maxUnlockedStep={maxUnlockedStep}
+        rejectionComment={rejectionComment}
         footer={
           <div className="ecl-u-d-flex ecl-u-align-items-center ecl-u-justify-content-between">
             <button

@@ -11,6 +11,7 @@ import {
 } from "@/app/case-studies/_lib/auth";
 import Notification from "@/app/case-studies/_components/Notification";
 import ClientIcon from "@/app/case-studies/_components/icons/ClientIcon";
+import PasswordInput from "@/app/case-studies/_components/PasswordInput";
 import RoleSelect from "../../_components/RoleSelect";
 
 export default function AddUserClient() {
@@ -142,15 +143,14 @@ export default function AddUserClient() {
               *
             </span>
           </label>
-          <input
+          <PasswordInput
             id="add-user-password"
-            type="password"
-            className="ecl-text-input ecl-text-input--m ecl-u-mt-2xs ecl-u-width-100"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             disabled={creating}
             autoComplete="new-password"
             required
+            className="ecl-text-input--m ecl-u-mt-2xs"
           />
         </div>
         <div className="ecl-form-group ecl-u-mb-m">

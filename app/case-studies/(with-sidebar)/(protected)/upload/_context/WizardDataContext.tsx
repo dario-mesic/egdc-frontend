@@ -35,6 +35,9 @@ type Ctx = {
   setStepValidity: (stepId: number, valid: boolean) => void;
   editDataLoadedAt: number;
   setEditDataLoadedAt: (t: number) => void;
+  /** Rejection comment from reviewer when case study was returned to draft; shown in wizard. */
+  rejectionComment: string | null;
+  setRejectionComment: (v: string | null) => void;
 };
 
 const WizardDataContext = createContext<Ctx | null>(null);
@@ -52,6 +55,7 @@ export function WizardDataProvider({ children }: WizardDataProviderProps) {
   const [data, setData] = useState<WizardData>({ metadata: {}, files: {} });
   const [stepValidity, setStepValidity] = useState<StepValidity>({});
   const [editDataLoadedAt, setEditDataLoadedAt] = useState(0);
+  const [rejectionComment, setRejectionComment] = useState<string | null>(null);
 
   const setMetadata = useCallback((patch: Partial<CaseStudyMetadata>) => {
     setData((p) => {
@@ -85,12 +89,15 @@ export function WizardDataProvider({ children }: WizardDataProviderProps) {
       setStepValidity: updateStepValidity,
       editDataLoadedAt,
       setEditDataLoadedAt,
+      rejectionComment,
+      setRejectionComment,
     }),
     [
       data,
       stepMetadataKey(data),
       stepValidity,
       editDataLoadedAt,
+      rejectionComment,
       setMetadata,
       setFiles,
       updateStepValidity,

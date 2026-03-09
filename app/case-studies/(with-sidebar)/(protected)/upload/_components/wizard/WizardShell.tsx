@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import WizardStepper from "./WizardStepper";
+import Notification from "@/app/case-studies/_components/Notification";
 
 export type WizardStepDef = {
   id: number;
@@ -16,6 +17,8 @@ type WizardShellProps = Readonly<{
   maxUnlockedStep?: number;
   children: React.ReactNode;
   footer?: React.ReactNode;
+  /** When editing a rejected case study, show the reviewer’s comment below the stepper. */
+  rejectionComment?: string | null;
 }>;
 
 export default function WizardShell({
@@ -25,6 +28,7 @@ export default function WizardShell({
   maxUnlockedStep = activeStep,
   children,
   footer,
+  rejectionComment,
 }: WizardShellProps) {
   const stepperSteps = useMemo(
     () =>
@@ -57,6 +61,16 @@ export default function WizardShell({
             }}
           />
         </div>
+        {rejectionComment ? (
+          <div className="ecl-u-mb-l">
+            <Notification
+              variant="warning"
+              title="Rejection comment"
+              description={rejectionComment}
+              autoDismissMs={0}
+            />
+          </div>
+        ) : null}
       </div>
 
       <div className="ecl-col-12">

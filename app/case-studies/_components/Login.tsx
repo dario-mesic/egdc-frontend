@@ -6,6 +6,7 @@ import {
   setStoredRole,
   type UserRole,
 } from "../_lib/auth";
+import PasswordInput from "./PasswordInput";
 
 type LoginProps = Readonly<{
   onSuccess: () => void;
@@ -120,10 +121,8 @@ export default function Login({ onSuccess }: LoginProps) {
                   Password{" "}
                 </label>
 
-                <input
+                <PasswordInput
                   id="login-password"
-                  type="password"
-                  className="ecl-text-input ecl-u-width-100"
                   value={form.password}
                   onChange={(e) =>
                     setForm((p) => ({ ...p, password: e.target.value }))

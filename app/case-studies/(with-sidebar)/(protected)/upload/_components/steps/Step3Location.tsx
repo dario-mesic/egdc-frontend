@@ -5,7 +5,7 @@ import { useWizardData } from "../../_context/WizardDataContext";
 import ClientIcon from "@/app/case-studies/_components/icons/ClientIcon";
 import { useCombobox, autocomplete } from "@szhsin/react-autocomplete";
 
-type CountryItem = { code: string; label: string };
+type CountryItem = { code: string; label: string; iso3?: string };
 type CityItem = { id: number; name: string; countryCode: string };
 
 type AddressRowState = {
@@ -397,18 +397,27 @@ export default function Step3Location() {
     };
   }, []);
 
+  // On edit: backend may send admin_unit_l1 as ISO2 (e.g. SE, HR) or ISO3 (e.g. CRO).
+  // Resolve code → full name for display. Run when countries or rows change so we
+  // resolve after edit data has set rows to codes (e.g. "SE") and countries have loaded.
   useEffect(() => {
     if (!countries.length) return;
 
-    setRows((prev) =>
-      prev.map((r) => {
-        const maybeIso2 = r.countryLabel.trim().toUpperCase();
-        const match = countries.find((c) => c.code === maybeIso2);
+    setRows((prev) => {
+      const next = prev.map((r) => {
+        const value = r.countryLabel.trim().toUpperCase();
+        // Only treat as a code when it looks like one (2 or 3 letters), so we don't overwrite user typing a name
+        if (!value || (value.length !== 2 && value.length !== 3)) return r;
+        const matchByIso2 = countries.find((c) => c.code === value);
+        const matchByIso3 = countries.find((c) => c.iso3 === value);
+        const match = matchByIso2 ?? matchByIso3;
         if (!match) return r;
         return { ...r, countryLabel: match.label };
-      }),
-    );
-  }, [countries]);
+      });
+      const changed = next.some((n, i) => n.countryLabel !== prev[i].countryLabel);
+      return changed ? next : prev;
+    });
+  }, [countries, rows]);
 
   const citiesCache = useRef(new Map<string, CityItem[]>());
 
@@ -431,12 +440,13 @@ export default function Step3Location() {
     return next;
   };
 
+  // We save admin_unit_l1 as ISO2 (2-letter code); backend may store or return ISO2 or ISO3.
   useEffect(() => {
     const toIso2 = (labelOrIso2: string) => {
       const v = labelOrIso2.trim();
       if (!v) return "";
       const match = countries.find((c) => normalize(c.label) === normalize(v));
-      if (match) return match.code.toUpperCase();
+      if (match) return match.code.toUpperCase(); // save ISO2
       if (v.length === 2) return v.toUpperCase();
       return "";
     };
