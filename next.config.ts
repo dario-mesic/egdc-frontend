@@ -8,13 +8,15 @@ const nextConfig: NextConfig = {
     "*": ["./node_modules/@countrystatecity/countries/**"],
   },
   async headers() {
+    const frameAncestors =
+      process.env.FRAME_ANCESTORS || "'self' http://localhost:4000";
     return [
       {
         source: "/(.*)",
         headers: [
           {
             key: "Content-Security-Policy",
-            value: "frame-ancestors 'self' http://localhost:4000;",
+            value: `frame-ancestors ${frameAncestors};`,
           },
         ],
       },

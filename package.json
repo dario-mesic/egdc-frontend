@@ -11,6 +11,7 @@
     "postinstall": "node scripts/copy-ecl.mjs"
   },
   "dependencies": {
+    "@auth0/nextjs-auth0": "^4.16.0",
     "@countrystatecity/countries": "^1.0.5",
     "@ecl/icon": "^5.0.0-alpha.22.2",
     "@ecl/preset-ec": "^5.0.0-alpha.22.2",

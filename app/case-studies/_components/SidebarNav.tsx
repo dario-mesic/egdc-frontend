@@ -1,12 +1,24 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { getStoredRole } from "../_lib/auth";
 
 export default function SidebarNav() {
   const pathname = usePathname();
-  const isAdmin = getStoredRole() === "admin";
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    setIsAdmin(getStoredRole() === "admin");
+
+    function onRoleChanged() {
+      setIsAdmin(getStoredRole() === "admin");
+    }
+
+    window.addEventListener("auth:role-changed", onRoleChanged);
+    return () => window.removeEventListener("auth:role-changed", onRoleChanged);
+  }, []);
 
   return (
     <nav className="ecl-u-d-flex ecl-u-flex-column">
