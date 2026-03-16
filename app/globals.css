@@ -51,6 +51,10 @@ html body * {
   font-family: var(--font-lora) !important;
 }
 
+html {
+  zoom: 0.8;
+}
+
 html:not(.ecl-ready) .ecl-js-gated {
   visibility: hidden;
   pointer-events: none;
