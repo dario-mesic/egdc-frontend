@@ -1,0 +1,28 @@
+name: Deploy Frontend to VPS
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH into VPS and deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: gesi
+          port: ${{ secrets.VPS_PORT }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            # 1. Go to the frontend folder and pull the new code
+            cd ~/egdc/egdc-frontend
+            git pull origin master
+            
+            # 2. Go to the backend folder where docker-compose.yml lives
+            cd ~/egdc/egdc-backend
+            
+            # 3. Rebuild ONLY the frontend container to save time
+            docker compose up -d --build frontend
