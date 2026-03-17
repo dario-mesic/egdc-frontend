@@ -10,7 +10,6 @@ import {
   setStoredRole,
   decodeJwtPayload,
   isInIframe,
-  loginWithPopup,
   logoutFromIframe,
   type UserRole,
 } from "../../_lib/auth";
@@ -64,7 +63,9 @@ export default function ProtectedLayout({ children }: ProtectedLayoutProps) {
           .then((res) => (res.ok ? res.json() : null))
           .then((tokenData) => {
             const token: string | undefined =
-              tokenData?.token ?? tokenData?.accessToken ?? tokenData?.access_token;
+              tokenData?.token ??
+              tokenData?.accessToken ??
+              tokenData?.access_token;
 
             if (token) {
               setStoredAccessToken(token);
@@ -91,20 +92,8 @@ export default function ProtectedLayout({ children }: ProtectedLayoutProps) {
 
   useEffect(() => {
     if (status !== "guest") return;
-
-    if (isInIframe()) {
-      loginWithPopup(pathname ?? "/case-studies/my").then((ok) => {
-        if (ok) {
-          didSync.current = false;
-          setStatus("authed");
-        }
-      });
-    } else {
-      window.location.replace(
-        `/auth/login?returnTo=${encodeURIComponent(pathname ?? "/case-studies/my")}`,
-      );
-    }
-  }, [status, pathname]);
+    window.location.replace("/case-studies/login");
+  }, [status]);
 
   useEffect(() => {
     if (status !== "authed") return;

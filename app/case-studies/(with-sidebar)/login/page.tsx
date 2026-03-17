@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   isAuthenticated,
@@ -11,6 +11,7 @@ import {
 export default function LoginPage() {
   const router = useRouter();
   const didRun = useRef(false);
+  const [showPrompt, setShowPrompt] = useState(false);
 
   useEffect(() => {
     if (didRun.current) return;
@@ -25,27 +26,26 @@ export default function LoginPage() {
       .then((res) => {
         if (res.ok) {
           router.replace("/case-studies/my");
-          return;
-        }
-
-        if (isInIframe()) {
-          loginWithPopup("/case-studies/my").then((ok) => {
-            if (ok) router.replace("/case-studies/my");
-          });
         } else {
-          window.location.replace("/auth/login?returnTo=/case-studies/my");
+          setShowPrompt(true);
         }
       })
       .catch(() => {
-        if (isInIframe()) {
-          loginWithPopup("/case-studies/my").then((ok) => {
-            if (ok) router.replace("/case-studies/my");
-          });
-        } else {
-          window.location.replace("/auth/login?returnTo=/case-studies/my");
-        }
+        setShowPrompt(true);
       });
   }, [router]);
+
+  const handleLogin = () => {
+    if (isInIframe()) {
+      loginWithPopup("/case-studies/my").then((ok) => {
+        if (ok) router.replace("/case-studies/my");
+      });
+    } else {
+      window.location.replace("/auth/login?returnTo=/case-studies/my");
+    }
+  };
+
+  if (!showPrompt) return null;
 
   return (
     <div className="ecl-u-bg-grey-25 min-h-screen ecl-u-d-flex ecl-u-align-items-center ecl-u-justify-content-center">
@@ -58,9 +58,21 @@ export default function LoginPage() {
               className="ecl-u-mb-m"
               style={{ height: 64, width: "auto" }}
             />
-            <p className="ecl-u-type-paragraph ecl-u-type-color-grey-700">
-              Redirecting to login&hellip;
+            <p className="ecl-u-type-paragraph ecl-u-type-color-grey-700 ecl-u-mb-l">
+              You need to log in to access this section.
             </p>
+            <div
+              className="ecl-u-d-flex ecl-u-align-items-center"
+              style={{ gap: "1rem" }}
+            >
+              <button
+                type="button"
+                className="ecl-button ecl-button--primary"
+                onClick={handleLogin}
+              >
+                Log in
+              </button>
+            </div>
           </div>
         </article>
       </div>
