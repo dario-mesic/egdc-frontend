@@ -17,7 +17,10 @@ import {
   WizardDataProvider,
   useWizardData,
 } from "../../_context/WizardDataContext";
-import { wizardPayloadSchema, wizardEditPayloadSchema } from "../../_lib/schemas/caseStudy";
+import {
+  wizardPayloadSchema,
+  wizardEditPayloadSchema,
+} from "../../_lib/schemas/caseStudy";
 import {
   step1Schema,
   step2Schema,
@@ -119,7 +122,7 @@ function sanitizeDraftMetadata(
         typeof raw === "number" && Number.isInteger(raw)
           ? raw
           : typeof raw === "string"
-            ? parseInt(raw, 10) || 0
+            ? Number.parseInt(raw, 10) || 0
             : 0;
       return {
         ...b,
@@ -235,7 +238,9 @@ function WizardInner({
     };
 
     attempt();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
   const isLast = activeStep === uploadStepCount;
 
@@ -274,20 +279,32 @@ function WizardInner({
         editOriginalRef.current = json;
         setMetadata(caseStudyDetailToMetadata(json));
 
-        const existing: import("../../_context/WizardDataContext").ExistingFiles = {};
+        const existing: import("../../_context/WizardDataContext").ExistingFiles =
+          {};
         const j = json as any;
-        if (j.logo?.url) existing.logo = { name: j.logo.alt_text || "Logo", url: j.logo.url };
-        if (j.methodology?.url) existing.methodology = { name: j.methodology.name || "Methodology", url: j.methodology.url };
-        if (j.dataset?.url) existing.dataset = { name: j.dataset.name || "Dataset", url: j.dataset.url };
-        if (j.additional_document?.url) existing.additional_document = { name: j.additional_document.name || "Additional document", url: j.additional_document.url };
+        if (j.logo?.url)
+          existing.logo = { name: j.logo.alt_text || "Logo", url: j.logo.url };
+        if (j.methodology?.url)
+          existing.methodology = {
+            name: j.methodology.name || "Methodology",
+            url: j.methodology.url,
+          };
+        if (j.dataset?.url)
+          existing.dataset = {
+            name: j.dataset.name || "Dataset",
+            url: j.dataset.url,
+          };
+        if (j.additional_document?.url)
+          existing.additional_document = {
+            name: j.additional_document.name || "Additional document",
+            url: j.additional_document.url,
+          };
         setExistingFiles(existing);
 
         const comment = (json as { rejection_comment?: string | null })
           .rejection_comment;
         setRejectionComment(
-          typeof comment === "string" && comment.trim()
-            ? comment.trim()
-            : null,
+          typeof comment === "string" && comment.trim() ? comment.trim() : null,
         );
         setEditDataLoadedAt(Date.now());
       })
@@ -306,7 +323,13 @@ function WizardInner({
   }, []);
 
   useEffect(() => {
-    const schemas = [step1Schema, step2Schema, step3Schema, step4Schema, step5Schema];
+    const schemas = [
+      step1Schema,
+      step2Schema,
+      step3Schema,
+      step4Schema,
+      step5Schema,
+    ];
     let unlocked = 1;
     for (let i = 0; i < schemas.length; i++) {
       if (schemas[i].safeParse(data.metadata).success) {
@@ -321,7 +344,8 @@ function WizardInner({
   const isCurrentStepValid = useMemo(() => {
     if (activeStep === 6) {
       const hasLogo = !!data.files.file_logo || !!existingFiles.logo;
-      const hasMethod = !!data.files.file_methodology || !!existingFiles.methodology;
+      const hasMethod =
+        !!data.files.file_methodology || !!existingFiles.methodology;
       const hasDataset = !!data.files.file_dataset || !!existingFiles.dataset;
       return hasLogo && hasMethod && hasDataset;
     }
@@ -433,9 +457,7 @@ function WizardInner({
         dataRef.current.files,
         editId,
       );
-      const url = editId
-        ? `/api/case-studies/${editId}`
-        : "/api/case-studies";
+      const url = editId ? `/api/case-studies/${editId}` : "/api/case-studies";
       const res = await fetch(url, {
         method: editId ? "PUT" : "POST",
         headers: { Authorization: `Bearer ${token}` },
@@ -461,9 +483,7 @@ function WizardInner({
         setIsSavingDraft(false);
         setLeaveDialogOpen(false);
         setSubmitState("error");
-        setSubmitError(
-          errData?.error ?? (txt || "Failed to save draft."),
-        );
+        setSubmitError(errData?.error ?? (txt || "Failed to save draft."));
         return;
       }
       sessionStorage.setItem("case-study-draft-saved", "1");
@@ -646,9 +666,18 @@ function WizardInner({
       const json = (await res.json()) as CaseStudyDetail;
       const orig = editOriginalRef.current;
 
-      const useExistingMethodology = !data.files.file_methodology && orig?.methodology && !(json.methodology?.url || json.methodology?.name);
-      const useExistingDataset = !data.files.file_dataset && orig?.dataset && !(json.dataset?.url || json.dataset?.name);
-      const useExistingAdditional = !data.files.file_additional_document && orig?.additional_document && !(json.additional_document?.url || json.additional_document?.name);
+      const useExistingMethodology =
+        !data.files.file_methodology &&
+        orig?.methodology &&
+        !(json.methodology?.url || json.methodology?.name);
+      const useExistingDataset =
+        !data.files.file_dataset &&
+        orig?.dataset &&
+        !(json.dataset?.url || json.dataset?.name);
+      const useExistingAdditional =
+        !data.files.file_additional_document &&
+        orig?.additional_document &&
+        !(json.additional_document?.url || json.additional_document?.name);
 
       const fixed: CaseStudyDetail = {
         ...json,
@@ -661,9 +690,13 @@ function WizardInner({
             }
           : (json.logo ?? null),
 
-        methodology: useExistingMethodology ? orig!.methodology : json.methodology,
+        methodology: useExistingMethodology
+          ? orig!.methodology
+          : json.methodology,
         dataset: useExistingDataset ? orig!.dataset : json.dataset,
-        additional_document: useExistingAdditional ? orig!.additional_document : json.additional_document,
+        additional_document: useExistingAdditional
+          ? orig!.additional_document
+          : json.additional_document,
       };
       setPreviewCs(fixed);
       setPreviewState("success");
@@ -800,21 +833,21 @@ function WizardInner({
         }
       >
         <div ref={wizardBodyRef}>
-        {uploadStepDefs.map((s) => {
-          const Step = (uploadStepComponents as any)[s.id];
-          const isActive = s.id === activeStep;
+          {uploadStepDefs.map((s) => {
+            const Step = (uploadStepComponents as any)[s.id];
+            const isActive = s.id === activeStep;
 
-          return (
-            <section
-              key={s.id}
-              hidden={!isActive}
-              aria-hidden={!isActive}
-              className={isActive ? "ecl-u-d-block" : "ecl-u-d-none"}
-            >
-              <Step />
-            </section>
-          );
-        })}
+            return (
+              <section
+                key={s.id}
+                hidden={!isActive}
+                aria-hidden={!isActive}
+                className={isActive ? "ecl-u-d-block" : "ecl-u-d-none"}
+              >
+                <Step />
+              </section>
+            );
+          })}
         </div>
       </WizardShell>
 
@@ -845,7 +878,7 @@ function UploadWizardWithRefData({ organizations }: UploadWizardClientProps) {
   const editParam = searchParams.get("edit");
   const editId =
     editParam != null && /^\d+$/.test(editParam)
-      ? parseInt(editParam, 10)
+      ? Number.parseInt(editParam, 10)
       : null;
   const baseRefData = useReferenceData();
   const [activeStep, setActiveStep] = useState(1);

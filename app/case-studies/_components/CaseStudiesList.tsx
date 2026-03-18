@@ -50,7 +50,7 @@ function statusLabel(
   status: string | undefined,
 ): { modifier: "low" | "medium" | "high" | "highlight"; text: string } | null {
   if (!status) return null;
-  const s = status.toLowerCase().replaceAll(/-/g, "_");
+  const s = status.toLowerCase().replaceAll("-", "_");
   switch (s) {
     case "published":
       return { modifier: "highlight", text: "Published" };
@@ -64,11 +64,11 @@ function statusLabel(
 }
 
 function canEdit(status: string | undefined): boolean {
-  return status?.toLowerCase().replaceAll(/-/g, "_") === "draft";
+  return status?.toLowerCase().replaceAll("-", "_") === "draft";
 }
 
 function canDelete(status: string | undefined): boolean {
-  const s = status?.toLowerCase().replaceAll(/-/g, "_");
+  const s = status?.toLowerCase().replaceAll("-", "_");
   return s === "draft";
 }
 

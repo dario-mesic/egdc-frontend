@@ -53,7 +53,11 @@ export function clearAuthAndRedirect(): void {
 export function isCredentialsError(message: unknown): boolean {
   if (message == null) return false;
   const s = String(message).toLowerCase();
-  return s.includes("credential") || s.includes("not validate") || s.includes("unauthorized");
+  return (
+    s.includes("credential") ||
+    s.includes("not validate") ||
+    s.includes("unauthorized")
+  );
 }
 
 const VALID_ROLES = new Set<UserRole>(["custodian", "data_owner", "admin"]);
@@ -64,20 +68,18 @@ function parseRole(value: unknown): UserRole | null {
   return VALID_ROLES.has(lower) ? lower : null;
 }
 
-export function decodeJwtPayload(token: string): Record<string, unknown> | null {
+export function decodeJwtPayload(
+  token: string,
+): Record<string, unknown> | null {
   try {
     const parts = token.split(".");
     if (parts.length !== 3) return null;
-    const payload = atob(parts[1].replace(/-/g, "+").replace(/_/g, "/"));
+    const payload = atob(parts[1].replaceAll(/-/g, "+").replaceAll(/_/g, "/"));
     return JSON.parse(payload);
   } catch {
     return null;
   }
 }
-
-/* ------------------------------------------------------------------ */
-/*  Iframe helpers                                                     */
-/* ------------------------------------------------------------------ */
 
 export function isInIframe(): boolean {
   if (typeof window === "undefined") return false;
@@ -88,10 +90,6 @@ export function isInIframe(): boolean {
   }
 }
 
-/**
- * Store the token + role from data received via postMessage
- * from the popup callback page.
- */
 function applyPopupResult(data: {
   token?: string;
   profile?: Record<string, unknown> | null;
@@ -105,16 +103,14 @@ function applyPopupResult(data: {
   const role =
     parseRole(claims?.["https://egdc-api/role"]) ??
     parseRole(profile?.["https://egdc-api/role"]) ??
-    parseRole((profile?.app_metadata as Record<string, unknown> | undefined)?.role);
+    parseRole(
+      (profile?.app_metadata as Record<string, unknown> | undefined)?.role,
+    );
 
   if (role) setStoredRole(role);
   return true;
 }
 
-/**
- * Open Auth0 login in a popup window and wait for the result.
- * Falls back to redirect if popup is blocked.
- */
 export function loginWithPopup(returnPath?: string): Promise<boolean> {
   return new Promise((resolve) => {
     const loginUrl = `/auth/login?returnTo=${encodeURIComponent("/auth-popup-complete")}`;
@@ -164,10 +160,6 @@ export function loginWithPopup(returnPath?: string): Promise<boolean> {
   });
 }
 
-/**
- * Log out when running inside an iframe.
- * Opens Auth0 logout in a popup, then clears local state.
- */
 export function logoutFromIframe(): void {
   clearAuth();
 
@@ -197,20 +189,17 @@ export function logoutFromIframe(): void {
 
     setTimeout(() => {
       clearInterval(timer);
-      try { popup.close(); } catch { /* already closed */ }
+      try {
+        popup.close();
+      } catch {
+        /* already closed */
+      }
     }, 5000);
   }
 
   window.location.replace("/case-studies/login");
 }
 
-/**
- * Fetch the Auth0 access token and user profile, then persist them
- * in sessionStorage so existing components keep working via
- * getStoredAccessToken() / getStoredRole().
- *
- * Returns true when a valid token was stored.
- */
 export async function syncAuth0Session(): Promise<boolean> {
   try {
     const [tokenRes, profileRes] = await Promise.all([
@@ -222,9 +211,7 @@ export async function syncAuth0Session(): Promise<boolean> {
 
     const tokenData = await tokenRes.json();
     const token: string | undefined =
-      tokenData?.token ??
-      tokenData?.accessToken ??
-      tokenData?.access_token;
+      tokenData?.token ?? tokenData?.accessToken ?? tokenData?.access_token;
     if (!token) {
       console.error("Auth0 token response:", JSON.stringify(tokenData));
       return false;
