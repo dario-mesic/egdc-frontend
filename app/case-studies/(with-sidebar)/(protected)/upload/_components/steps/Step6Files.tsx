@@ -11,6 +11,7 @@ type SingleFileDropzoneProps = Readonly<{
   accept: Accept;
   disabled?: boolean;
   file?: File;
+  existingFileName?: string;
   error?: string;
   onDropFile: (f?: File, errorCode?: string) => void;
   onReject?: (message: string) => void;
@@ -103,6 +104,7 @@ function SingleFileDropzone({
   accept,
   disabled,
   file,
+  existingFileName,
   error,
   onDropFile,
   onClear,
@@ -130,13 +132,14 @@ function SingleFileDropzone({
     },
   });
 
+  const hasAnyFile = !!file || !!existingFileName;
   let borderClass = "ecl-u-border-color-grey-300";
   if (isDragActive) {
     if (isDragAccept) borderClass = "ecl-u-border-color-success";
     else if (isDragReject) borderClass = "ecl-u-border-color-error";
   } else if (error) {
     borderClass = "ecl-u-border-color-error";
-  } else if (file) {
+  } else if (hasAnyFile) {
     borderClass = "ecl-u-border-color-success";
   }
 
@@ -161,6 +164,10 @@ function SingleFileDropzone({
         {file ? (
           <p className="ecl-u-mt-xs text-xs ecl-u-type-color-grey-700 ecl-u-ph-s ecl-u-type-align-center break-all">
             <span className="font-semibold">Selected:</span> {file.name}
+          </p>
+        ) : existingFileName ? (
+          <p className="ecl-u-mt-xs text-xs ecl-u-type-color-grey-700 ecl-u-ph-s ecl-u-type-align-center break-all">
+            <span className="font-semibold">Uploaded:</span> {existingFileName}
           </p>
         ) : null}
 
@@ -197,7 +204,8 @@ function resolveFieldError(
 
 export default function Step6Files() {
   const { languages } = useReferenceData();
-  const { data, setFiles, setStepValidity, setMetadata } = useWizardData();
+  const { data, setFiles, setStepValidity, setMetadata, existingFiles } =
+    useWizardData();
   const [touched, setTouched] = useState<LocalTouched>({});
   const [errors, setErrors] = useState<LocalErrors>({});
 
@@ -206,10 +214,13 @@ export default function Step6Files() {
   const logoRef = useRef<HTMLInputElement | null>(null);
   const additionalRef = useRef<HTMLInputElement | null>(null);
 
-  const hasMethodology = !!data.files.file_methodology;
-  const hasDatasetFile = !!data.files.file_dataset;
-  const hasLogo = !!data.files.file_logo;
-  const hasAdditional = !!data.files.file_additional_document;
+  const hasMethodology =
+    !!data.files.file_methodology || !!existingFiles.methodology;
+  const hasDatasetFile = !!data.files.file_dataset || !!existingFiles.dataset;
+  const hasLogo = !!data.files.file_logo || !!existingFiles.logo;
+  const hasAdditional =
+    !!data.files.file_additional_document ||
+    !!existingFiles.additional_document;
 
   const [resetKeys, setResetKeys] = useState({
     methodology: 0,
@@ -278,9 +289,6 @@ export default function Step6Files() {
     logo: "Logo is required.",
   } as const;
 
-  useEffect(() => {
-    globalThis.ECL?.autoInit?.();
-  }, [resetKeys.methodology, resetKeys.dataset, resetKeys.logo]);
 
   const stepValid = hasLogo && hasMethodology && hasDatasetFile;
 
@@ -420,6 +428,7 @@ export default function Step6Files() {
             label="Drag and drop PDF file here, or click to select"
             accept={{ "application/pdf": [".pdf"] }}
             file={data.files.file_methodology}
+            existingFileName={existingFiles.methodology?.name}
             error={methodologyError}
             onDropFile={(file, errorCode) =>
               handleDropFile({
@@ -568,6 +577,7 @@ export default function Step6Files() {
             label="Drag and drop PDF file here, or click to select"
             accept={{ "application/pdf": [".pdf"] }}
             file={data.files.file_additional_document}
+            existingFileName={existingFiles.additional_document?.name}
             error={touched.additional ? errors.additional : undefined}
             onDropFile={(file, errorCode) =>
               handleDropFile({
@@ -715,6 +725,7 @@ export default function Step6Files() {
                 [".xlsx"],
             }}
             file={data.files.file_dataset}
+            existingFileName={existingFiles.dataset?.name}
             error={datasetError}
             onDropFile={(file, errorCode) =>
               handleDropFile({
@@ -867,6 +878,7 @@ export default function Step6Files() {
             label="Drag and drop PNG/JPG file here, or click to select"
             accept={{ "image/png": [".png"], "image/jpeg": [".jpg", ".jpeg"] }}
             file={data.files.file_logo}
+            existingFileName={existingFiles.logo?.name}
             error={logoError}
             onDropFile={(file, errorCode) =>
               handleDropFile({

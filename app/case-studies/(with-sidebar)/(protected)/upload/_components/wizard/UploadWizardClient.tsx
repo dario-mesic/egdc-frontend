@@ -17,7 +17,7 @@ import {
   WizardDataProvider,
   useWizardData,
 } from "../../_context/WizardDataContext";
-import { wizardPayloadSchema } from "../../_lib/schemas/caseStudy";
+import { wizardPayloadSchema, wizardEditPayloadSchema } from "../../_lib/schemas/caseStudy";
 import {
   step1Schema,
   step2Schema,
@@ -59,27 +59,32 @@ type WizardInnerProps = Readonly<{
 function buildFormData(parsed: {
   metadata: Record<string, unknown> & { status?: string };
   files: {
-    file_logo: File;
-    file_methodology: File;
-    file_dataset: File;
+    file_logo?: File;
+    file_methodology?: File;
+    file_dataset?: File;
     file_additional_document?: File;
   };
 }) {
   const fd = new FormData();
   fd.append("metadata", JSON.stringify(parsed.metadata));
-  fd.append("file_logo", parsed.files.file_logo);
 
-  fd.append("file_methodology", parsed.files.file_methodology);
-  fd.append(
-    "methodology_language",
-    String(parsed.metadata.methodology_language_code ?? ""),
-  );
+  if (parsed.files.file_logo) fd.append("file_logo", parsed.files.file_logo);
 
-  fd.append("file_dataset", parsed.files.file_dataset);
-  fd.append(
-    "dataset_language",
-    String(parsed.metadata.dataset_language_code ?? ""),
-  );
+  if (parsed.files.file_methodology) {
+    fd.append("file_methodology", parsed.files.file_methodology);
+    fd.append(
+      "methodology_language",
+      String(parsed.metadata.methodology_language_code ?? ""),
+    );
+  }
+
+  if (parsed.files.file_dataset) {
+    fd.append("file_dataset", parsed.files.file_dataset);
+    fd.append(
+      "dataset_language",
+      String(parsed.metadata.dataset_language_code ?? ""),
+    );
+  }
 
   if (parsed.files.file_additional_document) {
     fd.append(
@@ -189,6 +194,8 @@ function WizardInner({
     setMetadata,
     setEditDataLoadedAt,
     editDataLoadedAt,
+    existingFiles,
+    setExistingFiles,
     rejectionComment,
     setRejectionComment,
   } = useWizardData();
@@ -199,6 +206,37 @@ function WizardInner({
   const [previewCs, setPreviewCs] = useState<CaseStudyDetail | null>(null);
   const [editLoadError, setEditLoadError] = useState("");
   const editPrefilledRef = useRef(false);
+  const editOriginalRef = useRef<CaseStudyDetail | null>(null);
+  const wizardBodyRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    let tries = 0;
+
+    const attempt = () => {
+      if (cancelled) return;
+      tries++;
+
+      if (!globalThis.ECL?.autoInit) {
+        if (tries < 60) setTimeout(attempt, 50);
+        return;
+      }
+
+      const duetReady = !!globalThis.customElements?.get?.("duet-date-picker");
+      if (!duetReady) {
+        if (tries < 60) setTimeout(attempt, 50);
+        return;
+      }
+
+      const root = wizardBodyRef.current ?? document.getElementById("app-root");
+      if (root) {
+        globalThis.ECL.autoInit(root);
+      }
+    };
+
+    attempt();
+    return () => { cancelled = true; };
+  }, []);
   const isLast = activeStep === uploadStepCount;
 
   const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
@@ -233,7 +271,17 @@ function WizardInner({
       })
       .then((json) => {
         if (json == null) return;
+        editOriginalRef.current = json;
         setMetadata(caseStudyDetailToMetadata(json));
+
+        const existing: import("../../_context/WizardDataContext").ExistingFiles = {};
+        const j = json as any;
+        if (j.logo?.url) existing.logo = { name: j.logo.alt_text || "Logo", url: j.logo.url };
+        if (j.methodology?.url) existing.methodology = { name: j.methodology.name || "Methodology", url: j.methodology.url };
+        if (j.dataset?.url) existing.dataset = { name: j.dataset.name || "Dataset", url: j.dataset.url };
+        if (j.additional_document?.url) existing.additional_document = { name: j.additional_document.name || "Additional document", url: j.additional_document.url };
+        setExistingFiles(existing);
+
         const comment = (json as { rejection_comment?: string | null })
           .rejection_comment;
         setRejectionComment(
@@ -257,11 +305,24 @@ function WizardInner({
     } as const;
   }, []);
 
+  useEffect(() => {
+    const schemas = [step1Schema, step2Schema, step3Schema, step4Schema, step5Schema];
+    let unlocked = 1;
+    for (let i = 0; i < schemas.length; i++) {
+      if (schemas[i].safeParse(data.metadata).success) {
+        unlocked = i + 2;
+      } else {
+        break;
+      }
+    }
+    setMaxUnlockedStep(Math.min(unlocked, uploadStepCount));
+  }, [data.metadata, setMaxUnlockedStep]);
+
   const isCurrentStepValid = useMemo(() => {
     if (activeStep === 6) {
-      const hasLogo = !!data.files.file_logo;
-      const hasMethod = !!data.files.file_methodology;
-      const hasDataset = !!data.files.file_dataset;
+      const hasLogo = !!data.files.file_logo || !!existingFiles.logo;
+      const hasMethod = !!data.files.file_methodology || !!existingFiles.methodology;
+      const hasDataset = !!data.files.file_dataset || !!existingFiles.dataset;
       return hasLogo && hasMethod && hasDataset;
     }
 
@@ -269,12 +330,13 @@ function WizardInner({
     if (!schema) return true;
 
     return schema.safeParse(data.metadata).success;
-  }, [activeStep, data.metadata, data.files, stepSchemaMap]);
+  }, [activeStep, data.metadata, data.files, existingFiles, stepSchemaMap]);
 
   const previewLogoUrl = useMemo(() => {
-    if (!data.files.file_logo) return null;
-    return URL.createObjectURL(data.files.file_logo);
-  }, [data.files.file_logo]);
+    if (data.files.file_logo) return URL.createObjectURL(data.files.file_logo);
+    if (existingFiles.logo?.url) return existingFiles.logo.url;
+    return null;
+  }, [data.files.file_logo, existingFiles.logo]);
 
   useEffect(() => {
     return () => {
@@ -480,16 +542,21 @@ function WizardInner({
 
     const submitStatus =
       getStoredRole() === "data_owner" ? "pending_approval" : "published";
-    const parsed = wizardPayloadSchema.safeParse({
+    const payload = {
       metadata: { ...data.metadata, status: submitStatus },
       files: data.files,
-    });
+    };
 
-    if (!parsed.success) {
-      return;
+    let fd: FormData;
+    if (editId) {
+      const parsed = wizardEditPayloadSchema.safeParse(payload);
+      if (!parsed.success) return;
+      fd = buildFormData(parsed.data);
+    } else {
+      const parsed = wizardPayloadSchema.safeParse(payload);
+      if (!parsed.success) return;
+      fd = buildFormData(parsed.data);
     }
-
-    const fd = buildFormData(parsed.data);
 
     setSubmitState("submitting");
     setSubmitError("");
@@ -549,7 +616,8 @@ function WizardInner({
   async function handlePreview() {
     if (!isCurrentStepValid) return;
 
-    const parsed = wizardPayloadSchema.safeParse({
+    const schema = editId ? wizardEditPayloadSchema : wizardPayloadSchema;
+    const parsed = schema.safeParse({
       metadata: data.metadata,
       files: data.files,
     });
@@ -576,6 +644,12 @@ function WizardInner({
       }
 
       const json = (await res.json()) as CaseStudyDetail;
+      const orig = editOriginalRef.current;
+
+      const useExistingMethodology = !data.files.file_methodology && orig?.methodology && !(json.methodology?.url || json.methodology?.name);
+      const useExistingDataset = !data.files.file_dataset && orig?.dataset && !(json.dataset?.url || json.dataset?.name);
+      const useExistingAdditional = !data.files.file_additional_document && orig?.additional_document && !(json.additional_document?.url || json.additional_document?.name);
+
       const fixed: CaseStudyDetail = {
         ...json,
 
@@ -586,6 +660,10 @@ function WizardInner({
               url: previewLogoUrl,
             }
           : (json.logo ?? null),
+
+        methodology: useExistingMethodology ? orig!.methodology : json.methodology,
+        dataset: useExistingDataset ? orig!.dataset : json.dataset,
+        additional_document: useExistingAdditional ? orig!.additional_document : json.additional_document,
       };
       setPreviewCs(fixed);
       setPreviewState("success");
@@ -721,6 +799,7 @@ function WizardInner({
           </div>
         }
       >
+        <div ref={wizardBodyRef}>
         {uploadStepDefs.map((s) => {
           const Step = (uploadStepComponents as any)[s.id];
           const isActive = s.id === activeStep;
@@ -736,6 +815,7 @@ function WizardInner({
             </section>
           );
         })}
+        </div>
       </WizardShell>
 
       <ConfirmDialog

@@ -20,6 +20,18 @@ type WizardFiles = {
   file_additional_document?: File;
 };
 
+export type ExistingFile = {
+  name: string;
+  url: string;
+};
+
+export type ExistingFiles = {
+  logo?: ExistingFile;
+  methodology?: ExistingFile;
+  dataset?: ExistingFile;
+  additional_document?: ExistingFile;
+};
+
 type WizardData = {
   metadata: Partial<CaseStudyMetadata>;
   files: WizardFiles;
@@ -31,11 +43,12 @@ type Ctx = {
   data: WizardData;
   setMetadata: (patch: Partial<CaseStudyMetadata>) => void;
   setFiles: (patch: WizardFiles) => void;
+  existingFiles: ExistingFiles;
+  setExistingFiles: (files: ExistingFiles) => void;
   stepValidity: StepValidity;
   setStepValidity: (stepId: number, valid: boolean) => void;
   editDataLoadedAt: number;
   setEditDataLoadedAt: (t: number) => void;
-  /** Rejection comment from reviewer when case study was returned to draft; shown in wizard. */
   rejectionComment: string | null;
   setRejectionComment: (v: string | null) => void;
 };
@@ -53,6 +66,7 @@ function shallowEqualObj(a: Record<string, any>, b: Record<string, any>) {
 
 export function WizardDataProvider({ children }: WizardDataProviderProps) {
   const [data, setData] = useState<WizardData>({ metadata: {}, files: {} });
+  const [existingFiles, setExistingFiles] = useState<ExistingFiles>({});
   const [stepValidity, setStepValidity] = useState<StepValidity>({});
   const [editDataLoadedAt, setEditDataLoadedAt] = useState(0);
   const [rejectionComment, setRejectionComment] = useState<string | null>(null);
@@ -85,6 +99,8 @@ export function WizardDataProvider({ children }: WizardDataProviderProps) {
       data,
       setMetadata,
       setFiles,
+      existingFiles,
+      setExistingFiles,
       stepValidity,
       setStepValidity: updateStepValidity,
       editDataLoadedAt,
@@ -95,6 +111,7 @@ export function WizardDataProvider({ children }: WizardDataProviderProps) {
     [
       data,
       stepMetadataKey(data),
+      existingFiles,
       stepValidity,
       editDataLoadedAt,
       rejectionComment,

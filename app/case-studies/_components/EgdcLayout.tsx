@@ -28,7 +28,8 @@ export default function EgdcLayout() {
               <img
                 src="https://www.greendigitalcoalition.eu/assets/uploads/2022/02/EGDC-Emblem-Colour-on-light-bg-LRES.png"
                 alt="European Green Digital Coalition"
-                className="h-14 sm:h-22.5 w-auto"
+                width={100}
+                height={90}
               />
             </div>
 

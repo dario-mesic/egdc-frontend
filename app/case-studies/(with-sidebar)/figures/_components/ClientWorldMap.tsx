@@ -32,21 +32,13 @@ const FILL_LAYER_ID = "country-fills";
 
 const SIMPLE_STYLE: any = {
   version: 8,
-  sources: {
-    osm: {
-      type: "raster",
-      tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
-      tileSize: 256,
-      attribution: "© OpenStreetMap contributors",
-    },
-  },
+  sources: {},
   layers: [
     {
       id: "background",
       type: "background",
-      paint: { "background-color": "#cfe8ff" },
+      paint: { "background-color": "#a8d4f0" },
     },
-    { id: "osm", type: "raster", source: "osm" },
   ],
 };
 

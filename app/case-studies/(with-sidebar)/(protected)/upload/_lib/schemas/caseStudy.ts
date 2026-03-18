@@ -149,3 +149,26 @@ export const wizardPayloadSchema = z
   });
 
 export type WizardPayload = z.infer<typeof wizardPayloadSchema>;
+
+export const wizardEditPayloadSchema = z
+  .object({
+    metadata: metadataSchema,
+    files: z.object({
+      file_methodology: z.instanceof(File).optional(),
+      file_dataset: z.instanceof(File).optional(),
+      file_logo: z.instanceof(File).optional(),
+      file_additional_document: z.instanceof(File).optional(),
+    }),
+  })
+  .superRefine(({ metadata, files }, ctx) => {
+    if (files.file_additional_document) {
+      const lang = (metadata.additional_language_code ?? "").trim();
+      if (!lang) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["metadata", "additional_language_code"],
+          message: "Additional document language is required.",
+        });
+      }
+    }
+  });

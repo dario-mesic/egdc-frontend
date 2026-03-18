@@ -80,11 +80,14 @@ export default function Step2Categorization() {
       fundingProgrammeUrl:
         (data.metadata.funding_programme_url as string) ?? "",
     });
-  }, [editDataLoadedAt, data.metadata.tech_code, data.metadata.calc_type_code, data.metadata.funding_type_code, data.metadata.funding_programme_url]);
+  }, [
+    editDataLoadedAt,
+    data.metadata.tech_code,
+    data.metadata.calc_type_code,
+    data.metadata.funding_type_code,
+    data.metadata.funding_programme_url,
+  ]);
 
-  useEffect(() => {
-    globalThis.ECL?.autoInit?.();
-  }, []);
 
   const techOptions = useMemo(
     () => [...technologies].sort((a, b) => a.label.localeCompare(b.label)),

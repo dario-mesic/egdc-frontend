@@ -425,15 +425,17 @@ export default function Step4Organizations() {
         ? String(data.metadata.used_by_org_id)
         : "",
     });
-  }, [editDataLoadedAt, data.metadata.provider_org_id, data.metadata.funder_org_id, data.metadata.used_by_org_id]);
+  }, [
+    editDataLoadedAt,
+    data.metadata.provider_org_id,
+    data.metadata.funder_org_id,
+    data.metadata.used_by_org_id,
+  ]);
 
   useEffect(() => {
     setOrgs(organizations);
   }, [organizations]);
 
-  useEffect(() => {
-    globalThis.ECL?.autoInit?.();
-  }, []);
 
   const orgOptions = useMemo(
     () => [...orgs].sort((a, b) => a.name.localeCompare(b.name)),

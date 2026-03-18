@@ -221,29 +221,11 @@ function FunctionalUnitCombobox({
 
 export default function Step5Benefits() {
   const { benefit_types, benefit_units } = useReferenceData();
-  const { data, setMetadata, setStepValidity, editDataLoadedAt } = useWizardData();
+  const { data, setMetadata, setStepValidity, editDataLoadedAt } =
+    useWizardData();
   const lastSyncedEditRef = useRef(0);
 
-  const idCounter = useRef(2);
-  const [rows, setRows] = useState<BenefitRow[]>([
-    {
-      id: "benefit-1",
-      benefitType: "",
-      name: NET_CARBON_NAME,
-      value: "",
-      unit: NET_CARBON_UNIT_CODE,
-      functionalUnit: "",
-    },
-  ]);
-
-  const environmentalCode = useMemo(() => {
-    const env = benefit_types.find(
-      (b) => (b.code || "").toLowerCase() === "environmental",
-    );
-    return env?.code ?? "";
-  }, [benefit_types]);
-
-  useEffect(() => {
+  const initialRows = useMemo<BenefitRow[]>(() => {
     const existing = data.metadata.benefits as
       | Array<{
           type_code: string;
@@ -255,7 +237,7 @@ export default function Step5Benefits() {
       | undefined;
 
     if (existing?.length) {
-      const seeded: BenefitRow[] = existing.map((b, idx) => ({
+      return existing.map((b, idx) => ({
         id: `benefit-${idx + 1}`,
         benefitType: b.type_code ?? "",
         name: b.name ?? "",
@@ -263,10 +245,30 @@ export default function Step5Benefits() {
         unit: b.unit_code ?? "",
         functionalUnit: (b.functional_unit ?? "").trim(),
       }));
-      setRows(seeded);
-      idCounter.current = seeded.length + 1;
     }
+
+    return [
+      {
+        id: "benefit-1",
+        benefitType: "",
+        name: NET_CARBON_NAME,
+        value: "",
+        unit: NET_CARBON_UNIT_CODE,
+        functionalUnit: "",
+      },
+    ];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const idCounter = useRef(initialRows.length + 1);
+  const [rows, setRows] = useState<BenefitRow[]>(initialRows);
+
+  const environmentalCode = useMemo(() => {
+    const env = benefit_types.find(
+      (b) => (b.code || "").toLowerCase() === "environmental",
+    );
+    return env?.code ?? "";
+  }, [benefit_types]);
 
   useEffect(() => {
     if (editDataLoadedAt <= 0 || editDataLoadedAt === lastSyncedEditRef.current)
@@ -329,9 +331,6 @@ export default function Step5Benefits() {
     });
   }, [environmentalCode, tco2UnitCode]);
 
-  useEffect(() => {
-    globalThis.ECL?.autoInit?.();
-  }, []);
 
   const typeOptions = useMemo(
     () => [...benefit_types].sort((a, b) => a.label.localeCompare(b.label)),
